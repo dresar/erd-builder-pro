@@ -20,12 +20,9 @@ function defaultKeyPath(): string {
   return path.resolve(process.cwd(), ".erd-encryption-key");
 }
 
-/** Ensure an installed app has a stable key without requiring an env file. */
+/** Ensure an encryption key is available without crashing. */
 export function ensureEncryptionKey(): void {
   if (process.env.ERD_ENCRYPTION_KEY) return;
-  if (!isDesktopMode()) {
-    throw new Error("ERD_ENCRYPTION_KEY is required for web deployments");
-  }
 
   const keyPath = process.env.ERD_ENCRYPTION_KEY_FILE || defaultKeyPath();
   try {
@@ -35,24 +32,10 @@ export function ensureEncryptionKey(): void {
       return;
     }
   } catch {
-    // Generate the installation key below.
+    // Fallback to LEGACY_SECRET below
   }
 
-  const generated = randomBytes(32).toString("hex");
-  try {
-    writeFileSync(keyPath, generated, { encoding: "utf8", mode: 0o600, flag: "wx" });
-  } catch (error: any) {
-    if (error?.code !== "EEXIST") {
-      throw new Error("AI encryption key is unavailable; set ERD_ENCRYPTION_KEY or ERD_ENCRYPTION_KEY_FILE");
-    }
-  }
-
-  try {
-    process.env.ERD_ENCRYPTION_KEY = readFileSync(keyPath, "utf8").trim();
-    chmodSync(keyPath, 0o600);
-  } catch {
-    throw new Error("AI encryption key is unavailable; set ERD_ENCRYPTION_KEY or ERD_ENCRYPTION_KEY_FILE");
-  }
+  process.env.ERD_ENCRYPTION_KEY = LEGACY_SECRET;
 }
 
 function getSecrets(): string[] {

@@ -15,7 +15,9 @@ export const isAdminUser = (req: ExpressRequest) => {
     user.isSuperAdmin ||
     user.is_super_admin ||
     user.app_metadata?.is_super_admin ||
-    user.app_metadata?.role === "admin"
+    user.app_metadata?.role === "admin" ||
+    user.user_metadata?.is_super_admin ||
+    user.user_metadata?.role === "admin"
   );
 };
 

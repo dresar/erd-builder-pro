@@ -1,4 +1,4 @@
-const CACHE_NAME = 'erd-builder-cache-v1.4'; // Bump: refreshed app icons
+const CACHE_NAME = 'erd-builder-cache-v1.5';
 const ASSETS_TO_CACHE = [
   '/',
   '/index.html',
@@ -48,29 +48,35 @@ self.addEventListener('fetch', (event) => {
   // STRATEGY: Network-First with Offline Fallback for Navigation (SPA Support)
   if (event.request.mode === 'navigate') {
     event.respondWith(
-      fetch(event.request)
-        .catch(() => {
-          // If network fails (offline), provide index.html from cache
-          // This allows React Router to handle the route client-side
-          return caches.match('/index.html') || caches.match('/');
-        })
+      fetch(event.request).catch(async () => {
+        const cached = (await caches.match('/index.html')) || (await caches.match('/'));
+        if (cached) return cached;
+        return new Response('Network error. Please reload.', {
+          status: 503,
+          headers: { 'Content-Type': 'text/plain' },
+        });
+      })
     );
     return;
   }
 
-  // STRATEGY: Stale-While-Revalidate for other assets (images, fonts, etc)
+  // STRATEGY: Stale-While-Revalidate for other assets
   event.respondWith(
-    caches.open(CACHE_NAME).then((cache) => {
-      return cache.match(event.request).then((cachedResponse) => {
-        const fetchedResponse = fetch(event.request).then((networkResponse) => {
+    caches.match(event.request).then((cachedResponse) => {
+      const fetchPromise = fetch(event.request)
+        .then((networkResponse) => {
           if (networkResponse && networkResponse.status === 200 && networkResponse.type === 'basic') {
-            cache.put(event.request, networkResponse.clone());
+            const clone = networkResponse.clone();
+            caches.open(CACHE_NAME).then((cache) => cache.put(event.request, clone));
           }
           return networkResponse;
-        }).catch(() => cachedResponse);
+        })
+        .catch(() => {
+          if (cachedResponse) return cachedResponse;
+          return new Response('', { status: 408 });
+        });
 
-        return cachedResponse || fetchedResponse;
-      });
+      return cachedResponse || fetchPromise;
     })
   );
 });
