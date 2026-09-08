@@ -4,11 +4,11 @@ import { toast } from 'sonner';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { useWorkspace } from '@/providers/WorkspaceContext';
-import { autoFixDBMLEnumNames } from '@/lib/dbml-utils';
 import { generateExternalAIPrompt, DOMAIN_PRESETS, PromptConfig, PromptStrategy } from './externalPromptTemplates';
 import { ExternalAIPromptTab } from './ExternalAIPromptTab';
 import { ExternalAIImportTab } from './ExternalAIImportTab';
 import { InfoTip } from './InfoTip';
+import { applyExternalBundle } from './applyExternalBundle';
 
 interface ExternalAIGeneratorDialogProps {
   isOpen: boolean;
@@ -45,6 +45,7 @@ export function ExternalAIGeneratorDialog({ isOpen, onClose }: ExternalAIGenerat
     handleSidebarNoteCreate, 
     handleSidebarPrdCreate,
     handleSidebarFlowchartCreate,
+    handleDiagramSelect,
     handleViewChange,
     selectedWorkspaceUid
   } = useWorkspace();
@@ -216,53 +217,19 @@ export function ExternalAIGeneratorDialog({ isOpen, onClose }: ExternalAIGenerat
 
     setIsApplying(true);
     try {
-      let projectId: string | null = null;
-      const effectiveName = parsedData.project?.name?.trim() || projectName.trim() || 'Proyek Enterprise';
-
-      if (targetMode === 'new_project' || !selectedWorkspaceUid) {
-        toast.info('Membuat proyek...');
-        const newProj = await handleSidebarProjectCreate(effectiveName);
-        projectId = newProj ? String(newProj.uid ?? newProj.id) : null;
-      } else {
-        projectId = selectedWorkspaceUid || null;
-      }
-
-      if (!projectId) {
-        const newProj = await handleSidebarProjectCreate(effectiveName);
-        projectId = newProj ? String(newProj.uid ?? newProj.id) : null;
-      }
-
-      if (parsedData.prd?.content_markdown) {
-        toast.info('Membuat PRD...');
-        localStorage.setItem('pending_note_content', parsedData.prd.content_markdown);
-        localStorage.setItem('pending_prd_content', parsedData.prd.content_markdown);
-        localStorage.setItem('pending_note_strategy', 'replace');
-        const rawTitle = parsedData.prd.title || `Spesifikasi - ${effectiveName}`;
-        const cleanPrdTitle = (rawTitle.includes('SPESIFIKASI PERSYARATAN') || rawTitle === 'Spesifikasi PRD') ? effectiveName : rawTitle;
-        await handleSidebarPrdCreate(cleanPrdTitle, projectId);
-      }
-
-      if (parsedData.flowchart?.nodes && parsedData.flowchart.nodes.length > 0) {
-        toast.info('Membuat Flowchart...');
-        localStorage.setItem('pending_create_flowchart_json', JSON.stringify(parsedData.flowchart));
-        const fcTitle = parsedData.flowchart.title || `Alur - ${effectiveName}`;
-        await handleSidebarFlowchartCreate(fcTitle, projectId, { silent: Boolean(parsedData.erd?.dbml) });
-      }
-
-      if (parsedData.erd?.dbml) {
-        toast.info('Membuat ERD...');
-        const healedDbml = autoFixDBMLEnumNames(parsedData.erd.dbml);
-        localStorage.setItem('pending_create_erd_schema', healedDbml);
-        const erdBundlename = parsedData.erd.title || `ERD - ${effectiveName}`;
-        await handleSidebarDiagramCreate(erdBundlename, projectId, { silent: false });
-      } else if (parsedData.flowchart?.nodes && parsedData.flowchart.nodes.length > 0) {
-        await handleViewChange('flowchart', true, projectId);
-      } else {
-        await handleViewChange('notes', true, projectId);
-      }
-
-      toast.success('✓ Berhasil!');
-      onClose();
+      await applyExternalBundle({
+        parsedData,
+        targetMode,
+        selectedWorkspaceUid,
+        projectName,
+        handleSidebarProjectCreate,
+        handleSidebarPrdCreate,
+        handleSidebarFlowchartCreate,
+        handleSidebarDiagramCreate,
+        handleDiagramSelect,
+        handleViewChange,
+        onClose,
+      });
     } catch {
       toast.error('Gagal menerapkan.');
     } finally {

@@ -4,13 +4,13 @@ export interface UseSidebarHandlersParams {
   createDiagram: (n: string, pid?: number | string | null) => Promise<any>;
   updateDiagram: (id: number | string, n: string, opts?: any) => Promise<any>;
   deleteDiagram: (id: number | string) => Promise<any>;
-  createNote: (t: string, pid?: number | string | null) => Promise<any>;
+  createNote: (t: string, pid?: number | string | null, content?: string) => Promise<any>;
   updateNote: (uid: string, t: string, opts?: any) => Promise<any>;
   deleteNote: (uid: string) => Promise<any>;
   createDrawing: (t: string, pid?: number | string | null) => Promise<any>;
   updateDrawing: (uid: string, t: string, opts?: any) => Promise<any>;
   deleteDrawing: (uid: string) => Promise<any>;
-  createFlowchart: (t: string, pid?: number | string | null) => Promise<any>;
+  createFlowchart: (t: string, pid?: number | string | null, data?: string) => Promise<any>;
   updateFlowchart: (uid: string, t: string, opts?: any) => Promise<any>;
   deleteFlowchart: (uid: string) => Promise<any>;
   createProject: (n: string) => Promise<any>;
@@ -62,21 +62,35 @@ export function useSidebarHandlers(params: UseSidebarHandlersParams) {
     return d;
   }, [createDiagram, fetchProjects, handleDiagramSelect]);
 
-  const handleSidebarNoteCreate = useCallback(async (t: string, pid?: number | string | null) => {
-    const n = await createNote(t, pid);
+  const handleSidebarNoteCreate = useCallback(async (
+    t: string,
+    pid?: number | string | null,
+    optionsOrContent?: string | { silent?: boolean; content?: string },
+    options?: { silent?: boolean }
+  ) => {
+    const content = typeof optionsOrContent === 'string' ? optionsOrContent : optionsOrContent?.content;
+    const finalOptions = typeof optionsOrContent === 'object' ? optionsOrContent : options;
+    const n = await createNote(t, pid, content);
     if (n) {
       await fetchProjects();
-      await handleNoteSelect(n.uid);
+      if (!finalOptions?.silent) await handleNoteSelect(n.uid);
     }
     return n;
   }, [createNote, fetchProjects, handleNoteSelect]);
 
-  const handleSidebarPrdCreate = useCallback(async (t: string, pid?: number | string | null) => {
+  const handleSidebarPrdCreate = useCallback(async (
+    t: string,
+    pid?: number | string | null,
+    optionsOrContent?: string | { silent?: boolean; content?: string },
+    options?: { silent?: boolean }
+  ) => {
     const finalTitle = t.startsWith('[PRD] ') ? t : `[PRD] ${t}`;
-    const n = await createNote(finalTitle, pid);
+    const content = typeof optionsOrContent === 'string' ? optionsOrContent : optionsOrContent?.content;
+    const finalOptions = typeof optionsOrContent === 'object' ? optionsOrContent : options;
+    const n = await createNote(finalTitle, pid, content);
     if (n) {
       await fetchProjects();
-      await handleNoteSelect(n.uid);
+      if (!finalOptions?.silent) await handleNoteSelect(n.uid);
     }
     return n;
   }, [createNote, fetchProjects, handleNoteSelect]);
@@ -90,11 +104,18 @@ export function useSidebarHandlers(params: UseSidebarHandlersParams) {
     return d;
   }, [createDrawing, fetchProjects, handleDrawingSelect]);
 
-  const handleSidebarFlowchartCreate = useCallback(async (t: string, pid?: number | string | null, options?: { silent?: boolean }) => {
-    const f = await createFlowchart(t, pid);
+  const handleSidebarFlowchartCreate = useCallback(async (
+    t: string,
+    pid?: number | string | null,
+    optionsOrData?: string | { silent?: boolean; data?: string },
+    options?: { silent?: boolean }
+  ) => {
+    const data = typeof optionsOrData === 'string' ? optionsOrData : optionsOrData?.data;
+    const finalOptions = typeof optionsOrData === 'object' ? optionsOrData : options;
+    const f = await createFlowchart(t, pid, data);
     if (f) {
       await fetchProjects();
-      if (!options?.silent) await handleFlowchartSelect(f.uid);
+      if (!finalOptions?.silent) await handleFlowchartSelect(f.uid);
     }
     return f;
   }, [createFlowchart, fetchProjects, handleFlowchartSelect]);

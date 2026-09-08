@@ -109,10 +109,10 @@ export interface WorkspaceContextValue {
 
   // Sidebar
   handleSidebarDiagramCreate: (title: string, projectId?: string | null, options?: { silent?: boolean }) => Promise<any>;
-  handleSidebarNoteCreate: (title: string, projectId?: string | null) => Promise<any>;
-  handleSidebarPrdCreate: (title: string, projectId?: string | null) => Promise<any>;
+  handleSidebarNoteCreate: (title: string, projectId?: string | null, optionsOrContent?: string | { silent?: boolean; content?: string }, options?: { silent?: boolean }) => Promise<any>;
+  handleSidebarPrdCreate: (title: string, projectId?: string | null, optionsOrContent?: string | { silent?: boolean; content?: string }, options?: { silent?: boolean }) => Promise<any>;
   handleSidebarDrawingCreate: (title: string, projectId?: string | null, options?: { silent?: boolean }) => Promise<any>;
-  handleSidebarFlowchartCreate: (title: string, projectId?: string | null, options?: { silent?: boolean }) => Promise<any>;
+  handleSidebarFlowchartCreate: (title: string, projectId?: string | null, optionsOrData?: string | { silent?: boolean; data?: string }, options?: { silent?: boolean }) => Promise<any>;
   handleSidebarProjectCreate: (name: string) => Promise<any>;
   handleSidebarProjectUpdate: (id: any, data: any) => Promise<void>;
   handleSidebarProjectDelete: (id: any) => Promise<void>;
