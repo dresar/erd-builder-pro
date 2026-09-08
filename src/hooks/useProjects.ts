@@ -158,43 +158,51 @@ export function useProjects(isGuest: boolean = false) {
     } catch (err) {}
   };
 
-  const deleteProject = async (id: number | string) => {
-    if (isGuestCheck()) {
-      const project = await localPersistence.getResource(id);
-      if (project) {
-        const deleted_at = new Date().toISOString();
-        project.is_deleted = true;
-        project.deleted_at = deleted_at;
-        await localPersistence.saveResource(project);
-        
-        // Cascading soft delete for local resources
-        const types = ['erd', 'notes', 'drawings', 'flowchart'];
-        for (const type of types) {
-          const items = await localPersistence.getAllResources(type);
-          const projectItems = items.filter(item => String(item.project_id) === String(id));
-          for (const item of projectItems) {
-            item.is_deleted = true;
-            item.deleted_at = deleted_at;
-            await localPersistence.saveResource(item);
-          }
-        }
+  const deletingProjectsRef = useRef<Set<string>>(new Set());
 
-        setProjects(prev => prev.filter(p => p.id !== id));
-        if (activeProjectId === id) setActiveProjectId(null);
-        toast.success('Project and its items moved to local trash');
-      }
-      return true;
-    }
+  const deleteProject = async (id: number | string) => {
+    const idStr = String(id);
+    if (deletingProjectsRef.current.has(idStr)) return false;
+    deletingProjectsRef.current.add(idStr);
 
     try {
+      if (isGuestCheck()) {
+        const project = await localPersistence.getResource(id);
+        if (project) {
+          const deleted_at = new Date().toISOString();
+          project.is_deleted = true;
+          project.deleted_at = deleted_at;
+          await localPersistence.saveResource(project);
+          
+          const types = ['erd', 'notes', 'drawings', 'flowchart'];
+          for (const type of types) {
+            const items = await localPersistence.getAllResources(type);
+            const projectItems = items.filter(item => String(item.project_id) === String(id));
+            for (const item of projectItems) {
+              item.is_deleted = true;
+              item.deleted_at = deleted_at;
+              await localPersistence.saveResource(item);
+            }
+          }
+
+          setProjects(prev => prev.filter(p => p.id !== id));
+          if (activeProjectId === id) setActiveProjectId(null);
+          toast.success('Project and its items moved to local trash', { id: `proj-${idStr}` });
+        }
+        return true;
+      }
+
       const res = await apiFetch(`/api/projects/${id}`, { method: 'DELETE' });
       if (res.ok) {
         setProjects(prev => prev.filter(p => p.id !== id));
         if (activeProjectId === id) setActiveProjectId(null);
-        toast.success('Project moved to trash');
+        toast.success('Project moved to trash', { id: `proj-${idStr}` });
         return true;
       }
-    } catch (err) {}
+    } catch (err) {
+    } finally {
+      deletingProjectsRef.current.delete(idStr);
+    }
     return false;
   };
 

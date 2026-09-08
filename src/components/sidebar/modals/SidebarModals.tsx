@@ -19,7 +19,7 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { Field, FieldLabel } from "@/components/ui/field"
-import { AlertTriangle } from "lucide-react"
+import { AlertTriangle, Loader2 } from "lucide-react"
 import { Project } from "../../../types"
 
 interface SidebarModalsProps {
@@ -104,6 +104,42 @@ export function SidebarModals({
   setDeletingProject,
   onProjectDelete
 }: SidebarModalsProps) {
+  const [isDeleting, setIsDeleting] = React.useState(false);
+  const isDeletingRef = React.useRef(false);
+
+  React.useEffect(() => {
+    if (!isDeleteConfirmOpen && !isProjectDeleteConfirmOpen) {
+      setIsDeleting(false);
+      isDeletingRef.current = false;
+    }
+  }, [isDeleteConfirmOpen, isProjectDeleteConfirmOpen]);
+
+  const onFileDeleteSubmit = async () => {
+    if (isDeletingRef.current || isDeleting) return;
+    isDeletingRef.current = true;
+    setIsDeleting(true);
+    try {
+      await handleDeleteConfirm();
+    } finally {
+      setIsDeleting(false);
+      isDeletingRef.current = false;
+    }
+  };
+
+  const onProjectDeleteSubmit = async () => {
+    if (isDeletingRef.current || isDeleting || !deletingProject) return;
+    isDeletingRef.current = true;
+    setIsDeleting(true);
+    try {
+      await onProjectDelete(deletingProject.id);
+      setIsProjectDeleteConfirmOpen(false);
+      setDeletingProject(null);
+    } finally {
+      setIsDeleting(false);
+      isDeletingRef.current = false;
+    }
+  };
+
   return (
     <>
       {/* Project Dialog */}
@@ -255,8 +291,11 @@ export function SidebarModals({
             </p>
           </DialogBody>
           <DialogFooter className="sm:justify-center flex-col sm:flex-row gap-2 mt-2">
-            <Button variant="outline" onClick={() => setIsDeleteConfirmOpen(false)} className="mt-0 w-full sm:w-auto">Cancel</Button>
-            <Button variant="destructive" onClick={handleDeleteConfirm} className="w-full sm:w-auto">Move to Trash</Button>
+            <Button variant="outline" disabled={isDeleting} onClick={() => setIsDeleteConfirmOpen(false)} className="mt-0 w-full sm:w-auto">Cancel</Button>
+            <Button variant="destructive" disabled={isDeleting} onClick={onFileDeleteSubmit} className="w-full sm:w-auto gap-2">
+              {isDeleting && <Loader2 className="size-3.5 animate-spin" />}
+              <span>{isDeleting ? "Moving..." : "Move to Trash"}</span>
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -278,14 +317,11 @@ export function SidebarModals({
             </p>
           </DialogBody>
           <DialogFooter className="sm:justify-center flex-col sm:flex-row gap-2 mt-2">
-            <Button variant="outline" onClick={() => setIsProjectDeleteConfirmOpen(false)} className="mt-0 w-full sm:w-auto">Cancel</Button>
-            <Button variant="destructive" onClick={() => {
-              if (deletingProject) {
-                onProjectDelete(deletingProject.id)
-                setIsProjectDeleteConfirmOpen(false)
-                setDeletingProject(null)
-              }
-            }} className="w-full sm:w-auto">Move Project to Trash</Button>
+            <Button variant="outline" disabled={isDeleting} onClick={() => setIsProjectDeleteConfirmOpen(false)} className="mt-0 w-full sm:w-auto">Cancel</Button>
+            <Button variant="destructive" disabled={isDeleting} onClick={onProjectDeleteSubmit} className="w-full sm:w-auto gap-2">
+              {isDeleting && <Loader2 className="size-3.5 animate-spin" />}
+              <span>{isDeleting ? "Moving..." : "Move Project to Trash"}</span>
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

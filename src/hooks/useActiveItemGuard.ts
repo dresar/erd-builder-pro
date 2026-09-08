@@ -54,7 +54,7 @@ export const useActiveItemGuard = ({
         else if (view === 'drawings') setActiveDrawingId(null);
         else if (view === 'flowchart') setActiveFlowchartId(null);
         
-        toast.info("Document closed because it was moved to trash.");
+        toast.info("Document closed because it was moved to trash.", { id: 'doc-closed-guard' });
         return;
       }
 
@@ -66,7 +66,7 @@ export const useActiveItemGuard = ({
           setActiveNoteUid(null);
           setActiveDrawingId(null);
           setActiveFlowchartId(null);
-          toast.warning("Project was deleted. Closing current document.");
+          toast.warning("Project was deleted. Closing current document.", { id: 'proj-closed-guard' });
         }
       }
     };

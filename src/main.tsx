@@ -61,7 +61,7 @@ createRoot(document.getElementById('root')!).render(
         <TooltipProvider>
           <AuthProvider>
             <App />
-            <Toaster position="top-center" />
+            <Toaster position="top-right" />
           </AuthProvider>
         </TooltipProvider>
       </ReactFlowProvider>
