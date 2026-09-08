@@ -28,7 +28,7 @@ export async function getAuthConfig() {
   let needsSetup = false;
   if (isLocalPostgres() && prisma) {
     try {
-      const users = await prisma.user.findMany({
+      const users = await (prisma.user as any).findMany({
         take: 2,
         select: { email: true, password: true, isSuperAdmin: true },
       });
@@ -66,7 +66,7 @@ export async function setupLocalAdmin(data: {
     throw new Error("Initial administrator setup is only available for Self-host PostgreSQL");
   }
 
-  const users = await prisma.user.findMany({
+  const users = await (prisma.user as any).findMany({
     take: 2,
     select: { id: true, email: true, password: true, isSuperAdmin: true },
   });
@@ -75,24 +75,25 @@ export async function setupLocalAdmin(data: {
 
   const email = data.email.trim().toLowerCase();
   const name = data.name?.trim() || email.split("@")[0] || "Admin";
-  const user = bootstrapUser
-    ? await prisma.user.update({
+  const user: any = bootstrapUser
+    ? await (prisma.user as any).update({
         where: { id: users[0].id },
         data: { email, name, password: hashPassword(data.password), isSuperAdmin: true },
       })
-    : await prisma.user.create({
+    : await (prisma.user as any).create({
         data: { email, name, password: hashPassword(data.password), isSuperAdmin: true },
       });
 
-  const token = await createSession(user.id, user.email, user.name);
+  const userName = user.name || name;
+  const token = await createSession(user.id, user.email, userName);
   return {
     token,
     user: {
       id: user.id,
       email: user.email,
-      name: user.name,
+      name: userName,
       isSuperAdmin: true,
-      user_metadata: { name: user.name },
+      user_metadata: { name: userName },
     },
   };
 }
@@ -239,9 +240,9 @@ export async function getLocalSession(token: string) {
   const session = await getSession(token);
   if (!session) return null;
 
-  const user = await prisma.user.findFirst({
+  const user = await (prisma.user as any).findFirst({
     where: { id: session.userId } as any,
-    select: { id: true, email: true, name: true, isSuperAdmin: true },
+    select: { id: true, email: true, name: true, isSuperAdmin: true } as any,
   });
   if (!user) return null;
 
@@ -311,10 +312,10 @@ export async function updateLocalAccount(
     return { error: "No valid fields to update" };
   }
 
-  const updated = await prisma.user.update({
+  const updated = await (prisma.user as any).update({
     where: { id: userId } as any,
     data: updateData,
-    select: { id: true, email: true, name: true },
+    select: { id: true, email: true, name: true } as any,
   });
 
   return {

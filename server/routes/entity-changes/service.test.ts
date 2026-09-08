@@ -21,7 +21,7 @@ const mcp = await import("../../mcp/service.js");
 
 describe("entity history restore", () => {
   beforeAll(async () => {
-    await prisma!.user.create({ data: { id: "history-user", email: "history@test.local", password: "test" } });
+    await (prisma!.user as any).create({ data: { id: "history-user", email: "history@test.local", password: "test" } });
   });
 
   afterAll(async () => {

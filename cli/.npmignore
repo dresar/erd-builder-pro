@@ -1,3 +1,0 @@
-# Override root .gitignore — include menubar binary in npm tarball
-!cli/menubar/erdbpro-tray
-!cli/menubar/ERDBProTray.app

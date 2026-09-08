@@ -55,9 +55,9 @@ export async function searchDocuments(userId: string, query: string) {
   const [projects, diagrams, notes, drawings, flowcharts, dbClients] = await Promise.all([
     prisma.project.findMany({
       where: { userId, isDeleted: false, name: contains },
-      orderBy: { updatedAt: "desc" },
+      orderBy: { createdAt: "desc" },
       take: 5,
-      select: { ...projectSelect, updatedAt: true },
+      select: { ...projectSelect, createdAt: true },
     }),
     prisma.diagram.findMany({
       where: { ...base, name: contains, AND: [{ OR: [{ sourceType: null }, { sourceType: { not: "production_db" } }] }] },
