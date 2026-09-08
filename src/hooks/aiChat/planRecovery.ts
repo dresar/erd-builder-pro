@@ -5,6 +5,7 @@ export interface PlanDraft {
   selected: string[];
   customSelected: boolean;
   customAnswer: string;
+  updatedAt?: number;
 }
 
 export type PlanOutboxStatus = 'pending' | 'needs-resume' | 'pending-assistant';

@@ -156,11 +156,9 @@ export const DefaultPromptsTab: React.FC<DefaultPromptsTabProps> = ({
               <h2 className="text-lg font-semibold">Instruksi Sistem</h2>
               <TooltipProvider>
                 <Tooltip>
-                  <TooltipTrigger asChild>
-                    <button type="button" className="text-muted-foreground hover:text-foreground cursor-pointer" aria-label="Penjelasan">
-                      <AlertCircle className="size-3.5 text-purple-400" />
-                    </button>
-                  </TooltipTrigger>
+                <TooltipTrigger type="button" className="text-muted-foreground hover:text-foreground cursor-pointer" aria-label="Penjelasan">
+                  <AlertCircle className="size-3.5 text-purple-400" />
+                </TooltipTrigger>
                   <TooltipContent className="text-xs max-w-xs">
                     Instruksi dasar yang otomatis disuntikkan pada setiap percakapan AI di seluruh aplikasi.
                   </TooltipContent>

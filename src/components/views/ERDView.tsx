@@ -35,6 +35,11 @@ import { buildErdIndexes, erdColumnKey, erdSourceColumnKey } from '@/lib/erd-ind
 import { databaseColumnToERD } from '@/lib/column-metadata';
 import { keepsDbRelation } from '@/lib/db-client-schema';
 import { ERD_HISTORY_PREVIEW_EVENT, type ErdHistoryPreview } from '@/lib/history-diagram';
+import { 
+  ERD_REPOSITORY_PREVIEW_EVENT, 
+  ERD_REPOSITORY_APPLIED_EVENT, 
+  type RepositoryPreview 
+} from '@/lib/repository-preview';
 import { autoFixDBMLEnumNames, erdToDBML } from '@/lib/dbml-converter';
 
 const nodeTypes = {

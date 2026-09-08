@@ -3,6 +3,8 @@ import { useSidebar } from "@/components/ui/sidebar"
 import { Diagram, Project, Note, Drawing, Flowchart } from "../types"
 import { Database, StickyNote, PenTool, Network, FileText } from "lucide-react"
 import { toast } from "sonner"
+import { ProjectGroup } from "@/components/sidebar/sections/ProjectGroup"
+import { SidebarModals } from "@/components/sidebar/modals/SidebarModals"
 
 interface NavProjectsProps {
   projects: any[];

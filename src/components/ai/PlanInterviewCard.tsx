@@ -91,10 +91,14 @@ export function PlanInterviewCard({ sessionUid, messages, isStreaming, onSubmit,
         setSelected(draft.selected);
         setCustomSelected(draft.customSelected);
         setCustomAnswer(draft.customAnswer);
+      } else if (entry.response && entry.response.kind === 'answer') {
+        setSelected(entry.response.selected ?? []);
+        setCustomSelected(Boolean(entry.response.customAnswer));
+        setCustomAnswer(entry.response.customAnswer ?? '');
       } else {
-        setSelected(entry.response?.selected ?? []);
-        setCustomSelected(Boolean(entry.response?.customAnswer));
-        setCustomAnswer(entry.response?.customAnswer ?? '');
+        setSelected([]);
+        setCustomSelected(false);
+        setCustomAnswer('');
       }
       setHydratedKey(entry.key);
     })();
@@ -192,10 +196,8 @@ export function PlanInterviewCard({ sessionUid, messages, isStreaming, onSubmit,
               <CardTitle className="text-sm">{entry.question.question}</CardTitle>
               <TooltipProvider>
                 <Tooltip>
-                  <TooltipTrigger asChild>
-                    <button type="button" className="text-muted-foreground hover:text-foreground cursor-pointer" aria-label="Informasi">
-                      <AlertCircle className="size-3.5 text-amber-500/80 hover:text-amber-500" />
-                    </button>
+                  <TooltipTrigger type="button" className="text-muted-foreground hover:text-foreground cursor-pointer" aria-label="Informasi">
+                    <AlertCircle className="size-3.5 text-amber-500/80 hover:text-amber-500" />
                   </TooltipTrigger>
                   <TooltipContent className="text-xs max-w-xs">
                     Pilih opsi atau klik &quot;Pilihkan AI&quot; untuk arsitektur serverless otomatis.

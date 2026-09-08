@@ -61,7 +61,7 @@ interface SidebarModalsProps {
   // Project Delete Confirm
   isProjectDeleteConfirmOpen: boolean
   setIsProjectDeleteConfirmOpen: (open: boolean) => void
-  deletingProject: { id: number | string, name: string } | null
+  deletingProject: { id: number | string, name: string, uid?: string } | null
   setDeletingProject: (project: any) => void
   onProjectDelete: (id: number | string) => void
 }

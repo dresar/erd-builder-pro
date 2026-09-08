@@ -38,10 +38,8 @@ export function AIRulesTab() {
           <h2 className="text-lg font-semibold text-foreground">Aturan AI</h2>
           <TooltipProvider>
             <Tooltip>
-              <TooltipTrigger asChild>
-                <button type="button" className="text-muted-foreground hover:text-foreground cursor-pointer" aria-label="Penjelasan">
-                  <AlertCircle className="size-3.5 text-amber-500/80 hover:text-amber-500" />
-                </button>
+              <TooltipTrigger type="button" className="text-muted-foreground hover:text-foreground cursor-pointer" aria-label="Penjelasan">
+                <AlertCircle className="size-3.5 text-amber-500/80 hover:text-amber-500" />
               </TooltipTrigger>
               <TooltipContent className="text-xs max-w-xs">
                 Aturan khusus yang otomatis aktif saat Anda membuka tampilan ini.
