@@ -193,9 +193,9 @@ export async function getAiConfig(userId: string) {
   ) return null;
 
   return {
-    baseUrl: config.provider?.baseUrl || "https://api.openai.com/v1",
-    model: config.selectedModel?.modelIdentifier || "gpt-4o-mini",
-    providerCode: config.provider?.code || "openai",
+    baseUrl: config.provider?.baseUrl || "https://generativelanguage.googleapis.com/v1beta",
+    model: config.selectedModel?.modelIdentifier || (config.provider?.code === "gemini" ? "gemini-1.5-flash" : "MY-COMBO"),
+    providerCode: config.provider?.code || "gemini",
   };
 }
 

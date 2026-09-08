@@ -196,7 +196,7 @@ export async function ensureModel(data: {
 export async function fetchProviderModels(body: {
   user_id: string; provider_id?: number; provider_code: string; base_url?: string; api_key?: string;
 }) {
-  if (body.provider_code !== "openai_compatible" && body.provider_code !== "openai") {
+  if (body.provider_code !== "openai_compatible") {
     return [];
   }
 
@@ -210,22 +210,29 @@ export async function fetchProviderModels(body: {
   }
   if (!apiKey) throw new Error("API key is required to fetch models");
 
-  const baseUrl = await safeAiBaseUrl(body.base_url, "https://api.openai.com/v1");
-  const response = await fetch(`${baseUrl}/models`, {
-    headers: { Authorization: `Bearer ${apiKey}` },
-    signal: AbortSignal.timeout(15000),
-  });
-  if (!response.ok) {
-    const errData = await response.json().catch(() => ({}));
-    throw new Error(errData.error?.message || `API Error: ${response.status} ${response.statusText}`);
-  }
+  const baseUrl = await safeAiBaseUrl(body.base_url, "https://9router.serverinka.cloud/v1");
+  try {
+    const response = await fetch(`${baseUrl}/models`, {
+      headers: { Authorization: `Bearer ${apiKey}` },
+      signal: AbortSignal.timeout(10000),
+    });
+    if (!response.ok) {
+      const errData = await response.json().catch(() => ({}));
+      throw new Error(errData.error?.message || `API Error: ${response.status} ${response.statusText}`);
+    }
 
-  const data: any = await response.json();
-  return (Array.isArray(data.data) ? data.data : [])
-    .map((m: any) => String(m.id || "").trim())
-    .filter(Boolean)
-    .sort()
-    .map((id: string) => ({ model_identifier: id, display_name: id }));
+    const data: any = await response.json();
+    return (Array.isArray(data.data) ? data.data : [])
+      .map((m: any) => String(m.id || "").trim())
+      .filter(Boolean)
+      .sort()
+      .map((id: string) => ({ model_identifier: id, display_name: id }));
+  } catch (fetchErr: any) {
+    if (fetchErr.name === "TimeoutError" || fetchErr.message?.includes("timeout")) {
+      throw new Error("Unable to connect to AI provider: request timed out");
+    }
+    throw fetchErr;
+  }
 }
 
 // ── Prompts ──
@@ -316,9 +323,8 @@ export async function toggleDefaultPrompt(promptId: string, isDefault: boolean, 
 
 export async function initializeDefaults() {
   const defaultProviders = [
-    { name: "OpenAI", code: "openai", baseUrl: "https://api.openai.com/v1", isActive: true },
-    { name: "Google Gemini", code: "gemini", baseUrl: null, isActive: true },
-    { name: "OpenAI Compatible", code: "openai_compatible", baseUrl: "https://ai.paas.id", isActive: true },
+    { name: "Google Gemini", code: "gemini", baseUrl: "https://generativelanguage.googleapis.com/v1beta", isActive: true },
+    { name: "9Router (OpenAI Compatible)", code: "openai_compatible", baseUrl: "https://9router.serverinka.cloud/v1", isActive: true },
   ];
 
   await prisma?.aiProvider.createMany({
@@ -331,19 +337,16 @@ export async function initializeDefaults() {
 
   const modelsToInsert: any[] = [];
   providers.forEach((p: any) => {
-    if (p.code === "openai") {
+    if (p.code === "gemini") {
       modelsToInsert.push(
-        { providerId: p.id, modelIdentifier: "gpt-4o", displayName: "GPT-4o (Smartest)", isActive: true },
-        { providerId: p.id, modelIdentifier: "gpt-4o-mini", displayName: "GPT-4o Mini (Fast)", isActive: true }
-      );
-    } else if (p.code === "gemini") {
-      modelsToInsert.push(
+        { providerId: p.id, modelIdentifier: "gemini-1.5-flash", displayName: "Gemini 1.5 Flash (Fast)", isActive: true },
         { providerId: p.id, modelIdentifier: "gemini-1.5-pro", displayName: "Gemini 1.5 Pro", isActive: true },
-        { providerId: p.id, modelIdentifier: "gemini-1.5-flash", displayName: "Gemini 1.5 Flash", isActive: true }
+        { providerId: p.id, modelIdentifier: "gemini-2.0-flash", displayName: "Gemini 2.0 Flash", isActive: true }
       );
     } else if (p.code === "openai_compatible") {
       modelsToInsert.push(
-        { providerId: p.id, modelIdentifier: "deepseek-v4-flash", displayName: "DeepSeek V4 Flash", isActive: true }
+        { providerId: p.id, modelIdentifier: "MY-COMBO", displayName: "9Router Combo Fallback (Recommended)", isActive: true },
+        { providerId: p.id, modelIdentifier: "COMBO-EX", displayName: "9Router Combo Extended", isActive: true }
       );
     }
   });
@@ -389,11 +392,11 @@ export async function testConnection(
   }
 
   const modelId = modelIdentifier || selectedModel?.modelIdentifier || (
-    providerCode === "gemini" ? "gemini-1.5-flash" : "gpt-4o-mini"
+    providerCode === "gemini" ? "gemini-1.5-flash" : "MY-COMBO"
   );
 
   if (providerCode === "openai" || providerCode === "openai_compatible") {
-    const baseUrl = await safeAiBaseUrl(provider?.baseUrl ?? undefined, "https://api.openai.com/v1");
+    const baseUrl = await safeAiBaseUrl(provider?.baseUrl ?? undefined, "https://9router.serverinka.cloud/v1");
 
     const response = await fetch(`${baseUrl}/chat/completions`, {
       method: "POST",

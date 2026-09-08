@@ -63,8 +63,8 @@ export async function proxy(req: Request, res: Response): Promise<void> {
       return;
     }
 
-    // A guest may only use an explicitly supplied key; never select a DB key without an owner.
-    if (!userId && !apiKey) {
+    // A guest may use system key if GUEST_AI_ENABLED is true; otherwise explicit key is required
+    if (!userId && !apiKey && (process.env.GUEST_AI_ENABLED || "false") !== "true") {
       clearTimeout(timeout);
       res.status(403).json({ error: "An authenticated session or inline AI API key is required" });
       return;
@@ -106,7 +106,7 @@ export async function proxy(req: Request, res: Response): Promise<void> {
     if (!baseUrlValidated) {
       baseUrl = await safeAiBaseUrl(baseUrl, providerCode === "gemini"
         ? "https://generativelanguage.googleapis.com/v1beta"
-        : "https://api.openai.com/v1");
+        : "https://9router.serverinka.cloud/v1");
     }
     const isGemini =
       providerCode === "gemini" ||
@@ -116,11 +116,11 @@ export async function proxy(req: Request, res: Response): Promise<void> {
       if (isGemini) {
         return baseUrl || "https://generativelanguage.googleapis.com/v1beta";
       }
-      return baseUrl || "https://api.openai.com/v1";
+      return baseUrl || "https://9router.serverinka.cloud/v1";
     })();
 
     const fetchUrl = getProxyFetchUrl(resolvedBaseUrl, isGemini);
-    const effectiveModel = model || "gpt-4o-mini";
+    const effectiveModel = model || (isGemini ? "gemini-1.5-flash" : "MY-COMBO");
 
     const fetchHeaders: Record<string, string> = {
       "Content-Type": "application/json",

@@ -30,3 +30,4 @@ cli/menubar/ERDBProTray.app/
 data.db-shm
 data.db-wal
 .vercel
+scratch/

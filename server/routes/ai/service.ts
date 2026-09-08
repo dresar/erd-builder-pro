@@ -20,27 +20,42 @@ export async function resolveAiConfig(params: {
 }> {
   let { apiKey, baseUrl, model, userId, providerCode } = params;
 
-  // When no apiKey is provided, look up config from DB
   if (!apiKey) {
-    if (!userId) {
-      throw new Error("Authenticated user required for stored AI configuration");
-    }
-
     if (!prisma) {
       throw new Error("Database not configured on server");
     }
 
-    const where: any = {
-      isEnabled: true,
-      selectedModelId: { not: null },
-    };
-    where.userId = userId;
+    let config: any = null;
 
-    const config = await prisma.userAiConfig.findFirst({
-      where,
-      include: { provider: true, selectedModel: true },
-      orderBy: { updatedAt: "desc" },
-    });
+    if (userId) {
+      const where: any = {
+        userId,
+        isEnabled: true,
+        selectedModelId: { not: null },
+      };
+      if (providerCode) where.provider = { code: providerCode };
+
+      config = await prisma.userAiConfig.findFirst({
+        where,
+        include: { provider: true, selectedModel: true },
+        orderBy: { updatedAt: "desc" },
+      });
+    }
+
+    // Fallback: system-wide active config if user has no personal config or is in guest mode
+    if (!config) {
+      const fallbackWhere: any = {
+        isEnabled: true,
+        selectedModelId: { not: null },
+      };
+      if (providerCode) fallbackWhere.provider = { code: providerCode };
+
+      config = await prisma.userAiConfig.findFirst({
+        where: fallbackWhere,
+        include: { provider: true, selectedModel: true },
+        orderBy: { updatedAt: "desc" },
+      });
+    }
 
     if (!config) {
       throw new Error("No AI provider configured. Configure AI in Settings.");
@@ -49,12 +64,21 @@ export async function resolveAiConfig(params: {
     if (!config.provider || config.provider.isActive !== true) {
       throw new Error("Selected AI provider is unavailable");
     }
+
     if (
       !config.selectedModel ||
       config.selectedModel.isActive !== true ||
       String(config.selectedModel.providerId) !== String(config.providerId)
     ) {
-      throw new Error("Selected AI model is unavailable for this provider");
+      const fallbackModel = await prisma.aiModel.findFirst({
+        where: { providerId: config.providerId, isActive: true },
+        orderBy: { id: "asc" },
+      });
+      if (fallbackModel) {
+        config.selectedModel = fallbackModel;
+      } else {
+        throw new Error("Selected AI model is unavailable for this provider");
+      }
     }
 
     const storedApiKey = config.apiKey;
@@ -70,23 +94,23 @@ export async function resolveAiConfig(params: {
       });
     }
     providerCode = config.provider.code;
-    // A request must not override the configured provider URL when using a stored key.
     baseUrl = config.provider?.baseUrl || (providerCode === "gemini"
       ? "https://generativelanguage.googleapis.com/v1beta"
-      : "https://api.openai.com/v1");
+      : "https://9router.serverinka.cloud/v1");
 
-    if (!model && config.selectedModelId) {
+    if (!model && config.selectedModel) {
       model = config.selectedModel.modelIdentifier;
     }
-
   }
+
+  const cleanBaseUrl = (baseUrl || "").replace(/\/+$/, "");
 
   return {
     apiKey: apiKey!,
-    baseUrl: await safeAiBaseUrl(baseUrl, providerCode === "gemini"
+    baseUrl: await safeAiBaseUrl(cleanBaseUrl, providerCode === "gemini"
       ? "https://generativelanguage.googleapis.com/v1beta"
-      : "https://api.openai.com/v1"),
-    model: model || "gpt-4o-mini",
+      : "https://9router.serverinka.cloud/v1"),
+    model: model || (providerCode === "gemini" ? "gemini-1.5-flash" : "MY-COMBO"),
     providerCode,
   };
 }
@@ -95,26 +119,20 @@ export function buildProxyUrl(
   baseUrl: string,
   providerCode?: string
 ): { fetchUrl: string; headers: Record<string, string> } {
-  const isGemini =
-    providerCode === "gemini" || baseUrl.includes("generativelanguage.googleapis.com");
-
   const headers: Record<string, string> = {
     "Content-Type": "application/json",
   };
 
-  // Unlike fetchUrl/headers — made symmetric for both Gemini and OpenAI
-  // Gemini: baseUrl defaults to https://generativelanguage.googleapis.com/v1beta
-  // OpenAI: baseUrl defaults to https://api.openai.com/v1
-  // Both use Authorization: Bearer for the OpenAI-compatible endpoint
-  return { fetchUrl: "", headers }; // will be set below
+  return { fetchUrl: "", headers };
 }
 
 export function getProxyFetchUrl(
   resolvedBaseUrl: string,
   isGemini: boolean
 ): string {
+  const cleanBase = resolvedBaseUrl.replace(/\/+$/, "");
   if (isGemini) {
-    return `${resolvedBaseUrl}/openai/chat/completions`;
+    return `${cleanBase}/openai/chat/completions`;
   }
-  return `${resolvedBaseUrl}/chat/completions`;
+  return `${cleanBase}/chat/completions`;
 }

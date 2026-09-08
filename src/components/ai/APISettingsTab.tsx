@@ -41,9 +41,11 @@ export const APISettingsTab: React.FC<APISettingsTabProps> = ({
   const [isFetchingModels, setIsFetchingModels] = useState(false);
   const [selectedProviderCode, setSelectedProviderCode] = useState<string>(
     () => {
-      const sorted = [...providers].sort((a, b) => {
+      const sorted = [...providers].filter(p => p.code !== 'openai').sort((a, b) => {
         if (a.code === 'openai_compatible') return -1;
         if (b.code === 'openai_compatible') return 1;
+        if (a.code === 'gemini') return -1;
+        if (b.code === 'gemini') return 1;
         return 0;
       });
       return sorted.length > 0 ? sorted[0].code : '';
@@ -73,13 +75,17 @@ export const APISettingsTab: React.FC<APISettingsTabProps> = ({
     }
   }, [selectedProvider?.code, selectedConfig?.selected_model_id, selectedModels.length]);
 
-  // Sort providers: openai_compatible first, then the rest
+  // Sort providers: openai_compatible first, then gemini, exclude openai
   const sortedProviders = useMemo(() => {
-    return [...providers].sort((a, b) => {
-      if (a.code === 'openai_compatible') return -1;
-      if (b.code === 'openai_compatible') return 1;
-      return 0;
-    });
+    return [...providers]
+      .filter(p => p.code !== 'openai')
+      .sort((a, b) => {
+        if (a.code === 'openai_compatible') return -1;
+        if (b.code === 'openai_compatible') return 1;
+        if (a.code === 'gemini') return -1;
+        if (b.code === 'gemini') return 1;
+        return 0;
+      });
   }, [providers]);
 
   useEffect(() => {

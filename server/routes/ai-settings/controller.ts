@@ -114,7 +114,8 @@ export async function fetchProviderModels(req: ExpressRequest, res: ExpressRespo
     if (!provider_code) { res.status(400).json({ error: "provider_code is required" }); return; }
     res.json(await aiService.fetchProviderModels({ user_id: getUserId(req), provider_id, provider_code, base_url, api_key }));
   } catch (err: any) {
-    handleError(res, err, "Failed to fetch provider models");
+    const msg = err instanceof Error ? err.message : "Failed to fetch provider models";
+    res.status(400).json({ error: msg });
   }
 }
 
