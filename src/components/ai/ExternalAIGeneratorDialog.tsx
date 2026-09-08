@@ -219,13 +219,17 @@ export function ExternalAIGeneratorDialog({ isOpen, onClose }: ExternalAIGenerat
       let projectId: string | null = null;
       const effectiveName = parsedData.project?.name?.trim() || projectName.trim() || 'Proyek Enterprise';
 
-      if (targetMode === 'new_project') {
+      if (targetMode === 'new_project' || !selectedWorkspaceUid) {
         toast.info('Membuat proyek...');
-        await handleSidebarProjectCreate(effectiveName);
-        const latestProj = projects.find(p => p.name === effectiveName);
-        projectId = latestProj ? String(latestProj.uid ?? latestProj.id) : null;
+        const newProj = await handleSidebarProjectCreate(effectiveName);
+        projectId = newProj ? String(newProj.uid ?? newProj.id) : null;
       } else {
         projectId = selectedWorkspaceUid || null;
+      }
+
+      if (!projectId) {
+        const newProj = await handleSidebarProjectCreate(effectiveName);
+        projectId = newProj ? String(newProj.uid ?? newProj.id) : null;
       }
 
       if (parsedData.prd?.content_markdown) {

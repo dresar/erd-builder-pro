@@ -72,28 +72,6 @@ export async function listProjects(
     prisma?.project.count({ where: whereClause }) || Promise.resolve(0),
   ]);
 
-  // Uncategorized files
-  const searchLower = searchTerm?.toLowerCase();
-  const uncategorizedBase = { projectId: null, userId, isDeleted: false } as const;
-  const uDiagramFilter: Record<string, any> = { ...uncategorizedBase, OR: [{ sourceType: null }, { sourceType: { not: "production_db" } }] };
-  const uNoteFilter: Record<string, any> = { ...uncategorizedBase };
-  const uDrawFilter: Record<string, any> = { ...uncategorizedBase };
-  const uFlowFilter: Record<string, any> = { ...uncategorizedBase };
-
-  if (searchLower) {
-    uDiagramFilter.name = { contains: searchLower, mode: "insensitive" };
-    uNoteFilter.title = { contains: searchLower, mode: "insensitive" };
-    uDrawFilter.title = { contains: searchLower, mode: "insensitive" };
-    uFlowFilter.title = { contains: searchLower, mode: "insensitive" };
-  }
-
-  const [uDiagrams, uNotes, uDrawings, uFlowcharts] = await Promise.all([
-    prisma?.diagram.findMany({ where: uDiagramFilter, orderBy: { createdAt: "desc" }, select: { id: true, uid: true, name: true, updatedAt: true, isDeleted: true, projectId: true } }) || Promise.resolve([]),
-    prisma?.note.findMany({ where: uNoteFilter, orderBy: { createdAt: "desc" }, select: { id: true, uid: true, title: true, updatedAt: true, isDeleted: true, projectId: true } }) || Promise.resolve([]),
-    prisma?.drawing.findMany({ where: uDrawFilter, orderBy: { createdAt: "desc" }, select: { id: true, uid: true, title: true, updatedAt: true, isDeleted: true, projectId: true } }) || Promise.resolve([]),
-    prisma?.flowchart.findMany({ where: uFlowFilter, orderBy: { createdAt: "desc" }, select: { id: true, uid: true, title: true, updatedAt: true, isDeleted: true, projectId: true } }) || Promise.resolve([]),
-  ]);
-
   const projectsWithFiles = (projects || []).map((project: any) => ({
     ...project,
     diagrams: [], notes: [], drawings: [], flowcharts: [],
@@ -103,10 +81,10 @@ export async function listProjects(
   return {
     data: projectsWithFiles,
     uncategorized: {
-      diagrams: uDiagrams || [],
-      notes: uNotes || [],
-      drawings: uDrawings || [],
-      flowcharts: uFlowcharts || [],
+      diagrams: [],
+      notes: [],
+      drawings: [],
+      flowcharts: [],
     },
     total: total || 0,
   };
@@ -174,6 +152,22 @@ export async function softDeleteProject(projectIdOrUid: number | string, userId:
       ? (prisma as any).dbClient.updateMany({ where: { projectId: targetId }, data: { isDeleted: true, deletedAt: now } })
       : Promise.resolve(),
   ]);
+
+  const remainingActive = await prisma?.project.count({
+    where: { userId, isDeleted: false },
+  });
+
+  if (remainingActive === 0) {
+    await Promise.all([
+      prisma?.diagram.updateMany({ where: { userId, isDeleted: false }, data: { isDeleted: true, deletedAt: now } }),
+      prisma?.note.updateMany({ where: { userId, isDeleted: false }, data: { isDeleted: true, deletedAt: now } }),
+      prisma?.drawing.updateMany({ where: { userId, isDeleted: false }, data: { isDeleted: true, deletedAt: now } }),
+      prisma?.flowchart.updateMany({ where: { userId, isDeleted: false }, data: { isDeleted: true, deletedAt: now } }),
+      isDesktopMode() && (prisma as any)?.dbClient
+        ? (prisma as any).dbClient.updateMany({ where: { userId, isDeleted: false }, data: { isDeleted: true, deletedAt: now } })
+        : Promise.resolve(),
+    ]);
+  }
 
   return { success: true };
 }
@@ -273,6 +267,19 @@ export async function permanentDeleteProject(projectIdOrUid: number | string, us
   }
 
   await prisma?.project.deleteMany({ where: { id: projectId, userId } });
+
+  const remainingActive = await prisma?.project.count({
+    where: { userId, isDeleted: false },
+  });
+
+  if (remainingActive === 0) {
+    await Promise.all([
+      prisma?.note.deleteMany({ where: { userId, projectId: null } }),
+      prisma?.drawing.deleteMany({ where: { userId, projectId: null } }),
+      prisma?.flowchart.deleteMany({ where: { userId, projectId: null } }),
+      prisma?.diagram.deleteMany({ where: { userId, projectId: null } }),
+    ]);
+  }
 
   return { success: true };
 }

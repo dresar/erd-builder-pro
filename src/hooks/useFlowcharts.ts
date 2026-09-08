@@ -1,4 +1,4 @@
-import { useState, useCallback, useRef } from 'react';
+import { useState, useCallback, useRef, useEffect } from 'react';
 import { toast } from 'sonner';
 import { Flowchart, DraftType } from '../types';
 import { localPersistence } from '../lib/localPersistence';
@@ -15,7 +15,11 @@ export function useFlowcharts(isGuest: boolean = false) {
   const flowchartsRef = useRef<Flowchart[]>(flowcharts);
   const activeFlowchartIdRef = useRef(activeFlowchartId);
 
-  // Keep refs in sync
+  const isGuestRef = useRef(isGuest);
+  useEffect(() => { isGuestRef.current = isGuest; }, [isGuest]);
+  const isGuestCheck = (): boolean =>
+    isGuestRef.current || sessionStorage.getItem('auth_mode') === 'guest';
+
   flowchartsRef.current = flowcharts;
   activeFlowchartIdRef.current = activeFlowchartId;
 
@@ -52,11 +56,23 @@ export function useFlowcharts(isGuest: boolean = false) {
     limit = 10,
     options?: { silent?: boolean; page?: number },
   ) => {
-    if (isGuest) {
-      const localFlowcharts = await localPersistence.getAllResources('flowchart');
-      let filtered = localFlowcharts.filter(f => !f.is_deleted);
+    if (isGuestCheck()) {
+      const [localFlowcharts, localProjects] = await Promise.all([
+        localPersistence.getAllResources('flowchart'),
+        localPersistence.getAllResources('project'),
+      ]);
+      const activeProjects = localProjects.filter((p: any) => !p.is_deleted);
+      if (activeProjects.length === 0) {
+        setFlowcharts([]);
+        setFlowchartsTotal(0);
+        setHasMoreFlowcharts(false);
+        setIsLoading(false);
+        return;
+      }
+      const activeProjectIds = new Set(activeProjects.flatMap((p: any) => [String(p.id), String(p.uid)].filter(Boolean)));
+      let filtered = localFlowcharts.filter(f => !f.is_deleted && f.project_id && activeProjectIds.has(String(f.project_id)));
       if (projectId !== 'all') {
-        filtered = filtered.filter(f => f.project_id === projectId);
+        filtered = filtered.filter(f => String(f.project_id) === String(projectId));
       }
       if (searchQuery) {
         filtered = filtered.filter(f => f.title.toLowerCase().includes(searchQuery.toLowerCase()));

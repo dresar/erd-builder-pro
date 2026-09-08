@@ -115,12 +115,19 @@ export function useDiagrams(isAuthenticated: boolean | null, view: 'erd' | 'diag
         localPersistence.getAllResources('erd'),
         localPersistence.getAllResources('project'),
       ]);
+      const activeProjects = localProjects.filter((p: any) => !p.is_deleted);
+      if (activeProjects.length === 0) {
+        setDiagrams([]);
+        setDiagramsTotal(0);
+        setHasMoreDiagrams(false);
+        setIsLoading(false);
+        return;
+      }
+      const activeProjectIds = new Set(activeProjects.flatMap((p: any) => [String(p.id), String(p.uid)].filter(Boolean)));
       const projectMap = new Map(
-        localProjects
-          .filter((p: any) => !p.is_deleted)
-          .map((p: any) => [String(p.id), { uid: p.uid || String(p.id), name: p.name }])
+        activeProjects.map((p: any) => [String(p.id), { uid: p.uid || String(p.id), name: p.name }])
       );
-      let filtered = localResources.filter((f: any) => !f.is_deleted);
+      let filtered = localResources.filter((f: any) => !f.is_deleted && f.project_id && activeProjectIds.has(String(f.project_id)));
       if (options?.sourceType) {
         filtered = filtered.filter((f: any) => (f.source_type ?? f.sourceType ?? 'blank') === options.sourceType);
       }

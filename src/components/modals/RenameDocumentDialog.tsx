@@ -75,17 +75,27 @@ export const RenameDocumentDialog: React.FC<RenameDocumentDialogProps> = ({
   const isCreate = mode === 'create';
 
   useEffect(() => {
-    if (isOpen && !isCreate && activeDocument) {
-      const pid = activeDocument?.project_id ?? activeDocument?.projectId;
-      setSelectedProjectId(pid != null ? String(pid) : 'none');
+    if (isOpen) {
+      if (isCreate) {
+        if ((!selectedProjectId || selectedProjectId === 'none') && projects.length > 0) {
+          setSelectedProjectId(projects[0].id.toString());
+        }
+      } else if (activeDocument) {
+        const pid = activeDocument?.project_id ?? activeDocument?.projectId;
+        setSelectedProjectId(pid != null ? String(pid) : 'none');
+      }
     }
-  }, [isOpen]);
+  }, [isOpen, isCreate, projects]);
 
   const handleSave = async () => {
     if (!newName.trim()) return;
 
     if (isCreate) {
-      onCreate?.(newName.trim(), selectedProjectId === 'none' ? null : selectedProjectId);
+      if (!selectedProjectId || selectedProjectId === 'none') {
+        toast.error('Wajib memilih ruang kerja untuk dokumen baru');
+        return;
+      }
+      onCreate?.(newName.trim(), selectedProjectId);
       onOpenChange(false);
       return;
     }
@@ -164,21 +174,27 @@ export const RenameDocumentDialog: React.FC<RenameDocumentDialogProps> = ({
               <FieldLabel className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/70 px-1">
                 Ruang Kerja
               </FieldLabel>
-              <Select value={selectedProjectId} onValueChange={(value) => value !== null && setSelectedProjectId(value)}>
-                <SelectTrigger className="h-9">
-                  <SelectValue>
-                    {selectedProjectId === "none" ? "Tanpa Kategori" : projects.find(p => p.id.toString() === selectedProjectId)?.name || "Pilih Ruang Kerja"}
-                  </SelectValue>
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="none">Tanpa Kategori</SelectItem>
-                  {projects.map((project) => (
-                    <SelectItem key={project.id} value={project.id.toString()}>
-                      {project.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              {projects.length === 0 ? (
+                <p className="text-xs text-amber-500/90 py-1">
+                  Belum ada ruang kerja. Harap buat ruang kerja terlebih dahulu sebelum membuat dokumen.
+                </p>
+              ) : (
+                <Select value={selectedProjectId} onValueChange={(value) => value !== null && setSelectedProjectId(value)}>
+                  <SelectTrigger className="h-9">
+                    <SelectValue>
+                      {selectedProjectId === "none" ? "Tanpa Kategori" : projects.find(p => p.id.toString() === selectedProjectId)?.name || "Pilih Ruang Kerja"}
+                    </SelectValue>
+                  </SelectTrigger>
+                  <SelectContent>
+                    {!isCreate && <SelectItem value="none">Tanpa Kategori</SelectItem>}
+                    {projects.map((project) => (
+                      <SelectItem key={project.id} value={project.id.toString()}>
+                        {project.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              )}
             </Field>
           </div>
         </DialogBody>
@@ -187,7 +203,7 @@ export const RenameDocumentDialog: React.FC<RenameDocumentDialogProps> = ({
             Batal
           </DialogClose>
           <Button
-            disabled={!newName.trim()}
+            disabled={!newName.trim() || (isCreate && (!selectedProjectId || selectedProjectId === 'none' || projects.length === 0))}
             onClick={handleSave}
             className="h-9 px-6"
           >

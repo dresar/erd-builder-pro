@@ -1,6 +1,5 @@
 import { prisma } from "../../lib/prisma.js";
-
-// ── Helpers ──
+import { randomUUID } from "crypto";
 
 function uidWhere(uid: string, userId: string) {
   const id = Number(uid);
@@ -36,24 +35,26 @@ function whereClause(userId: string, query: {
   return where;
 }
 
-async function excludeDeletedProjectIds(): Promise<number[]> {
-  const deleted = await prisma?.project.findMany({
-    where: { isDeleted: true },
+async function addActiveProjectFilter(where: any, userId: string) {
+  const active = await prisma?.project.findMany({
+    where: { userId, isDeleted: false },
     select: { id: true },
   });
-  return deleted?.map(p => Number(p.id)) || [];
-}
-
-async function addDeletedProjectFilter(where: any, _userId: string) {
-  const deletedIds = await excludeDeletedProjectIds();
-  if (deletedIds.length > 0) {
-    where.AND = [...(where.AND || []), { OR: [
-      { projectId: null }, { projectId: { notIn: deletedIds } },
-    ] }];
+  const activeIds = active?.map(p => p.id) || [];
+  if (activeIds.length === 0) {
+    where.id = -1;
+    return;
+  }
+  const activeSet = new Set(activeIds.map(id => String(id)));
+  if (where.projectId !== undefined) {
+    if (where.projectId === null || !activeSet.has(String(where.projectId))) {
+      where.id = -1;
+    }
+  } else {
+    where.projectId = { in: activeIds };
   }
 }
 
-// Exported for use by save-service
 export function uidWhereClause(uid: string, userId: string) {
   return uidWhere(uid, userId);
 }
@@ -72,193 +73,21 @@ const TAB_SELECT = {
   sourceType: true,
 } as const;
 
-function dedupe<T extends { id: any }>(arr: T[], label: string): T[] {
-  const seen = new Set();
-  const result: T[] = [];
-  for (const item of arr) {
-    if (seen.has(item.id)) {
-      console.warn(`[Save Warning] Duplicate ${label} id=${item.id} removed`);
-      continue;
-    }
-    seen.add(item.id);
-    result.push(item);
-  }
-  return result;
-}
-
-export { dedupe };
-
-function normalizePersistedColumnDefault(value: any, isNullable: boolean): string | null {
-  const normalized = value == null ? null : String(value).trim() || null;
-  return !isNullable && normalized?.toUpperCase() === 'NULL' ? null : normalized;
-}
-
-function columnIsNullable(value: any): boolean {
-  return value !== undefined ? Boolean(value) : true;
-}
-
-async function upsertEntities(rows: any[], diagramId: number) {
-  if (rows.length === 0 || !prisma) return;
-  await prisma.$transaction(
-    rows.map(e =>
-      prisma!.entity.upsert({
-        where: { id: e.id },
-        create: {
-          id: e.id, diagramId,
-          name: e.name, x: e.x, y: e.y,
-          color: e.color || "#6366f1",
-          comment: e.comment || null,
-        },
-        update: {
-          name: e.name, x: e.x, y: e.y,
-          color: e.color || "#6366f1",
-          comment: e.comment || null,
-        },
-      })
-    ),
-    { timeout: 30000 }
-  );
-}
-
-export { upsertEntities };
-
-async function upsertColumns(rows: any[]) {
-  if (rows.length === 0 || !prisma) return;
-  await prisma.$transaction(
-    rows.map(col =>
-      prisma!.column.upsert({
-        where: { id: col.id },
-        create: {
-          id: col.id, entityId: col._entity_id,
-          name: col.name, type: col.type,
-          isPk: col.is_pk || false,
-          isNullable: columnIsNullable(col.is_nullable),
-          isUnique: Boolean(col.is_unique),
-          defaultValue: normalizePersistedColumnDefault(col.default_value, columnIsNullable(col.is_nullable)),
-          enumValues: col.enum_values || null,
-          comment: col.comment || null,
-          maxLength: col.max_length ?? null,
-          numericPrecision: col.numeric_precision ?? null,
-          numericScale: col.numeric_scale ?? null,
-          sortOrder: col.sort_order || 0,
-        },
-        update: {
-          entityId: col._entity_id, name: col.name, type: col.type,
-          isPk: col.is_pk || false,
-          isNullable: columnIsNullable(col.is_nullable),
-          isUnique: Boolean(col.is_unique),
-          defaultValue: normalizePersistedColumnDefault(col.default_value, columnIsNullable(col.is_nullable)),
-          enumValues: col.enum_values || null,
-          comment: col.comment || null,
-          maxLength: col.max_length ?? null,
-          numericPrecision: col.numeric_precision ?? null,
-          numericScale: col.numeric_scale ?? null,
-          sortOrder: col.sort_order || 0,
-        },
-      })
-    ),
-    { timeout: 30000 }
-  );
-}
-
-export { upsertColumns };
-
-async function upsertRelationships(rows: any[], diagramId: number) {
-  if (rows.length === 0 || !prisma) return;
-  await prisma.$transaction(
-    rows.map(r =>
-      prisma!.relationship.upsert({
-        where: { id: r.id },
-        create: {
-          id: r.id, diagramId,
-          sourceEntityId: r.source_entity_id,
-          targetEntityId: r.target_entity_id,
-          sourceColumnId: r.source_column_id || null,
-          targetColumnId: r.target_column_id || null,
-          sourceHandle: r.source_handle || null,
-          targetHandle: r.target_handle || null,
-          type: r.type || "one-to-many",
-          label: r.label || null,
-          onDelete: r.on_delete || null,
-          onUpdate: r.on_update || null,
-          constraintName: r.constraint_name || null,
-        },
-        update: {
-          diagramId,
-          sourceEntityId: r.source_entity_id,
-          targetEntityId: r.target_entity_id,
-          sourceColumnId: r.source_column_id || null,
-          targetColumnId: r.target_column_id || null,
-          sourceHandle: r.source_handle || null,
-          targetHandle: r.target_handle || null,
-          type: r.type || "one-to-many",
-          label: r.label || null,
-          onDelete: r.on_delete || null,
-          onUpdate: r.on_update || null,
-          constraintName: r.constraint_name || null,
-        },
-      })
-    ),
-    { timeout: 30000 }
-  );
-}
-
-export { upsertRelationships };
-
-async function upsertTableConstraints(rows: any[]) {
-  if (rows.length === 0 || !prisma) return;
-  await prisma.$transaction(rows.map(constraint => prisma!.tableConstraint.upsert({
-    where: { id: constraint.id },
-    create: {
-      id: constraint.id,
-      entityId: constraint._entity_id,
-      kind: constraint.kind,
-      name: constraint.name || null,
-      columnIds: Array.isArray(constraint.column_ids) ? JSON.stringify(constraint.column_ids) : constraint.column_ids || null,
-      expression: constraint.expression || null,
-    },
-    update: {
-      entityId: constraint._entity_id,
-      kind: constraint.kind,
-      name: constraint.name || null,
-      columnIds: Array.isArray(constraint.column_ids) ? JSON.stringify(constraint.column_ids) : constraint.column_ids || null,
-      expression: constraint.expression || null,
-    },
-  })), { timeout: 30000 });
-}
-
-async function upsertTableIndexes(rows: any[]) {
-  if (rows.length === 0 || !prisma) return;
-  await prisma.$transaction(rows.map(index => prisma!.tableIndex.upsert({
-    where: { id: index.id },
-    create: {
-      id: index.id,
-      entityId: index._entity_id,
-      name: index.name,
-      columnIds: Array.isArray(index.column_ids) ? JSON.stringify(index.column_ids) : String(index.column_ids || "[]"),
-      isUnique: Boolean(index.is_unique),
-      algorithm: index.algorithm || null,
-    },
-    update: {
-      entityId: index._entity_id,
-      name: index.name,
-      columnIds: Array.isArray(index.column_ids) ? JSON.stringify(index.column_ids) : String(index.column_ids || "[]"),
-      isUnique: Boolean(index.is_unique),
-      algorithm: index.algorithm || null,
-    },
-  })), { timeout: 30000 });
-}
-
-export { upsertTableConstraints, upsertTableIndexes };
-
-// ── CRUD ──
+export {
+  dedupe,
+  upsertEntities,
+  upsertColumns,
+  upsertRelationships,
+  upsertTableConstraints,
+  upsertTableIndexes,
+} from "./save-helpers.js";
 
 export async function listDiagrams(
   userId: string,
   params: { limit: number; offset: number; projectId?: string; q?: string; isPublic?: boolean | null; sourceType?: string; summary?: boolean }
 ) {
   const where = whereClause(userId, params);
-  await addDeletedProjectFilter(where, userId);
+  await addActiveProjectFilter(where, userId);
 
   const [data, total] = await Promise.all([
     prisma?.diagram.findMany({
@@ -277,10 +106,26 @@ export async function createDiagram(data: {
   name: string; projectId?: number | null; userId: string; uid?: string;
 }) {
   if (!prisma) throw new Error("Database connection not available");
+  let targetProjectId = data.projectId ?? null;
+  if (!targetProjectId) {
+    const activeProject = await prisma.project.findFirst({
+      where: { userId: data.userId, isDeleted: false },
+      orderBy: { createdAt: "desc" },
+      select: { id: true },
+    });
+    if (activeProject) {
+      targetProjectId = activeProject.id as any;
+    } else {
+      const newProj = await prisma.project.create({
+        data: { name: "Ruang Kerja Utama", userId: data.userId, uid: randomUUID() },
+      });
+      targetProjectId = newProj.id as any;
+    }
+  }
   return prisma.diagram.create({
     data: {
       name: data.name,
-      projectId: data.projectId ?? null,
+      projectId: targetProjectId,
       uid: data.uid || undefined,
       userId: data.userId,
     },

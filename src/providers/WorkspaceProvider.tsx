@@ -831,10 +831,10 @@ export function WorkspaceProvider({
       const targetIds = new Set<string>((e.detail?.targetIds || []).map(String));
       if (targetIds.size === 0) return;
 
-      setNotes(prev => prev.filter(n => !targetIds.has(String(n.project_id))));
-      setDrawings(prev => prev.filter(dw => !targetIds.has(String(dw.project_id))));
-      setFlowcharts(prev => prev.filter(fc => !targetIds.has(String(fc.project_id))));
-      setDiagrams(prev => prev.filter(d => !targetIds.has(String(d.project_id))));
+      setNotes(prev => prev.filter(n => n.project_id && !targetIds.has(String(n.project_id))));
+      setDrawings(prev => prev.filter(dw => dw.project_id && !targetIds.has(String(dw.project_id))));
+      setFlowcharts(prev => prev.filter(fc => fc.project_id && !targetIds.has(String(fc.project_id))));
+      setDiagrams(prev => prev.filter(d => d.project_id && !targetIds.has(String(d.project_id))));
 
       const currentWs = tableSearchParams.get('workspace');
       if (currentWs && targetIds.has(String(currentWs))) {
@@ -846,6 +846,11 @@ export function WorkspaceProvider({
 
       triggerTableRefresh();
       fetchTrash();
+      fetchProjects();
+      fetchNotes();
+      fetchDiagrams();
+      fetchDrawings();
+      fetchFlowcharts();
     };
 
     const handleProjectRestored = () => {

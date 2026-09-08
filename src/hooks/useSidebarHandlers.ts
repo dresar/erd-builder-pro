@@ -100,8 +100,9 @@ export function useSidebarHandlers(params: UseSidebarHandlersParams) {
   }, [createFlowchart, fetchProjects, handleFlowchartSelect]);
 
   const handleSidebarProjectCreate = useCallback(async (n: string) => {
-    await createProject(n);
+    const p = await createProject(n);
     await fetchProjects();
+    return p;
   }, [createProject, fetchProjects]);
 
   const handleSidebarProjectUpdate = useCallback(async (id: number | string, n: string) => {

@@ -1,9 +1,8 @@
 import { prisma } from "../../lib/prisma.js";
 import { captureEntityRevisionSafely } from "../../lib/entity-history.js";
 import { isDesktopMode, isLocalPostgres } from "../../lib/config.js";
+import { randomUUID } from "crypto";
 
-// Helper: build uid-or-id where clause that works with both UUIDs and numeric IDs
-// Prisma's @prisma/adapter-pg throws "Argument id is missing" when id is NaN
 function uidWhere(uid: string, userId: string) {
   const id = Number(uid);
   return Number.isFinite(id)
@@ -11,7 +10,6 @@ function uidWhere(uid: string, userId: string) {
     : { uid, userId };
 }
 
-// Shared helpers (same pattern as notes)
 function whereClause(userId: string, query: {
   projectId?: string | null;
   q?: string;
@@ -33,21 +31,23 @@ function whereClause(userId: string, query: {
   return where;
 }
 
-async function excludeDeletedProjects(userId: string): Promise<any[]> {
-  const deleted = await prisma?.project.findMany({
-    where: { userId, isDeleted: true },
+async function addActiveProjectFilter(where: any, userId: string) {
+  const active = await prisma?.project.findMany({
+    where: { userId, isDeleted: false },
     select: { id: true },
   });
-  return deleted?.map(p => p.id) || [];
-}
-
-async function addDeletedProjectFilter(where: any, userId: string) {
-  const deletedIds = await excludeDeletedProjects(userId);
-  if (deletedIds.length > 0) {
-    where.OR = [
-      { projectId: null },
-      { projectId: { notIn: deletedIds } },
-    ];
+  const activeIds = active?.map(p => p.id) || [];
+  if (activeIds.length === 0) {
+    where.id = -1;
+    return;
+  }
+  const activeSet = new Set(activeIds.map(id => String(id)));
+  if (where.projectId !== undefined) {
+    if (where.projectId === null || !activeSet.has(String(where.projectId))) {
+      where.id = -1;
+    }
+  } else {
+    where.projectId = { in: activeIds };
   }
 }
 
@@ -58,14 +58,12 @@ const LIST_SELECT = {
   project: { select: { name: true, uid: true, id: true } },
 } as const;
 
-// ── Drawings ──
-
 export async function listDrawings(
   userId: string,
   params: { limit: number; offset: number; projectId?: string; q?: string; isPublic?: boolean | null }
 ) {
   const where = whereClause(userId, params);
-  await addDeletedProjectFilter(where, userId);
+  await addActiveProjectFilter(where, userId);
 
   const [data, total] = await Promise.all([
     prisma?.drawing.findMany({
@@ -84,11 +82,27 @@ export async function createDrawing(data: {
   title: string; drawingData?: string; projectId?: number | null; userId: string; uid?: string;
 }) {
   if (!prisma) throw new Error("Database connection not available");
+  let targetProjectId = data.projectId ?? null;
+  if (!targetProjectId) {
+    const activeProject = await prisma.project.findFirst({
+      where: { userId: data.userId, isDeleted: false },
+      orderBy: { createdAt: "desc" },
+      select: { id: true },
+    });
+    if (activeProject) {
+      targetProjectId = activeProject.id as any;
+    } else {
+      const newProj = await prisma.project.create({
+        data: { name: "Ruang Kerja Utama", userId: data.userId, uid: randomUUID() },
+      });
+      targetProjectId = newProj.id as any;
+    }
+  }
   return prisma.drawing.create({
     data: {
       title: data.title,
       data: data.drawingData || "[]",
-      projectId: data.projectId ?? null,
+      projectId: targetProjectId,
       userId: data.userId,
       ...(data.uid ? { uid: data.uid } : {}),
     },

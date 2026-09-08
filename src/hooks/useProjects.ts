@@ -176,14 +176,18 @@ export function useProjects(isGuest: boolean = false) {
           await localPersistence.saveResource(project);
           
           const targetIds = new Set([idStr, String(project.id), String(project.uid)].filter(Boolean));
+          const remainingProjects = allProjects.filter((p: any) => !p.is_deleted && String(p.id) !== idStr && String(p.uid) !== idStr);
+          const remainingProjectIds = new Set(remainingProjects.flatMap((p: any) => [String(p.id), String(p.uid)].filter(Boolean)));
+
           const types = ['erd', 'notes', 'drawings', 'flowchart'];
           for (const type of types) {
             const items = await localPersistence.getAllResources(type);
-            const projectItems = items.filter(item => targetIds.has(String(item.project_id)));
-            for (const item of projectItems) {
-              item.is_deleted = true;
-              item.deleted_at = deleted_at;
-              await localPersistence.saveResource(item);
+            for (const item of items) {
+              if (targetIds.has(String(item.project_id)) || !item.project_id || !remainingProjectIds.has(String(item.project_id))) {
+                item.is_deleted = true;
+                item.deleted_at = deleted_at;
+                await localPersistence.saveResource(item);
+              }
             }
           }
 
@@ -261,13 +265,17 @@ export function useProjects(isGuest: boolean = false) {
       const project = allProjects.find((p: any) => String(p.id) === idStr || String(p.uid) === idStr);
       if (project) {
         const targetIds = new Set([idStr, String(project.id), String(project.uid)].filter(Boolean));
+        const remainingProjects = allProjects.filter((p: any) => !p.is_deleted && String(p.id) !== idStr && String(p.uid) !== idStr);
+        const remainingProjectIds = new Set(remainingProjects.flatMap((p: any) => [String(p.id), String(p.uid)].filter(Boolean)));
+
         const types = ['erd', 'notes', 'drawings', 'flowchart'];
         for (const type of types) {
           const items = await localPersistence.getAllResources(type);
-          const projectItems = items.filter(item => targetIds.has(String(item.project_id)));
-          for (const item of projectItems) {
-            const itemId = item.id ?? item.uid;
-            await localPersistence.deleteResource(itemId);
+          for (const item of items) {
+            if (targetIds.has(String(item.project_id)) || !item.project_id || !remainingProjectIds.has(String(item.project_id))) {
+              const itemId = item.id ?? item.uid;
+              await localPersistence.deleteResource(itemId);
+            }
           }
         }
         await localPersistence.deleteResource(project.id ?? id);

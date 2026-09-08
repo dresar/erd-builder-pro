@@ -58,10 +58,22 @@ export function useDrawings(isGuest: boolean = false) {
     options?: { silent?: boolean }
   ) => {
     if (isGuestCheck()) {
-      const localDrawings = await localPersistence.getAllResources('drawings');
-      let filtered = localDrawings.filter(d => !d.is_deleted);
+      const [localDrawings, localProjects] = await Promise.all([
+        localPersistence.getAllResources('drawings'),
+        localPersistence.getAllResources('project'),
+      ]);
+      const activeProjects = localProjects.filter((p: any) => !p.is_deleted);
+      if (activeProjects.length === 0) {
+        setDrawings([]);
+        setDrawingsTotal(0);
+        setHasMoreFiles(false);
+        setIsLoading(false);
+        return;
+      }
+      const activeProjectIds = new Set(activeProjects.flatMap((p: any) => [String(p.id), String(p.uid)].filter(Boolean)));
+      let filtered = localDrawings.filter(d => !d.is_deleted && d.project_id && activeProjectIds.has(String(d.project_id)));
       if (projectId !== 'all') {
-        filtered = filtered.filter(d => d.project_id === projectId);
+        filtered = filtered.filter(d => String(d.project_id) === String(projectId));
       }
       if (searchQuery) {
         filtered = filtered.filter(d => d.title.toLowerCase().includes(searchQuery.toLowerCase()));

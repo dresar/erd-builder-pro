@@ -40,12 +40,19 @@ export function useNotes(isGuest: boolean = false) {
         localPersistence.getAllResources('notes'),
         localPersistence.getAllResources('project'),
       ]);
+      const activeProjects = localProjects.filter((p: any) => !p.is_deleted);
+      if (activeProjects.length === 0) {
+        setNotes([]);
+        setNotesTotal(0);
+        setHasMoreNotes(false);
+        setIsLoading(false);
+        return;
+      }
+      const activeProjectIds = new Set(activeProjects.flatMap((p: any) => [String(p.id), String(p.uid)].filter(Boolean)));
       const projectMap = new Map(
-        localProjects
-          .filter(p => !p.is_deleted)
-          .map((p: any) => [String(p.id), { uid: p.uid || String(p.id), name: p.name }])
+        activeProjects.map((p: any) => [String(p.id), { uid: p.uid || String(p.id), name: p.name }])
       );
-      let filtered = localNotes.filter(n => !n.is_deleted);
+      let filtered = localNotes.filter((n: any) => !n.is_deleted && n.project_id && activeProjectIds.has(String(n.project_id)));
       if (projectId !== 'all') {
         filtered = filtered.filter(n => String(n.project_id) === String(projectId));
       }

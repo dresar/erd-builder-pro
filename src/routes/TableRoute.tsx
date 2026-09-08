@@ -58,8 +58,35 @@ export function TableRoute() {
     setIsMoveToTrashAlertOpen(true);
   };
 
-  const prdNotes = React.useMemo(() => (notes || []).filter((n: any) => n.title?.startsWith('[PRD] ')), [notes]);
-  const regularNotes = React.useMemo(() => (notes || []).filter((n: any) => !n.title?.startsWith('[PRD] ')), [notes]);
+  const hasActiveProjects = (projects || []).length > 0;
+  const activeIds = React.useMemo(() => {
+    return new Set((projects || []).flatMap((p: any) => [String(p.id), String(p.uid)].filter(Boolean)));
+  }, [projects]);
+
+  const prdNotes = React.useMemo(() => {
+    if (!hasActiveProjects) return [];
+    return (notes || []).filter((n: any) => n.title?.startsWith('[PRD] ') && n.project_id && activeIds.has(String(n.project_id)));
+  }, [notes, hasActiveProjects, activeIds]);
+
+  const regularNotes = React.useMemo(() => {
+    if (!hasActiveProjects) return [];
+    return (notes || []).filter((n: any) => !n.title?.startsWith('[PRD] ') && n.project_id && activeIds.has(String(n.project_id)));
+  }, [notes, hasActiveProjects, activeIds]);
+
+  const validDiagrams = React.useMemo(() => {
+    if (!hasActiveProjects) return [];
+    return (diagrams || []).filter((d: any) => d.project_id && activeIds.has(String(d.project_id)));
+  }, [diagrams, hasActiveProjects, activeIds]);
+
+  const validDrawings = React.useMemo(() => {
+    if (!hasActiveProjects) return [];
+    return (drawings || []).filter((d: any) => d.project_id && activeIds.has(String(d.project_id)));
+  }, [drawings, hasActiveProjects, activeIds]);
+
+  const validFlowcharts = React.useMemo(() => {
+    if (!hasActiveProjects) return [];
+    return (flowcharts || []).filter((f: any) => f.project_id && activeIds.has(String(f.project_id)));
+  }, [flowcharts, hasActiveProjects, activeIds]);
 
   switch (feature) {
     case 'notes':
@@ -105,11 +132,11 @@ export function TableRoute() {
     case 'erd':
       return (
         <ErdTableView
-          diagrams={diagrams}
+          diagrams={validDiagrams}
           projects={projects}
           selectedWorkspace={selectedWorkspaceUid}
           page={tablePage}
-          totalDiagrams={diagramsTotal}
+          totalDiagrams={validDiagrams.length}
           isLoading={isDiagramsLoading}
           onSelectDiagram={(uid) => openDiagram(uid)}
           onCreateDiagram={() => handleOpenCreateDocument('erd')}
@@ -127,11 +154,11 @@ export function TableRoute() {
     case 'drawings':
       return (
         <DrawingsTableView
-          drawings={drawings}
+          drawings={validDrawings}
           projects={projects}
           selectedWorkspace={selectedWorkspaceUid}
           page={tablePage}
-          totalDrawings={drawingsTotal}
+          totalDrawings={validDrawings.length}
           isLoading={isDrawingsLoading}
           onSelectDrawing={handleDrawingSelect}
           onCreateDrawing={() => handleOpenCreateDocument('drawings')}
@@ -147,11 +174,11 @@ export function TableRoute() {
     case 'flowchart':
       return (
         <FlowchartTableView
-          flowcharts={flowcharts}
+          flowcharts={validFlowcharts}
           projects={projects}
           selectedWorkspace={selectedWorkspaceUid}
           page={tablePage}
-          totalFlowcharts={flowchartsTotal}
+          totalFlowcharts={validFlowcharts.length}
           isLoading={isFlowchartsLoading}
           onSelectFlowchart={handleFlowchartSelect}
           onCreateFlowchart={() => handleOpenCreateDocument('flowchart')}
