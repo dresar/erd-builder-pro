@@ -48,7 +48,7 @@ interface RenameDocumentDialogProps {
 }
 
 const viewLabel = (v: string) =>
-  v === 'erd' ? 'diagram' : v === 'notes' ? 'note' : v === 'drawings' ? 'drawing' : 'flowchart';
+  v === 'erd' ? 'ERD' : v === 'notes' ? 'catatan' : v === 'drawings' ? 'gambar' : 'flowchart';
 
 export const RenameDocumentDialog: React.FC<RenameDocumentDialogProps> = ({
   isOpen,
@@ -117,10 +117,10 @@ export const RenameDocumentDialog: React.FC<RenameDocumentDialogProps> = ({
           await onRenameSuccess();
         }
 
-        toast.success('Document updated successfully');
+        toast.success('Dokumen berhasil diperbarui');
         onOpenChange(false);
       } catch (error) {
-        toast.error('Failed to update document');
+        toast.error('Gagal memperbarui dokumen');
       }
     }
   };
@@ -129,22 +129,23 @@ export const RenameDocumentDialog: React.FC<RenameDocumentDialogProps> = ({
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-sm">
         <DialogHeader>
-          <DialogTitle>{isCreate ? `Create ${viewLabel(view)}` : 'Edit Document'}</DialogTitle>
+          <DialogTitle>{isCreate ? `Buat ${viewLabel(view)}` : 'Edit Dokumen'}</DialogTitle>
           <DialogDescription>
             {isCreate
-              ? `Enter a name and select a workspace for your new ${viewLabel(view)}.`
-              : `Update the name and project for your ${viewLabel(view)}.`}
+              ? `Masukkan nama dan pilih ruang kerja untuk ${viewLabel(view)} baru.`
+              : `Ubah nama dan ruang kerja untuk ${viewLabel(view)} ini.`}
           </DialogDescription>
         </DialogHeader>
         <DialogBody>
           <div className="space-y-4">
             <Field>
               <FieldLabel htmlFor="rename-input" className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/70 px-1">
-                {isCreate ? 'Name' : 'New Name'}
+                {isCreate ? 'Nama' : 'Nama Baru'}
               </FieldLabel>
               <Input
                 id="rename-input"
                 type="text"
+                placeholder="Nama"
                 value={newName}
                 onChange={(e) => setNewName(e.target.value)}
                 onKeyDown={(e) => {
@@ -158,16 +159,16 @@ export const RenameDocumentDialog: React.FC<RenameDocumentDialogProps> = ({
 
             <Field>
               <FieldLabel className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/70 px-1">
-                Project
+                Ruang Kerja
               </FieldLabel>
               <Select value={selectedProjectId} onValueChange={(value) => value !== null && setSelectedProjectId(value)}>
                 <SelectTrigger className="h-9">
                   <SelectValue>
-                    {selectedProjectId === "none" ? "Uncategorized" : projects.find(p => p.id.toString() === selectedProjectId)?.name || "Select Project"}
+                    {selectedProjectId === "none" ? "Tanpa Kategori" : projects.find(p => p.id.toString() === selectedProjectId)?.name || "Pilih Ruang Kerja"}
                   </SelectValue>
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="none">Uncategorized</SelectItem>
+                  <SelectItem value="none">Tanpa Kategori</SelectItem>
                   {projects.map((project) => (
                     <SelectItem key={project.id} value={project.id.toString()}>
                       {project.name}
@@ -180,14 +181,14 @@ export const RenameDocumentDialog: React.FC<RenameDocumentDialogProps> = ({
         </DialogBody>
         <DialogFooter>
           <DialogClose render={<Button variant="outline" className="h-9" />}>
-            Cancel
+            Batal
           </DialogClose>
           <Button
             disabled={!newName.trim()}
             onClick={handleSave}
             className="h-9 px-6"
           >
-            {isCreate ? 'Create' : 'Save Changes'}
+            {isCreate ? 'Buat' : 'Simpan'}
           </Button>
         </DialogFooter>
       </DialogContent>

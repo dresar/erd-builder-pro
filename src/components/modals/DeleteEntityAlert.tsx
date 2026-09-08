@@ -35,15 +35,15 @@ export const DeleteEntityAlert: React.FC<DeleteEntityAlertProps> = ({
           <AlertDialogMedia className="bg-destructive/10">
             <AlertTriangle className="w-5 h-5 text-destructive" />
           </AlertDialogMedia>
-          <AlertDialogTitle>Delete Table</AlertDialogTitle>
+          <AlertDialogTitle>Hapus Tabel</AlertDialogTitle>
         </AlertDialogHeader>
         <AlertDialogBody>
           <AlertDialogDescription>
-            Are you sure you want to delete the table <strong>{selectedEntity?.name}</strong>? This action cannot be undone.
+            Hapus tabel <strong>{selectedEntity?.name}</strong>? Tindakan ini tidak dapat dibatalkan.
           </AlertDialogDescription>
         </AlertDialogBody>
         <AlertDialogFooter>
-          <AlertDialogCancel onClick={() => onOpenChange(false)}>Cancel</AlertDialogCancel>
+          <AlertDialogCancel onClick={() => onOpenChange(false)}>Batal</AlertDialogCancel>
           <AlertDialogAction 
             onClick={() => {
               if (selectedEntity) {
@@ -54,7 +54,7 @@ export const DeleteEntityAlert: React.FC<DeleteEntityAlertProps> = ({
             }}
             className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
           >
-            Delete
+            Hapus
           </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>

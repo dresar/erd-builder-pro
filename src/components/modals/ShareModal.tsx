@@ -77,14 +77,14 @@ export function ShareModal({
   const handleCopy = () => {
     navigator.clipboard.writeText(shareUrl);
     setIsCopied(true);
-    toast.success("Link copied to clipboard!");
+    toast.success("Tautan berhasil disalin!");
     setTimeout(() => setIsCopied(false), 2000);
   };
 
   const generateToken = () => {
     const newToken = Math.random().toString(36).substring(2, 10).toUpperCase();
     setToken(newToken);
-    toast.info("Secure token generated");
+    toast.info("Token aman dibuat");
   };
 
   const handleSave = async () => {
@@ -109,13 +109,13 @@ export function ShareModal({
         })
       });
 
-      if (!res.ok) throw new Error("Failed to save settings");
+      if (!res.ok) throw new Error("Gagal menyimpan pengaturan");
 
-      toast.success("Sharing settings updated!");
+      toast.success("Pengaturan berbagi diperbarui!");
       if (onSettingsSaved) onSettingsSaved();
       onOpenChange(false);
     } catch (err: any) {
-      toast.error(err.message || "Something went wrong");
+      toast.error(err.message || "Terjadi kesalahan");
     } finally {
       setIsSaving(false);
     }
@@ -125,13 +125,13 @@ export function ShareModal({
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>{isPublicView ? "Share Document" : `Share "${documentTitle}"`}</DialogTitle>
+          <DialogTitle>{isPublicView ? "Bagikan Dokumen" : `Bagikan "${documentTitle}"`}</DialogTitle>
           <DialogDescription>
             {isPublicView 
-              ? "Share this link with others to view this document."
+              ? "Bagikan tautan ini kepada orang lain untuk melihat dokumen ini."
               : isPublic 
-                ? "Anyone with this link can view this document. No account required." 
-                : "This document is currently private. Only you can access it."}
+                ? "Siapa saja yang memiliki tautan dapat melihat dokumen ini tanpa akun." 
+                : "Dokumen ini saat ini privat. Hanya Anda yang dapat mengaksesnya."}
           </DialogDescription>
         </DialogHeader>
 
@@ -141,9 +141,9 @@ export function ShareModal({
               <div className="space-y-0.5">
                 <div className="flex items-center gap-2">
                   {isPublic ? <Globe className="w-4 h-4 text-primary" /> : <Lock className="w-4 h-4 text-muted-foreground" />}
-                  <Label htmlFor="public-status" className="text-sm font-bold">Public Access</Label>
+                  <Label htmlFor="public-status" className="text-sm font-bold">Akses Publik</Label>
                 </div>
-                <p className="text-[11px] text-muted-foreground">Enable sharing via public link</p>
+                <p className="text-[11px] text-muted-foreground">Aktifkan akses melalui tautan publik</p>
               </div>
               <Checkbox
                 id="public-status"
@@ -155,7 +155,7 @@ export function ShareModal({
 
           <div className={`space-y-4 transition-all duration-300 ${(isPublic || isPublicView) ? 'opacity-100' : 'opacity-40 pointer-events-none grayscale-[0.5]'}`}>
             <div className="space-y-2">
-              <Label htmlFor="share-link" className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Public Link</Label>
+              <Label htmlFor="share-link" className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Tautan Publik</Label>
               <div className="flex items-center space-x-2">
                 <Input 
                   id="share-link"
@@ -179,7 +179,7 @@ export function ShareModal({
               <>
                 <div className="space-y-2 pt-2">
                   <div className="flex items-center justify-between">
-                    <Label htmlFor="access-token" className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Access Token (Optional)</Label>
+                    <Label htmlFor="access-token" className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Token Akses (Opsional)</Label>
                     <Button 
                       variant="link" 
                       size="sm" 
@@ -188,12 +188,12 @@ export function ShareModal({
                       disabled={!isPublic}
                     >
                       <RefreshCw className="w-3 h-3 mr-1" />
-                      Generate
+                      Buat Token
                     </Button>
                   </div>
                   <Input 
                     id="access-token"
-                    placeholder="Enter or generate a token..." 
+                    placeholder="Token" 
                     value={token}
                     onChange={(e) => setToken(e.target.value)}
                     disabled={!isPublic}
@@ -202,11 +202,11 @@ export function ShareModal({
                 </div>
 
                 <div className="space-y-2 pt-2">
-                  <Label htmlFor="valid-until" className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Duration (Days)</Label>
+                  <Label htmlFor="valid-until" className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Durasi (Hari)</Label>
                   <Input 
                     id="valid-until"
                     type="number"
-                    placeholder="Forever"
+                    placeholder="Selamanya"
                     value={durationDays}
                     onChange={(e) => setDurationDays(e.target.value)}
                     disabled={!isPublic}
@@ -225,7 +225,7 @@ export function ShareModal({
               onClick={() => onOpenChange(false)}
               className="cursor-pointer w-full sm:w-auto font-bold"
             >
-              Close
+              Tutup
             </Button>
           ) : (
             <>
@@ -235,7 +235,7 @@ export function ShareModal({
                 className="cursor-pointer order-2 sm:order-1 font-semibold"
                 disabled={isSaving}
               >
-                Cancel
+                Batal
               </Button>
               <Button 
                 type="button" 
@@ -246,9 +246,9 @@ export function ShareModal({
                 {isSaving ? (
                   <>
                     <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
-                    Saving...
+                    Menyimpan...
                   </>
-                ) : "Save Changes"}
+                ) : "Simpan"}
               </Button>
             </>
           )}

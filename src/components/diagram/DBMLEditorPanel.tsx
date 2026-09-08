@@ -208,14 +208,14 @@ export const DBMLEditorPanel = memo(function DBMLEditorPanel({
       <div className="shrink-0 flex items-center justify-between px-4 py-3 border-b bg-muted/20">
         <div className="flex items-center gap-2">
           <Database className="size-4 text-primary" />
-          <h3 className="text-sm font-semibold tracking-tight">DBML Editor</h3>
+          <h3 className="text-sm font-semibold tracking-tight">Editor DBML</h3>
         </div>
         <Button
           variant="ghost"
           size="icon"
           className="size-8"
           onClick={() => setHelpOpen(true)}
-          title="DBML Reference"
+          title="Panduan DBML"
         >
           <HelpCircle className="size-3.5" />
         </Button>

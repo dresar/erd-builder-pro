@@ -29,11 +29,11 @@ export function DashboardSwitcher() {
           }`}
         >
           <LayoutDashboard className="size-3.5" />
-          Classic
+          Klasik
         </button>
         <button
           onClick={() => { setMode('ai'); localStorage.setItem(STORAGE_KEY, 'ai'); }}
-          title="Preview — not yet functional"
+          title="Pratinjau — belum fungsional"
           className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-medium transition-all ${
             mode === 'ai'
               ? 'bg-primary text-primary-foreground shadow-sm'
@@ -42,7 +42,7 @@ export function DashboardSwitcher() {
         >
           <Sparkles className="size-3.5" />
           AI
-          <span className="ml-0.5 text-[9px] font-semibold uppercase tracking-wider opacity-50">Preview</span>
+          <span className="ml-0.5 text-[9px] font-semibold uppercase tracking-wider opacity-50">Pratinjau</span>
         </button>
       </div>
 

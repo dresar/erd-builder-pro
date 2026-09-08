@@ -43,13 +43,13 @@ const ITEMS_PER_PAGE = 10;
 const STORAGE_KEY = 'notes-table-column-visibility';
 
 const COLUMNS: ColumnDef[] = [
-  { id: 'name', label: 'Name', defaultVisible: true, hideable: false, width: 'w-[30%]' },
-  { id: 'workspace', label: 'Workspace', defaultVisible: true, hideable: false, width: 'w-[20%]' },
-  { id: 'updated', label: 'Updated', defaultVisible: false, hideable: true, width: 'w-[14%]' },
+  { id: 'name', label: 'Nama', defaultVisible: true, hideable: false, width: 'w-[30%]' },
+  { id: 'workspace', label: 'Ruang Kerja', defaultVisible: true, hideable: false, width: 'w-[20%]' },
+  { id: 'updated', label: 'Diperbarui', defaultVisible: false, hideable: true, width: 'w-[14%]' },
   { id: 'status', label: 'Status', defaultVisible: true, hideable: true, width: 'w-[8%]' },
-  { id: 'created', label: 'Created', defaultVisible: true, hideable: true, width: 'w-[12%]' },
-  { id: 'expires', label: 'Expires', defaultVisible: false, hideable: true, width: 'w-[14%]' },
-  { id: 'actions', label: 'Actions', defaultVisible: true, hideable: false, width: 'w-[8%]' },
+  { id: 'created', label: 'Dibuat', defaultVisible: true, hideable: true, width: 'w-[12%]' },
+  { id: 'expires', label: 'Kedaluwarsa', defaultVisible: false, hideable: true, width: 'w-[14%]' },
+  { id: 'actions', label: 'Aksi', defaultVisible: true, hideable: false, width: 'w-[8%]' },
 ];
 
 export const NotesTableView = React.memo(function NotesTableView({
@@ -124,7 +124,7 @@ export const NotesTableView = React.memo(function NotesTableView({
       <div className="flex flex-col gap-3 shrink-0">
         <div className="flex items-center gap-2">
           <FileText className="w-5 h-5 text-yellow-400" />
-          <h2 className="text-lg font-semibold">Notes</h2>
+          <h2 className="text-lg font-semibold">Catatan</h2>
           {selectedWorkspace && (
             <>
               <span className="text-muted-foreground">/</span>
@@ -132,12 +132,12 @@ export const NotesTableView = React.memo(function NotesTableView({
                 onClick={() => onWorkspaceClick(null)}
                 className="text-sm text-muted-foreground hover:text-foreground transition-colors"
               >
-                {projects.find(p => p.uid === selectedWorkspace)?.name || 'Workspace'}
+                {projects.find(p => p.uid === selectedWorkspace)?.name || 'Ruang Kerja'}
               </button>
             </>
           )}
           <span className="text-xs text-muted-foreground ml-2">
-            ({totalNotes} notes)
+            ({totalNotes} catatan)
           </span>
         </div>
         <div className="flex items-center justify-between gap-2">
@@ -146,7 +146,7 @@ export const NotesTableView = React.memo(function NotesTableView({
             <Input
               ref={searchRef}
               type="text"
-              placeholder="Search notes..."
+              placeholder="Cari"
               value={searchQuery}
               onChange={(e) => onSearchChange(e.target.value)}
               className="h-8 pl-8 text-xs"
@@ -155,7 +155,7 @@ export const NotesTableView = React.memo(function NotesTableView({
           <div className="flex items-center gap-2">
             <DropdownMenu>
               <DropdownMenuTrigger render={
-                <Button variant="outline" size="icon-sm" aria-label="Columns" title="Columns">
+                <Button variant="outline" size="icon-sm" aria-label="Kolom" title="Kolom">
                   <Columns3 className="w-4 h-4" />
                 </Button>
               } />
@@ -173,7 +173,7 @@ export const NotesTableView = React.memo(function NotesTableView({
             </DropdownMenu>
             <Button size="sm" onClick={onCreateNote}>
               <Plus className="w-4 h-4 sm:mr-1.5" />
-              <span className="hidden sm:inline">Create Note</span>
+              <span className="hidden sm:inline">Buat Catatan</span>
             </Button>
           </div>
         </div>
@@ -195,7 +195,7 @@ export const NotesTableView = React.memo(function NotesTableView({
                 <TableCell colSpan={cols.length} className="h-32 text-center text-muted-foreground">
                   <span className="inline-flex items-center gap-2 text-xs">
                     <span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-primary/30 border-t-primary" />
-                    Loading...
+                    Memuat...
                   </span>
                 </TableCell>
               </TableRow>
@@ -203,8 +203,8 @@ export const NotesTableView = React.memo(function NotesTableView({
               <TableRow>
                 <TableCell colSpan={cols.length} className="h-32 text-center text-muted-foreground">
                   {totalNotes === 0
-                    ? 'No notes yet. Create your first note to get started.'
-                    : 'No notes on this page.'}
+                    ? 'Belum ada catatan. Buat catatan pertama Anda untuk memulai.'
+                    : 'Tidak ada catatan pada halaman ini.'}
                 </TableCell>
               </TableRow>
             ) : (
@@ -221,7 +221,7 @@ export const NotesTableView = React.memo(function NotesTableView({
                       if (col.id === 'name') {
                         return (
                           <TableCell key="name" className="font-medium">
-                            <span className="truncate block max-w-70">{note.title || 'Untitled'}</span>
+                            <span className="truncate block max-w-70">{note.title || '(Tanpa Judul)'}</span>
                           </TableCell>
                         );
                       }
@@ -248,7 +248,7 @@ export const NotesTableView = React.memo(function NotesTableView({
                         return (
                           <TableCell key="status">
                             <span className={`inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full ${note.is_public ? 'bg-green-500/10 text-green-500' : 'bg-muted text-muted-foreground'}`}>
-                              {note.is_public ? 'Public' : 'Private'}
+                              {note.is_public ? 'Publik' : 'Privat'}
                             </span>
                           </TableCell>
                         );
@@ -279,12 +279,12 @@ export const NotesTableView = React.memo(function NotesTableView({
                               <DropdownMenuContent align="end" className="w-44">
                                 <DropdownMenuItem onClick={() => onOpenEditDocument(uid)}>
                                   <Pencil className="h-4 w-4 mr-2" />
-                                  Edit Document
+                                  Edit Dokumen
                                 </DropdownMenuItem>
                                 <DropdownMenuSeparator />
                                 <DropdownMenuItem onClick={() => onDeleteNote(uid)} className="text-destructive">
                                   <Trash2 className="h-4 w-4 mr-2" />
-                                  Delete
+                                  Hapus
                                 </DropdownMenuItem>
                               </DropdownMenuContent>
                             </DropdownMenu>
@@ -305,7 +305,7 @@ export const NotesTableView = React.memo(function NotesTableView({
       {totalPages > 1 && (
         <div className="flex items-center justify-between border-x border-b bg-background px-4 py-2 shrink-0 rounded-b-xl">
           <span className="text-xs text-muted-foreground">
-            Page {page} of {totalPages}
+            Halaman {page} dari {totalPages}
           </span>
           <div className="flex items-center gap-1">
             <Button

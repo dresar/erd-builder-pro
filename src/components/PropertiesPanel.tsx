@@ -297,7 +297,7 @@ export default function PropertiesPanel({
         <div className="mb-3 flex min-w-0 items-center gap-2 text-xs">
           {onBackToTables ? <>
             <button type="button" onClick={onBackToTables} className="flex shrink-0 items-center gap-1 font-medium text-muted-foreground hover:text-foreground">
-              <ArrowLeft className="size-3.5" /> Tables
+              <ArrowLeft className="size-3.5" /> Tabel
             </button>
             <span className="text-muted-foreground/50">/</span>
             <span className="truncate font-medium text-foreground">{editingEntity.name}</span>
@@ -307,12 +307,12 @@ export default function PropertiesPanel({
             variant="ghost"
             size="icon-xs"
             className="ml-auto shrink-0 text-destructive hover:bg-destructive/10 hover:text-destructive"
-            title="Delete table"
-            aria-label={`Delete table ${editingEntity.name}`}
+            title="Hapus tabel"
+            aria-label={`Hapus tabel ${editingEntity.name}`}
             onClick={() => setConfirmModal({
               isOpen: true,
-              title: 'Delete Table',
-              message: `Are you sure you want to delete the table "${editingEntity.name}"? This action cannot be undone.`,
+              title: 'Hapus Tabel',
+              message: `Hapus tabel "${editingEntity.name}"? Tindakan ini tidak dapat dibatalkan.`,
               onConfirm: () => {
                 if (syncDebounceRef.current) clearTimeout(syncDebounceRef.current);
                 onDeleteEntity(editingEntity.id);
@@ -325,8 +325,8 @@ export default function PropertiesPanel({
         </div>
         {!propertiesOnly && <div className="flex w-full gap-1 rounded-lg border border-border bg-muted p-1" aria-label="Table editor sections">
           {[
-            ['properties', 'Properties'],
-            ['schema', 'Schema'],
+            ['properties', 'Properti'],
+            ['schema', 'Skema'],
             ['dbml', 'DBML'],
           ].map(([value, label]) => (
             <button
@@ -362,7 +362,7 @@ export default function PropertiesPanel({
         {/* Entity Settings */}
         <section className="space-y-4">
           <div className="space-y-2">
-            <Label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Table Name</Label>
+            <Label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Nama Tabel</Label>
             <div className="relative">
               <Type className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground z-10" />
               <Input
@@ -376,7 +376,7 @@ export default function PropertiesPanel({
           </div>
 
           <div className="space-y-2">
-            <Label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Theme Color</Label>
+            <Label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Warna Tema</Label>
             <div className="flex flex-wrap gap-2 pt-1">
               {THEME_COLORS.map(color => (
                 <button
@@ -415,28 +415,28 @@ export default function PropertiesPanel({
       {/* Columns Settings Header */}
       <div className="shrink-0 flex items-center justify-between bg-popover/95 py-2 px-6 border-b border-border/50 z-10 shadow-sm">
           <div className="flex items-center gap-2">
-            <Label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Columns ({editingEntity.columns.length})</Label>
+            <Label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Kolom ({editingEntity.columns.length})</Label>
             <Button
               variant="ghost"
               size="icon"
               onClick={normalizeColumns}
               className="h-6 w-6 text-muted-foreground hover:text-primary transition-colors"
-              title="Normalize (PKs to top)"
+              title="Urutkan PK ke atas"
             >
               <Wand2 className="w-3.5 h-3.5" />
             </Button>
             <Popover open={auditColumnMenuOpen} onOpenChange={setAuditColumnMenuOpen}>
               <PopoverTrigger
                 render={
-                  <Button variant="ghost" size="icon" className="h-6 w-6 text-muted-foreground hover:text-primary" title="Generate audit columns" aria-label="Generate audit columns">
+                  <Button variant="ghost" size="icon" className="h-6 w-6 text-muted-foreground hover:text-primary" title="Tambah kolom audit" aria-label="Tambah kolom audit">
                     <Clock3 className="w-3.5 h-3.5" />
                   </Button>
                 }
               />
               <PopoverContent align="start" className="w-56 space-y-3">
                 <div>
-                  <p className="text-sm font-semibold">Generate audit columns</p>
-                  <p className="text-xs text-muted-foreground">Add common timestamp fields.</p>
+                  <p className="text-sm font-semibold">Kolom Audit</p>
+                  <p className="text-xs text-muted-foreground">Tambah timestamp standar.</p>
                 </div>
                 <div className="space-y-2">
                   {AUDIT_COLUMN_OPTIONS.map(column => {

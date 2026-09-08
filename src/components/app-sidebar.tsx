@@ -392,7 +392,7 @@ export const AppSidebar = React.memo(({
               ref={searchInputRef}
               value={searchQuery}
               onChange={(event) => onSearchChange(event.target.value)}
-              placeholder="Search"
+              placeholder="Cari"
               aria-label="Global search"
               className="h-9 min-w-0 flex-1 bg-transparent text-lg outline-none placeholder:text-muted-foreground/70"
             />

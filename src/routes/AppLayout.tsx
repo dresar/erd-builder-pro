@@ -1009,7 +1009,7 @@ function AppLayoutInner() {
                       }`}
                     >
                       <Pencil className="size-3.5" />
-                      Properties
+                      Properti
                     </button>
                   )}
                   {showDBMLPanel && (
@@ -1034,10 +1034,10 @@ function AppLayoutInner() {
                     }`}
                   >
                     <Sparkles className="size-3.5" />
-                    AI Chat
+                    Chat AI
                   </button>
                 </div>
-                <Button variant="ghost" size="icon" className="size-8 mr-1" onClick={() => setRightPanelMode('closed')} title="Close panel">
+                <Button variant="ghost" size="icon" className="size-8 mr-1" onClick={() => setRightPanelMode('closed')} title="Tutup panel">
                   <PanelRightClose className="size-3.5" />
                 </Button>
               </div>

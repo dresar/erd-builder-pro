@@ -11,11 +11,11 @@ type FeatureTab = 'notes' | 'erd' | 'flowchart' | 'drawings' | 'db-client'
 type CreateFileType = Exclude<FeatureTab, 'db-client'>
 
 const FEATURES: { id: FeatureTab; label: string; icon: React.ElementType; route: string }[] = [
-  { id: 'notes', label: 'Notes', icon: FileText, route: '/notes' },
-  { id: 'erd', label: 'ERD Builder', icon: Database, route: '/diagrams' },
-  { id: 'db-client', label: 'DB Client', icon: DatabaseZap, route: '/db-client' },
+  { id: 'notes', label: 'Catatan', icon: FileText, route: '/notes' },
+  { id: 'erd', label: 'ERD', icon: Database, route: '/diagrams' },
+  { id: 'db-client', label: 'Koneksi DB', icon: DatabaseZap, route: '/db-client' },
   { id: 'flowchart', label: 'Flowchart', icon: GitBranch, route: '/flowcharts' },
-  { id: 'drawings', label: 'Drawings', icon: PenTool, route: '/drawings' },
+  { id: 'drawings', label: 'Gambar', icon: PenTool, route: '/drawings' },
 ]
 
 const getFileName = (file: any) => file.title || file.name || 'Untitled'
@@ -269,7 +269,7 @@ export function ProjectFileTabs({ currentView, currentFile }: Props) {
         <button
           onClick={() => setCreateOpen(open => !open)}
           className="flex size-8 items-center justify-center rounded-md bg-primary text-primary-foreground shadow-sm hover:bg-primary/90"
-          aria-label="Create file"
+          aria-label="Buat file"
           aria-expanded={createOpen}
         >
           <Plus className="size-4" />
@@ -309,7 +309,7 @@ export function ProjectFileTabs({ currentView, currentFile }: Props) {
                     setNewName('')
                   }
                 }}
-                placeholder="New file name"
+                placeholder="Nama"
                 className="h-8 text-xs"
                 disabled={creating}
               />
@@ -318,7 +318,7 @@ export function ProjectFileTabs({ currentView, currentFile }: Props) {
                 disabled={!newName.trim() || creating}
                 className="h-8 shrink-0 rounded-md bg-primary px-3 text-xs font-medium text-primary-foreground hover:bg-primary/90 disabled:opacity-40"
               >
-                Create
+                Buat
               </button>
             </div>
           </div>

@@ -82,10 +82,11 @@ export const MoveToTrashAlert: React.FC<MoveToTrashAlertProps> = ({
     onAfterDelete?.();
   };
 
-  const itemLabel = itemType === 'erd' ? 'diagram'
-    : itemType === 'notes' ? 'note'
-    : itemType === 'drawings' ? 'drawing'
-    : itemType === 'project' ? 'workspace'
+  const itemLabel = itemType === 'erd' ? 'ERD'
+    : itemType === 'notes' ? 'catatan'
+    : itemType === 'drawings' ? 'gambar'
+    : itemType === 'flowchart' ? 'flowchart'
+    : itemType === 'project' ? 'ruang kerja'
     : 'item';
 
   if (mode === 'permanent-delete') {
@@ -97,22 +98,22 @@ export const MoveToTrashAlert: React.FC<MoveToTrashAlertProps> = ({
             <AlertDialogMedia className="bg-destructive/10">
               <AlertTriangle className="w-5 h-5 text-destructive" />
             </AlertDialogMedia>
-            <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+            <AlertDialogTitle>Hapus Permanen?</AlertDialogTitle>
           </AlertDialogHeader>
           <AlertDialogBody>
             <AlertDialogDescription>
               {isProject ? (
-                <>This action cannot be undone. Deleting this workspace will also permanently delete all
-                  <strong> notes, diagrams, drawings, and flowcharts</strong> inside it.</>
+                <>Tindakan ini tidak dapat dibatalkan. Menghapus ruang kerja ini juga akan menghapus permanen semua
+                  <strong> catatan, ERD, gambar, dan flowchart</strong> di dalamnya.</>
               ) : (
-                <>This action cannot be undone. This will permanently delete the <strong>{itemLabel}</strong> from our servers.</>
+                <>Tindakan ini tidak dapat dibatalkan. Ini akan menghapus permanen <strong>{itemLabel}</strong> dari server.</>
               )}
             </AlertDialogDescription>
           </AlertDialogBody>
           <AlertDialogFooter>
-            <AlertDialogCancel onClick={() => onOpenChange(false)}>Cancel</AlertDialogCancel>
+            <AlertDialogCancel onClick={() => onOpenChange(false)}>Batal</AlertDialogCancel>
             <AlertDialogAction onClick={handleConfirm} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
-              Permanently Delete
+              Hapus Permanen
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
@@ -129,29 +130,29 @@ export const MoveToTrashAlert: React.FC<MoveToTrashAlertProps> = ({
           <AlertDialogMedia className={isDocument ? 'bg-destructive/10' : 'bg-destructive/10'}>
             <Trash2 className="w-5 h-5 text-destructive" />
           </AlertDialogMedia>
-          <AlertDialogTitle>{isDocument ? 'Move to Trash?' : 'Delete Workspace?'}</AlertDialogTitle>
+          <AlertDialogTitle>{isDocument ? 'Pindahkan ke Sampah?' : 'Hapus Ruang Kerja?'}</AlertDialogTitle>
         </AlertDialogHeader>
         <AlertDialogBody>
           <AlertDialogDescription>
             {isDocument ? (
               <>
-                Are you sure you want to move <strong>{activeDocument?.title || activeDocument?.name || 'this item'}</strong> to trash?
+                Pindahkan <strong>{activeDocument?.title || activeDocument?.name || 'item ini'}</strong> ke sampah?
                 <br />
-                You can restore it later from the trash bin.
+                Item dapat dipulihkan kembali nanti melalui menu Sampah.
               </>
             ) : (
               <>
-                This will move the workspace and all its contents to trash.
+                Memindahkan ruang kerja dan semua file di dalamnya ke sampah.
                 <br />
-                You can restore it later from the trash bin.
+                Dapat dipulihkan kembali nanti melalui menu Sampah.
               </>
             )}
           </AlertDialogDescription>
         </AlertDialogBody>
         <AlertDialogFooter>
-          <AlertDialogCancel onClick={() => onOpenChange(false)}>Cancel</AlertDialogCancel>
+          <AlertDialogCancel onClick={() => onOpenChange(false)}>Batal</AlertDialogCancel>
           <AlertDialogAction onClick={handleConfirm}>
-            {isDocument ? 'Move to Trash' : 'Delete'}
+            {isDocument ? 'Ke Sampah' : 'Hapus'}
           </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>

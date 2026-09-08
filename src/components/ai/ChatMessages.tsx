@@ -165,18 +165,18 @@ export const ChatMessages = memo(function ChatMessages({
             {!hasSessions ? (
               <>
                 <MessageSquare className="size-10 text-muted-foreground/20 mb-4" />
-                <h4 className="text-sm font-semibold">AI Assistant</h4>
+                <h4 className="text-sm font-semibold">Asisten AI</h4>
                 <p className="text-xs text-muted-foreground mt-1 max-w-50">
-                  Select a conversation or start a new chat
+                  Pilih percakapan atau buat baru.
                 </p>
                 <Button variant="default" size="sm" className="mt-4" onClick={handleNewSession}>
                   <Plus className="size-4 mr-2" />
-                  New Chat
+                  Chat Baru
                 </Button>
               </>
             ) : (
               <p className="text-xs text-muted-foreground/50 font-medium">
-                Select a conversation to continue
+                Pilih percakapan untuk lanjut
               </p>
             )}
           </div>
@@ -187,7 +187,7 @@ export const ChatMessages = memo(function ChatMessages({
         ) : !hasMessages ? (
           <div className="flex flex-col items-center justify-center text-center py-16">
             <Bot className="size-10 text-muted-foreground/20 mb-3" />
-            <p className="text-xs text-muted-foreground font-medium">Send a message to start chatting</p>
+            <p className="text-xs text-muted-foreground font-medium">Kirim pesan untuk memulai</p>
           </div>
         ) : (
           <>
@@ -198,7 +198,7 @@ export const ChatMessages = memo(function ChatMessages({
                   disabled={isLoadingMore}
                   className="text-[10px] font-medium text-muted-foreground/50 hover:text-muted-foreground transition-colors disabled:opacity-30 cursor-pointer"
                 >
-                  {isLoadingMore ? 'Loading...' : 'Load earlier messages'}
+                  {isLoadingMore ? 'Memuat...' : 'Pesan sebelumnya'}
                 </button>
               </div>
             )}

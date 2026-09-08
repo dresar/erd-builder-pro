@@ -2,6 +2,9 @@ export interface PromptConfig {
   projectName: string;
   domain: string;
   scale: 'large' | 'enterprise' | 'ecosystem';
+  deploymentMethod?: string;
+  customDeployment?: string;
+  architectureStyle?: string;
   compliance: string[];
   techStack: string;
   notesRequirement?: string;
@@ -26,19 +29,34 @@ export function generateExternalAIPrompt(config: PromptConfig): string {
   const minTables = config.scale === 'ecosystem' ? 50 : config.scale === 'enterprise' ? 35 : 25;
   const complianceList = config.compliance.length > 0 ? config.compliance.join(', ') : 'Audit Trail, RBAC, Soft Deletes, Data Masking';
 
+  let resolvedDeployment = 'Serverless on Vercel (Recommended: Serverless Functions + Edge Runtime)';
+  if (config.deploymentMethod === 'vps') resolvedDeployment = 'Self-Hosted Docker Container / VPS Linux';
+  else if (config.deploymentMethod === 'cloudflare') resolvedDeployment = 'Cloudflare Pages & Cloudflare Workers';
+  else if (config.deploymentMethod === 'aws') resolvedDeployment = 'AWS ECS / Lambda / RDS Enterprise Cloud';
+  else if (config.deploymentMethod === 'other' && config.customDeployment) resolvedDeployment = config.customDeployment;
+  else if (config.deploymentMethod === 'ai_choice') resolvedDeployment = 'Serverless on Vercel (Auto-selected: Serverless with Edge API for Website)';
+
+  let resolvedArch = 'Modular Monolith with Clean Architecture & Domain Boundaries';
+  if (config.architectureStyle === 'microservices') resolvedArch = 'Microservices & Event-Driven Architecture';
+  else if (config.architectureStyle === 'serverless_edge') resolvedArch = 'Serverless API & Edge Backend Architecture';
+  else if (config.architectureStyle === 'ai_choice') resolvedArch = 'Serverless Modular Architecture on Vercel';
+
   return `You are a Senior Principal Software & Database Architect. 
 
 Your task is to design a COMPLETE, PRODUCTION-GRADE, ENTERPRISE-LEVEL SYSTEM SPECIFICATION for:
 PROJECT NAME: "${config.projectName || 'Enterprise Platform'}"
 BUSINESS DOMAIN: ${config.domain}
+DEPLOYMENT TARGET: ${resolvedDeployment}
+ARCHITECTURE STYLE: ${resolvedArch}
 TECH STACK TARGET: ${config.techStack || 'Serverless on Vercel + Managed PostgreSQL (Supabase/Neon) + Edge Functions + Cloudflare R2'}
 SECURITY & COMPLIANCE: ${complianceList}
 
 CRITICAL RULES — DO NOT VIOLATE:
 1. NO TOY OR SIMPLIFIED SCHEMAS: You MUST produce an exhaustive, real-world enterprise database schema with AT LEAST ${minTables} TABLES. Do not group multiple tables into one generic table. Break down the system into realistic, normalized relational modules.
 2. NO SHORT PRD: The PRD must be comprehensive, professional, and detailed enough for an engineering team to start building immediately.
-3. FLOWCHART MUST BE DECISION-RICH: The flowchart must contain decision logic diamonds for validations, auth checks, status transitions, and error paths. Never produce a trivial linear sequence.
-4. STRICT JSON OUTPUT CONTRACT: You must respond ONLY with a single valid JSON object enclosed within \`\`\`json ... \`\`\` code fence. No conversational filler before or after the JSON.
+3. HOSTING & DEPLOYMENT: The application architecture must be optimized for ${resolvedDeployment}.
+4. FLOWCHART MUST BE DECISION-RICH: The flowchart must contain decision logic diamonds for validations, auth checks, status transitions, and error paths. Never produce a trivial linear sequence.
+5. STRICT JSON OUTPUT CONTRACT: You must respond ONLY with a single valid JSON object enclosed within \`\`\`json ... \`\`\` code fence. No conversational filler before or after the JSON.
 
 REQUIRED JSON STRUCTURE:
 \`\`\`json

@@ -404,7 +404,7 @@ export const AIChatPanel = ({
             <div className="shrink-0 flex items-center justify-between px-4 py-3 border-b bg-muted/20">
               <div className="flex items-center gap-2.5">
                 <Sparkles className="size-4 text-primary" />
-                <h3 className="text-sm font-semibold tracking-tight">AI Assistant</h3>
+                <h3 className="text-sm font-semibold tracking-tight">Asisten AI</h3>
               </div>
               <div className="flex items-center gap-1">
                 {onOpenExternalAI && (
@@ -412,7 +412,7 @@ export const AIChatPanel = ({
                     <Bot className="size-4" />
                   </Button>
                 )}
-                <Button variant="ghost" size="icon" className="size-8" onClick={handleNewSession} title="New Chat">
+                <Button variant="ghost" size="icon" className="size-8" onClick={handleNewSession} title="Chat Baru">
                   <Plus className="size-4" />
                 </Button>
               </div>
@@ -426,7 +426,7 @@ export const AIChatPanel = ({
                   <Search className="absolute left-2 top-1/2 -translate-y-1/2 size-3 text-muted-foreground/40" />
                   <input
                     type="text"
-                    placeholder="Search conversations..."
+                    placeholder="Cari"
                     value={sessionSearch}
                     onChange={e => setSessionSearch(e.target.value)}
                     className="w-full h-8 pl-7 pr-2 text-xs rounded-md border border-border bg-background/50 outline-none focus:border-primary/30 transition-colors"
@@ -441,7 +441,7 @@ export const AIChatPanel = ({
               ) : filteredSessions.length === 0 ? (
                 <div className="py-16 text-center">
                   <p className="text-xs text-muted-foreground/50 font-medium">
-                    {sessionSearch ? 'No matching conversations' : 'No conversations yet'}
+                    {sessionSearch ? 'Tidak ditemukan' : 'Belum ada percakapan'}
                   </p>
                 </div>
               ) : (
@@ -492,11 +492,11 @@ export const AIChatPanel = ({
                 <button
                   onClick={() => setPage('list')}
                   className="size-7 flex items-center justify-center rounded hover:bg-muted/30 shrink-0 transition-colors"
-                  title="Back to conversations"
+                  title="Kembali"
                 >
                   <ArrowLeft className="size-4" />
                 </button>
-                <span className="text-sm font-medium truncate">{currentSession?.title || 'AI Assistant'}</span>
+                <span className="text-sm font-medium truncate">{currentSession?.title || 'Asisten AI'}</span>
               </div>
               {onOpenExternalAI && (
                 <div className="flex items-center gap-1 shrink-0">

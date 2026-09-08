@@ -19,8 +19,8 @@ const featureOptions: {
   color: string;
   bg: string;
 }[] = [
-  { type: 'note', label: 'Notes', icon: StickyNote, color: 'text-amber-500', bg: 'bg-amber-500/10' },
-  { type: 'erd', label: 'ERD Builder', icon: Database, color: 'text-blue-500', bg: 'bg-blue-500/10' },
+  { type: 'note', label: 'Catatan', icon: StickyNote, color: 'text-amber-500', bg: 'bg-amber-500/10' },
+  { type: 'erd', label: 'ERD', icon: Database, color: 'text-blue-500', bg: 'bg-blue-500/10' },
   { type: 'flowchart', label: 'Flowchart', icon: Network, color: 'text-emerald-500', bg: 'bg-emerald-500/10' },
 ];
 
@@ -32,15 +32,15 @@ interface SuggestionItem {
 }
 
 const allSuggestions: SuggestionItem[] = [
-  { icon: StickyNote, label: 'Write project docs', desc: 'Create comprehensive documentation', type: 'note' },
-  { icon: StickyNote, label: 'Meeting notes', desc: 'Capture meeting minutes and action items', type: 'note' },
-  { icon: StickyNote, label: 'API reference draft', desc: 'Draft API endpoints and usage', type: 'note' },
-  { icon: Database, label: 'Design users table', desc: 'User management schema with roles', type: 'erd' },
-  { icon: Database, label: 'E-commerce DB', desc: 'Model products, orders, inventory', type: 'erd' },
-  { icon: Database, label: 'Import from SQL', desc: 'Generate ERD from existing schema', type: 'erd' },
-  { icon: Network, label: 'Login flow chart', desc: 'Authentication authorization flow', type: 'flowchart' },
-  { icon: Network, label: 'CI/CD pipeline', desc: 'Build, test, and deploy stages', type: 'flowchart' },
-  { icon: Network, label: 'Decision tree', desc: 'Branching logic and decisions', type: 'flowchart' },
+  { icon: StickyNote, label: 'Dokumen Proyek', desc: 'Buat dokumentasi sistem lengkap', type: 'note' },
+  { icon: StickyNote, label: 'Notula Rapat', desc: 'Catat poin dan tindakan penting', type: 'note' },
+  { icon: StickyNote, label: 'Draf API', desc: 'Rancang endpoint dan skema', type: 'note' },
+  { icon: Database, label: 'Tabel Pengguna', desc: 'Skema user dan autentikasi peran', type: 'erd' },
+  { icon: Database, label: 'Database E-Commerce', desc: 'Model produk, pesanan, dan stok', type: 'erd' },
+  { icon: Database, label: 'Impor dari SQL', desc: 'Buat ERD dari skema DDL yang ada', type: 'erd' },
+  { icon: Network, label: 'Alur Login', desc: 'Diagram alir autentikasi pengguna', type: 'flowchart' },
+  { icon: Network, label: 'Pipeline CI/CD', desc: 'Tahap build, uji coba, dan deploy', type: 'flowchart' },
+  { icon: Network, label: 'Pohon Keputusan', desc: 'Logika percabangan proses bisnis', type: 'flowchart' },
 ];
 
 export function NewDashboardPreview() {
@@ -90,9 +90,9 @@ export function NewDashboardPreview() {
         <div className="flex items-start gap-3 rounded-lg border border-amber-500/30 bg-amber-500/5 p-3.5">
           <AlertTriangle className="size-4 text-amber-500 shrink-0 mt-0.5" />
           <div className="min-w-0">
-            <p className="text-sm font-medium text-foreground">Dashboard AI — Preview</p>
+            <p className="text-sm font-medium text-foreground">Dashboard AI — Pratinjau</p>
             <p className="text-xs text-muted-foreground mt-0.5 leading-relaxed">
-              This page is not yet functional. Use the AI Chat panel from the sidebar for active AI features.
+              Halaman ini masih dalam tahap pratinjau. Gunakan panel Chat AI di bilah samping untuk fitur AI aktif.
             </p>
           </div>
         </div>
@@ -103,9 +103,9 @@ export function NewDashboardPreview() {
         <div className="size-12 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center mb-4">
           <Bot className="size-6 text-primary" />
         </div>
-        <h1 className="text-xl font-semibold tracking-tight">What would you like to create?</h1>
+        <h1 className="text-xl font-semibold tracking-tight">Apa yang ingin Anda buat?</h1>
         <p className="text-sm text-muted-foreground mt-1.5">
-          Notes, ERD diagrams, or flowcharts — describe it and we'll help you start
+          Catatan, diagram ERD, atau flowchart — tuliskan ide dan kami bantu mulai
         </p>
       </div>
 
@@ -122,7 +122,7 @@ export function NewDashboardPreview() {
             value={inputValue}
             onChange={e => { setInputValue(e.target.value); handleInput(); }}
             onKeyDown={handleKeyDown}
-            placeholder="Describe what you want to create..."
+            placeholder="Tulis..."
             className="flex-1 bg-transparent px-2 py-2.5 text-sm outline-none placeholder:text-muted-foreground/40 resize-none overflow-hidden"
             rows={1}
           />
@@ -183,7 +183,7 @@ export function NewDashboardPreview() {
 
       {/* ── Footer ── */}
       <p className="text-center text-[10px] text-muted-foreground/20 font-medium mt-6 pb-4">
-        Preview Dashboard • Not yet functional
+        Pratinjau Dashboard • Belum aktif
       </p>
 
       {/* ── Spacer bottom ── */}

@@ -19,8 +19,8 @@ import { apiFetch, isInstalledApp } from '../lib/api';
 const typeConfig = [
   {
     key: 'notes',
-    label: 'Notes',
-    createLabel: 'Note',
+    label: 'Catatan',
+    createLabel: 'Catatan',
     icon: FileText,
     color: 'text-amber-500',
     bg: 'bg-amber-500/10',
@@ -30,8 +30,8 @@ const typeConfig = [
   },
   {
     key: 'diagrams',
-    label: 'ERD Builder',
-    createLabel: 'ERD Builder',
+    label: 'ERD',
+    createLabel: 'ERD',
     icon: Database,
     color: 'text-cyan-400',
     bg: 'bg-cyan-500/20',
@@ -41,8 +41,8 @@ const typeConfig = [
   },
   {
     key: 'drawings',
-    label: 'Drawings',
-    createLabel: 'Drawing',
+    label: 'Gambar',
+    createLabel: 'Gambar',
     icon: PenTool,
     color: 'text-violet-500',
     bg: 'bg-violet-500/10',
@@ -52,7 +52,7 @@ const typeConfig = [
   },
   {
     key: 'flowcharts',
-    label: 'Flowcharts',
+    label: 'Flowchart',
     createLabel: 'Flowchart',
     icon: Network,
     color: 'text-emerald-500',
@@ -65,21 +65,21 @@ const typeConfig = [
 
 function getGreeting(): string {
   const hour = new Date().getHours();
-  if (hour < 12) return 'Good morning';
-  if (hour < 17) return 'Good afternoon';
-  return 'Good evening';
+  if (hour < 12) return 'Selamat pagi';
+  if (hour < 17) return 'Selamat siang';
+  return 'Selamat malam';
 }
 
 function formatTimeAgo(dateStr: string): string {
   const diff = Date.now() - new Date(dateStr).getTime();
   const mins = Math.floor(diff / 60000);
-  if (mins < 1) return 'Just now';
-  if (mins < 60) return `${mins}m ago`;
+  if (mins < 1) return 'Baru saja';
+  if (mins < 60) return `${mins}m lalu`;
   const hours = Math.floor(mins / 60);
-  if (hours < 24) return `${hours}h ago`;
+  if (hours < 24) return `${hours}j lalu`;
   const days = Math.floor(hours / 24);
-  if (days < 30) return `${days}d ago`;
-  return new Date(dateStr).toLocaleDateString('en-US');
+  if (days < 30) return `${days}h lalu`;
+  return new Date(dateStr).toLocaleDateString('id-ID');
 }
 
 function getDocIcon(type: string) {
@@ -109,11 +109,11 @@ function isDbClientFile(doc: any): boolean {
 
 function getDocLabel(doc: any): string {
   switch (doc._type) {
-    case 'diagrams': return isDbClientFile(doc) ? 'DB Client' : 'ERD Builder';
-    case 'notes': return 'Note';
-    case 'drawings': return 'Drawing';
+    case 'diagrams': return isDbClientFile(doc) ? 'Koneksi DB' : 'ERD';
+    case 'notes': return 'Catatan';
+    case 'drawings': return 'Gambar';
     case 'flowcharts': return 'Flowchart';
-    case 'db-client': return 'DB Client';
+    case 'db-client': return 'Koneksi DB';
     default: return '';
   }
 }
@@ -288,7 +288,7 @@ export function DashboardRoute() {
 
   const createDocument = (cfg: typeof typeConfig[number]) => {
     const fn = (ctx as Record<string, any>)[cfg.createFn];
-    if (fn) fn(`New ${cfg.createLabel}`);
+    if (fn) fn(`${cfg.createLabel} Baru`);
   };
 
   const lastDocument = recentDocs[0];
@@ -301,7 +301,7 @@ export function DashboardRoute() {
           <div>
             <p className="text-sm font-medium text-muted-foreground">{getGreeting()},</p>
             <h1 className="mt-0.5 text-xl font-semibold tracking-tight">{userName}</h1>
-            <p className="mt-0.5 text-xs text-muted-foreground">Pick up where you left off.</p>
+            <p className="mt-0.5 text-xs text-muted-foreground">Lanjutkan pekerjaan Anda.</p>
           </div>
           {!isEmpty && (
             <button
@@ -309,7 +309,7 @@ export function DashboardRoute() {
               className="hidden h-8 shrink-0 items-center gap-1.5 rounded-md bg-primary px-3 text-xs font-semibold text-primary-foreground shadow-sm transition-colors hover:bg-primary/90 sm:inline-flex"
             >
               <Plus className="size-3.5" />
-              New ERD Builder
+              ERD Baru
             </button>
           )}
         </div>
@@ -321,10 +321,10 @@ export function DashboardRoute() {
           <div className="size-16 rounded-2xl bg-primary/10 border border-primary/20 flex items-center justify-center mb-5">
             <Sparkles className="size-7 text-primary" />
           </div>
-          <h2 className="text-lg font-semibold text-foreground">Let's get started</h2>
+          <h2 className="text-lg font-semibold text-foreground">Mulai Sekarang</h2>
           <p className="text-sm text-muted-foreground mt-1.5 max-w-md">
-            Create your first document — notes, ERD Builder, flowcharts, or drawings —
-            and start building your workspace.
+            Buat dokumen pertama Anda — catatan, ERD, flowchart, atau gambar —
+            dan mulai bangun ruang kerja Anda.
           </p>
           <div className="flex flex-wrap justify-center gap-2 mt-5">
             {typeConfig.map((cfg) => (
@@ -334,7 +334,7 @@ export function DashboardRoute() {
                 className={`inline-flex items-center gap-2 rounded-lg border px-4 py-2.5 text-sm font-medium transition-all hover:shadow-sm ${cfg.key === 'diagrams' ? 'border-cyan-400/50' : 'border-border/60'} ${cfg.bg} hover:scale-[1.02]`}
               >
                 <cfg.icon className={`h-4 w-4 ${cfg.color}`} />
-                New {cfg.createLabel}
+                {cfg.createLabel} Baru
               </button>
             ))}
           </div>
@@ -347,28 +347,28 @@ export function DashboardRoute() {
             <section className="relative overflow-hidden rounded-xl border border-primary/25 bg-linear-to-br from-primary/10 via-card to-card p-4">
               <div className="relative z-10 flex h-full min-h-32 flex-col justify-between gap-4">
                 <div>
-                  <p className="text-xs font-semibold uppercase tracking-wider text-primary">Continue working</p>
+                  <p className="text-xs font-semibold uppercase tracking-wider text-primary">Lanjutkan Pekerjaan</p>
                   {lastDocument ? (
                     <div className="mt-3 flex items-start gap-2.5">
                       <div className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-background/80 shadow-sm">
                         {getDocIcon(lastDocument._type)}
                       </div>
                       <div className="min-w-0">
-                        <h2 className="truncate text-lg font-semibold">{lastDocument.name || lastDocument.title || '(Untitled)'}</h2>
+                        <h2 className="truncate text-lg font-semibold">{lastDocument.name || lastDocument.title || '(Tanpa Nama)'}</h2>
                         <p className="mt-0.5 text-xs text-muted-foreground">
                           {getDocLabel(lastDocument)} · {lastDocument._workspace} · {formatTimeAgo(lastDocument.updated_at)}
                         </p>
                       </div>
                     </div>
                   ) : (
-                    <h2 className="mt-4 text-xl font-semibold">Create your first document</h2>
+                    <h2 className="mt-4 text-xl font-semibold">Buat dokumen pertama Anda</h2>
                   )}
                 </div>
                 <button
                   onClick={() => lastDocument ? navigate(getDocRoute(lastDocument._type, lastDocument)) : createDocument(typeConfig[1])}
                   className="inline-flex h-8 w-fit items-center gap-1.5 rounded-md bg-primary px-3 text-xs font-semibold text-primary-foreground transition-colors hover:bg-primary/90"
                 >
-                  {lastDocument ? 'Open document' : 'Create ERD Builder'}
+                  {lastDocument ? 'Buka Dokumen' : 'Buat ERD'}
                   <ArrowUpRight className="size-3.5" />
                 </button>
               </div>
@@ -378,8 +378,8 @@ export function DashboardRoute() {
             <section className="rounded-xl border border-border/60 bg-card p-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <h2 className="text-sm font-semibold">Create something new</h2>
-                  <p className="mt-1 text-xs text-muted-foreground">Start with the format you need.</p>
+                  <h2 className="text-sm font-semibold">Buat Baru</h2>
+                  <p className="mt-1 text-xs text-muted-foreground">Pilih format yang dibutuhkan.</p>
                 </div>
                 <Plus className="size-4 text-muted-foreground" />
               </div>
@@ -391,7 +391,7 @@ export function DashboardRoute() {
                     className="group flex min-h-14 flex-col items-start justify-between rounded-lg border border-border/60 bg-background px-2.5 py-2 text-left transition-colors hover:border-primary/40 hover:bg-accent/40"
                   >
                     <cfg.icon className={`size-4 ${cfg.color}`} />
-                    <span className="text-xs font-medium">New {cfg.createLabel}</span>
+                    <span className="text-xs font-medium">{cfg.createLabel} Baru</span>
                   </button>
                 ))}
               </div>
@@ -404,17 +404,17 @@ export function DashboardRoute() {
                 <div>
                   <h2 className="flex items-center gap-2 text-sm font-semibold">
                     <Clock className="size-4 text-muted-foreground" />
-                    Recent files
+                    File Terbaru
                   </h2>
-                  <p className="mt-0.5 text-xs text-muted-foreground">Jump back into your latest work.</p>
+                  <p className="mt-0.5 text-xs text-muted-foreground">Lanjutkan pekerjaan terakhir.</p>
                 </div>
                 <div className="relative w-full sm:w-52">
                   <Search className="pointer-events-none absolute left-2.5 top-2.5 size-3.5 text-muted-foreground" />
                   <input
                     value={recentQuery}
                     onChange={(event) => setRecentQuery(event.target.value)}
-                    placeholder="Search files"
-                    aria-label="Search recent files"
+                    placeholder="Cari"
+                    aria-label="Cari file terbaru"
                     className="h-8 w-full rounded-lg border border-border/60 bg-card pl-8 pr-3 text-xs outline-none placeholder:text-muted-foreground/60 focus:border-primary/50"
                   />
                 </div>
@@ -423,7 +423,7 @@ export function DashboardRoute() {
                 <button
                   onClick={() => setRecentFilter('all')}
                   className={`rounded-md px-2.5 py-1 text-xs font-medium ${recentFilter === 'all' ? 'bg-accent text-foreground' : 'text-muted-foreground hover:bg-accent/50'}`}
-                >All</button>
+                >Semua</button>
                 {typeConfig.map((cfg) => (
                   <button
                     key={cfg.key}
@@ -435,18 +435,18 @@ export function DashboardRoute() {
                   <button
                     onClick={() => setRecentFilter('db-client')}
                     className={`rounded-md px-2.5 py-1 text-xs font-medium ${recentFilter === 'db-client' ? 'bg-accent text-foreground' : 'text-muted-foreground hover:bg-accent/50'}`}
-                  >DB Client</button>
+                  >Koneksi DB</button>
                 )}
               </div>
               <div className="overflow-hidden rounded-lg border border-border/60 bg-card">
                 {filteredRecentDocs.length === 0 ? (
-                  <p className="px-4 py-10 text-center text-sm text-muted-foreground">No matching files.</p>
+                  <p className="px-4 py-10 text-center text-sm text-muted-foreground">Tidak ada file yang cocok.</p>
                 ) : (
                   <>
                     <div className="hidden grid-cols-[minmax(0,1fr)_minmax(7rem,0.7fr)_auto_auto] gap-2.5 border-b border-border/50 px-3 py-2 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground sm:grid">
                       <span>File</span>
-                      <span>Workspace</span>
-                      <span>Updated</span>
+                      <span>Ruang Kerja</span>
+                      <span>Diperbarui</span>
                       <span aria-hidden="true" />
                     </div>
                     {filteredRecentDocs.map((doc: any) => (
@@ -460,7 +460,7 @@ export function DashboardRoute() {
                             {getDocIcon(doc._type)}
                           </div>
                           <div className="min-w-0">
-                            <p className="truncate text-sm font-medium">{doc.name || doc.title || '(Untitled)'}</p>
+                            <p className="truncate text-sm font-medium">{doc.name || doc.title || '(Tanpa Nama)'}</p>
                             <p className="mt-0.5 truncate text-[11px] text-muted-foreground">{getDocLabel(doc)}</p>
                           </div>
                         </div>
@@ -479,9 +479,9 @@ export function DashboardRoute() {
                 <div className="mb-2">
                   <h2 className="flex items-center gap-2 text-sm font-semibold">
                     <FolderKanban className="size-4 text-muted-foreground" />
-                    Workspaces
+                    Ruang Kerja
                   </h2>
-                  <p className="mt-0.5 text-xs text-muted-foreground">Your projects at a glance.</p>
+                  <p className="mt-0.5 text-xs text-muted-foreground">Ringkasan proyek Anda.</p>
                 </div>
                 <div className="space-y-2">
                   {projectsWithCounts.map((p: any) => (
@@ -495,7 +495,7 @@ export function DashboardRoute() {
                       </div>
                       <div className="min-w-0 flex-1">
                         <p className="truncate text-sm font-medium">{p.name}</p>
-                        <p className="mt-0.5 text-xs text-muted-foreground">{p.totalDocs} {p.totalDocs === 1 ? 'file' : 'files'}</p>
+                        <p className="mt-0.5 text-xs text-muted-foreground">{p.totalDocs} file</p>
                       </div>
                       <ArrowUpRight className="size-4 text-muted-foreground/30 transition-colors group-hover:text-primary" />
                     </button>

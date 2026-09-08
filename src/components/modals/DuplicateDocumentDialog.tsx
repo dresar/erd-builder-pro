@@ -36,20 +36,21 @@ export const DuplicateDocumentDialog: React.FC<DuplicateDocumentDialogProps> = (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-sm">
         <DialogHeader>
-          <DialogTitle>Duplicate Document</DialogTitle>
+          <DialogTitle>Duplikat Dokumen</DialogTitle>
           <DialogDescription>
-            Create a copy of this {view === 'erd' ? 'diagram' : view === 'notes' ? 'note' : view === 'drawings' ? 'drawing' : 'flowchart'}.
+            Buat salinan dari {view === 'erd' ? 'ERD' : view === 'notes' ? 'catatan' : view === 'drawings' ? 'gambar' : 'flowchart'} ini.
           </DialogDescription>
         </DialogHeader>
         <DialogBody>
           <div className="space-y-4">
             <Field>
               <FieldLabel htmlFor="duplicate-input" className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/70 px-1">
-                New Name
+                Nama Baru
               </FieldLabel>
               <Input
                 id="duplicate-input"
                 type="text"
+                placeholder="Nama"
                 value={duplicateName}
                 onChange={(e) => setDuplicateName(e.target.value)}
                 onKeyDown={(e) => {
@@ -64,7 +65,7 @@ export const DuplicateDocumentDialog: React.FC<DuplicateDocumentDialogProps> = (
         </DialogBody>
         <DialogFooter className="gap-2 sm:gap-0">
           <Button variant="ghost" onClick={() => onOpenChange(false)}>
-            Cancel
+            Batal
           </Button>
           <Button 
             onClick={executeDuplicate}
@@ -73,9 +74,9 @@ export const DuplicateDocumentDialog: React.FC<DuplicateDocumentDialogProps> = (
             {isRefreshing ? (
               <>
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                Duplicating...
+                Menyalin...
               </>
-            ) : "Duplicate"}
+            ) : "Duplikat"}
           </Button>
         </DialogFooter>
       </DialogContent>

@@ -764,7 +764,7 @@ export const FlowchartView = React.memo(({
     return (
       <div className="flex-1 flex flex-col items-center justify-center border rounded-xl bg-muted/10">
         <Loader2 className="w-6 h-6 text-primary animate-spin" />
-        <p className="mt-4 text-sm font-medium text-muted-foreground animate-pulse">Loading flowchart...</p>
+        <p className="mt-4 text-sm font-medium text-muted-foreground animate-pulse">Memuat flowchart...</p>
       </div>
     );
   }
@@ -776,14 +776,14 @@ export const FlowchartView = React.memo(({
       {!isReadOnly && (
         <div className="absolute top-6 inset-x-0 z-10 flex justify-center pointer-events-none">
           <div className="flex items-center gap-1.5 p-1.5 bg-background/95 backdrop-blur-md border border-border/50 rounded-2xl shadow-2xl pointer-events-auto max-w-[95vw] overflow-x-auto no-scrollbar">
-            <JumpToNode nodes={nodes} label="Symbol" />
+            <JumpToNode nodes={nodes} label="Simbol" />
             {canvasGroups.length > 0 && (
               <>
                 <div className="w-px h-6 bg-border mx-0.5" />
                 <Select value={selectedGroup ?? ''} onValueChange={(val) => { setSelectedGroup(val || null); setSelectedNodeId(null); }}>
-                  <SelectTrigger className="h-9 min-w-[130px] border-none bg-transparent hover:bg-muted px-2 text-xs font-medium cursor-pointer [&>svg]:text-muted-foreground" title="Select a group to move">
+                  <SelectTrigger className="h-9 min-w-[130px] border-none bg-transparent hover:bg-muted px-2 text-xs font-medium cursor-pointer [&>svg]:text-muted-foreground" title="Pilih grup untuk dipindahkan">
                     <Move className="w-3.5 h-3.5 mr-1 text-muted-foreground shrink-0" />
-                    <SelectValue placeholder="Move Group" />
+                    <SelectValue placeholder="Pindah" />
                   </SelectTrigger>
                   <SelectContent className="bg-popover border-border text-popover-foreground min-w-[150px]">
                     {canvasGroups.map((g) => (
@@ -797,19 +797,19 @@ export const FlowchartView = React.memo(({
               <div className="w-px h-6 bg-border mx-0.5" />
               <Button onClick={handleAutoLayout} variant="outline" size="sm" className="h-9 px-3 border-border hover:bg-muted bg-muted/50 text-xs font-semibold cursor-pointer">
                 <LayoutGrid className="w-3.5 h-3.5 sm:mr-1.5" />
-                <span className="hidden sm:inline">Auto Layout</span>
+                <span className="hidden sm:inline">Tata Letak</span>
               </Button>
               <div className="w-px h-6 bg-border mx-0.5" />
               <Button onClick={() => setIsAddingNode(true)} size="sm" className="h-9 px-3 sm:px-4 font-bold shadow-lg shadow-primary/20 cursor-pointer">
                 <Plus className="w-4 h-4 sm:mr-2" />
-                <span className="hidden sm:inline">Add Symbol</span>
+                <span className="hidden sm:inline">Tambah Simbol</span>
               </Button>
             </>
             <div className="w-px h-6 bg-border mx-0.5" />
-            <Button onClick={() => undo(nodesRef.current, edgesRef.current)} disabled={!canUndo} size="sm" variant="ghost" className="h-9 w-9 p-0 cursor-pointer" title="Undo">
+            <Button onClick={() => undo(nodesRef.current, edgesRef.current)} disabled={!canUndo} size="sm" variant="ghost" className="h-9 w-9 p-0 cursor-pointer" title="Urungkan">
               <Undo2 className="w-4 h-4" />
             </Button>
-            <Button onClick={() => redo(nodesRef.current, edgesRef.current)} disabled={!canRedo} size="sm" variant="ghost" className="h-9 w-9 p-0 cursor-pointer" title="Redo">
+            <Button onClick={() => redo(nodesRef.current, edgesRef.current)} disabled={!canRedo} size="sm" variant="ghost" className="h-9 w-9 p-0 cursor-pointer" title="Ulangi">
               <Redo2 className="w-4 h-4" />
             </Button>
           </div>
@@ -908,7 +908,7 @@ export const FlowchartView = React.memo(({
           existingEdges={edges}
           onConfirm={handleConfirmAppend}
           onCancel={() => { setPendingPreview(null); pendingContentRef.current = null; }}
-          confirmLabel={pendingApplyModeRef.current === 'insert' ? 'Confirm Insert' : pendingApplyModeRef.current === 'replace' ? 'Confirm Replace' : 'Confirm Append'}
+          confirmLabel={pendingApplyModeRef.current === 'insert' ? 'Konfirmasi Sisip' : pendingApplyModeRef.current === 'replace' ? 'Konfirmasi Ganti' : 'Konfirmasi Tambah'}
           canvasGroups={pendingApplyModeRef.current === 'replace' ? nodes.map(n => n.data.section).filter((s): s is string => !!s).filter((s, i, arr) => arr.indexOf(s) === i) : []}
         />
       )}

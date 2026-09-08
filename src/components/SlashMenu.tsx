@@ -35,73 +35,73 @@ interface SlashMenuProps {
   onRequestCompanion?: (type: 'erd' | 'flowchart' | 'drawing', editor: any, range: { from: number; to: number }) => void;
 }
 
-const CATEGORIES = ["Basic blocks", "Lists", "Media", "Organization", "Advanced", "History"];
+const CATEGORIES = ["Blok Dasar", "Daftar", "Media", "Organisasi", "Lanjutan", "Riwayat"];
 
 const MAIN_ITEMS: SlashMenuItem[] = [
   // Basic blocks
-  { title: 'Text', icon: <Type className="w-4 h-4" />, shortcut: 'T', category: 'Basic blocks', command: (editor, range) => editor.chain().focus().deleteRange(range).setParagraph().run() },
-  { title: 'Heading 1', icon: <Heading1 className="w-4 h-4" />, shortcut: '⌘ ⌥ 1', category: 'Basic blocks', command: (editor, range) => editor.chain().focus().deleteRange(range).setNode('heading', { level: 1 }).run() },
-  { title: 'Heading 2', icon: <Heading2 className="w-4 h-4" />, shortcut: '⌘ ⌥ 2', category: 'Basic blocks', command: (editor, range) => editor.chain().focus().deleteRange(range).setNode('heading', { level: 2 }).run() },
-  { title: 'Heading 3', icon: <Heading3 className="w-4 h-4" />, shortcut: '⌘ ⌥ 3', category: 'Basic blocks', command: (editor, range) => editor.chain().focus().deleteRange(range).setNode('heading', { level: 3 }).run() },
-  { title: 'Heading 4', icon: <Heading4 className="w-4 h-4" />, shortcut: '⌘ ⌥ 4', category: 'Basic blocks', command: (editor, range) => editor.chain().focus().deleteRange(range).setNode('heading', { level: 4 }).run() },
-  { title: 'Badge', icon: <Tag className="w-4 h-4" />, shortcut: '⌘ ⌥ B', category: 'Basic blocks', command: (editor, range) => editor.chain().focus().deleteRange(range).toggleBadge().run() },
-  { title: 'Divider', icon: <Minus className="w-4 h-4" />, shortcut: '⌘ ⌥ -', category: 'Basic blocks', command: (editor, range) => editor.chain().focus().deleteRange(range).setHorizontalRule().run() },
+  { title: 'Teks', icon: <Type className="w-4 h-4" />, shortcut: 'T', category: 'Blok Dasar', command: (editor, range) => editor.chain().focus().deleteRange(range).setParagraph().run() },
+  { title: 'Judul 1', icon: <Heading1 className="w-4 h-4" />, shortcut: '⌘ ⌥ 1', category: 'Blok Dasar', command: (editor, range) => editor.chain().focus().deleteRange(range).setNode('heading', { level: 1 }).run() },
+  { title: 'Judul 2', icon: <Heading2 className="w-4 h-4" />, shortcut: '⌘ ⌥ 2', category: 'Blok Dasar', command: (editor, range) => editor.chain().focus().deleteRange(range).setNode('heading', { level: 2 }).run() },
+  { title: 'Judul 3', icon: <Heading3 className="w-4 h-4" />, shortcut: '⌘ ⌥ 3', category: 'Blok Dasar', command: (editor, range) => editor.chain().focus().deleteRange(range).setNode('heading', { level: 3 }).run() },
+  { title: 'Judul 4', icon: <Heading4 className="w-4 h-4" />, shortcut: '⌘ ⌥ 4', category: 'Blok Dasar', command: (editor, range) => editor.chain().focus().deleteRange(range).setNode('heading', { level: 4 }).run() },
+  { title: 'Lencana', icon: <Tag className="w-4 h-4" />, shortcut: '⌘ ⌥ B', category: 'Blok Dasar', command: (editor, range) => editor.chain().focus().deleteRange(range).toggleBadge().run() },
+  { title: 'Garis Pemisah', icon: <Minus className="w-4 h-4" />, shortcut: '⌘ ⌥ -', category: 'Blok Dasar', command: (editor, range) => editor.chain().focus().deleteRange(range).setHorizontalRule().run() },
   
   // Lists
-  { title: 'Bulleted list', icon: <List className="w-4 h-4" />, shortcut: '⌘ ⇧ 8', category: 'Lists', command: (editor, range) => editor.chain().focus().deleteRange(range).toggleBulletList().run() },
-  { title: 'Ordered list', icon: <ListOrdered className="w-4 h-4" />, shortcut: '⌘ ⇧ 7', category: 'Lists', command: (editor, range) => editor.chain().focus().deleteRange(range).toggleOrderedList().run() },
-  { title: 'To-do list', icon: <CheckSquare className="w-4 h-4" />, shortcut: '⌘ ⇧ 9', category: 'Lists', command: (editor, range) => editor.chain().focus().deleteRange(range).toggleTaskList().run() },
+  { title: 'Daftar Poin', icon: <List className="w-4 h-4" />, shortcut: '⌘ ⇧ 8', category: 'Daftar', command: (editor, range) => editor.chain().focus().deleteRange(range).toggleBulletList().run() },
+  { title: 'Daftar Nomor', icon: <ListOrdered className="w-4 h-4" />, shortcut: '⌘ ⇧ 7', category: 'Daftar', command: (editor, range) => editor.chain().focus().deleteRange(range).toggleOrderedList().run() },
+  { title: 'Daftar Tugas', icon: <CheckSquare className="w-4 h-4" />, shortcut: '⌘ ⇧ 9', category: 'Daftar', command: (editor, range) => editor.chain().focus().deleteRange(range).toggleTaskList().run() },
   
   // Media
-  { title: 'Image', icon: <ImageIcon className="w-4 h-4" />, category: 'Media', command: (editor, range) => { 
+  { title: 'Gambar', icon: <ImageIcon className="w-4 h-4" />, category: 'Media', command: (editor, range) => { 
     editor.chain().focus().deleteRange(range).run(); 
     const input = document.getElementById('tiptap-image-upload') as HTMLInputElement;
     if (input) input.click();
   }},
-  { title: 'Lucide Icon', icon: <Smile className="w-4 h-4" />, shortcut: '⌘ ⌥ I', category: 'Media', customView: 'icon-search' },
+  { title: 'Ikon Lucide', icon: <Smile className="w-4 h-4" />, shortcut: '⌘ ⌥ I', category: 'Media', customView: 'icon-search' },
 
   // Organization
-  { title: 'Blockquote', icon: <Quote className="w-4 h-4" />, shortcut: '⌘ ⇧ .', category: 'Organization', command: (editor, range) => editor.chain().focus().deleteRange(range).toggleBlockquote().run() },
-  { title: 'Toggle Section', icon: <ChevronDown className="w-4 h-4" />, category: 'Organization', command: (editor, range) => editor.chain().focus().deleteRange(range).setToggle().run() },
-  { title: 'Code block', icon: <Code className="w-4 h-4" />, shortcut: '⌘ ⌥ C', category: 'Organization', command: (editor, range) => editor.chain().focus().deleteRange(range).toggleCodeBlock().run() },
-  { title: 'SQL Query', icon: <DatabaseZap className="w-4 h-4" />, category: 'Organization', installedOnly: true, command: (editor, range) => editor.chain().focus().deleteRange(range).setCodeBlock({ language: 'sql' }).run() },
+  { title: 'Kutipan', icon: <Quote className="w-4 h-4" />, shortcut: '⌘ ⇧ .', category: 'Organisasi', command: (editor, range) => editor.chain().focus().deleteRange(range).toggleBlockquote().run() },
+  { title: 'Bagian Lipat', icon: <ChevronDown className="w-4 h-4" />, category: 'Organisasi', command: (editor, range) => editor.chain().focus().deleteRange(range).setToggle().run() },
+  { title: 'Blok Kode', icon: <Code className="w-4 h-4" />, shortcut: '⌘ ⌥ C', category: 'Organisasi', command: (editor, range) => editor.chain().focus().deleteRange(range).toggleCodeBlock().run() },
+  { title: 'Kueri SQL', icon: <DatabaseZap className="w-4 h-4" />, category: 'Organisasi', installedOnly: true, command: (editor, range) => editor.chain().focus().deleteRange(range).setCodeBlock({ language: 'sql' }).run() },
   {
-    title: 'Open preview',
+    title: 'Buka Pratinjau',
     icon: <PanelRightOpen className="w-4 h-4" />,
-    category: 'Organization',
+    category: 'Organisasi',
     children: [
-      { title: 'ERD Builder', icon: <Database className="w-4 h-4" />, companionType: 'erd' },
+      { title: 'ERD', icon: <Database className="w-4 h-4" />, companionType: 'erd' },
       { title: 'Flowchart', icon: <GitBranch className="w-4 h-4" />, companionType: 'flowchart' },
-      { title: 'Drawing', icon: <PenTool className="w-4 h-4" />, companionType: 'drawing' },
+      { title: 'Gambar', icon: <PenTool className="w-4 h-4" />, companionType: 'drawing' },
     ],
   },
 
   // Advanced / Table Submenu
   { 
-    title: 'Table Actions', 
+    title: 'Aksi Tabel', 
     icon: <TableIcon className="w-4 h-4" />, 
     shortcut: '⌘ ⌥ T',
-    category: 'Advanced',
+    category: 'Lanjutan',
     children: [
-      { title: 'Insert Table', icon: <Layout className="w-4 h-4" />, shortcut: '⌘ ⌥ T', command: (editor, range) => editor.chain().focus().deleteRange(range).insertTable({ rows: 3, cols: 3, withHeaderRow: true }).run() },
-      { title: 'Add Column', icon: <Columns className="w-4 h-4" />, command: (editor) => editor.chain().focus().addColumnAfter().run() },
-      { title: 'Delete Column', icon: <Columns className="w-4 h-4 text-destructive" />, command: (editor) => editor.chain().focus().deleteColumn().run() },
-      { title: 'Add Row', icon: <Layout className="w-4 h-4" />, command: (editor) => editor.chain().focus().addRowAfter().run() },
-      { title: 'Delete Row', icon: <Layout className="w-4 h-4 text-destructive" />, command: (editor) => editor.chain().focus().deleteRow().run() },
-      { title: 'Delete Table', icon: <Trash2 className="w-4 h-4 text-destructive" />, command: (editor) => editor.chain().focus().deleteTable().run() },
+      { title: 'Sisipkan Tabel', icon: <Layout className="w-4 h-4" />, shortcut: '⌘ ⌥ T', command: (editor, range) => editor.chain().focus().deleteRange(range).insertTable({ rows: 3, cols: 3, withHeaderRow: true }).run() },
+      { title: 'Tambah Kolom', icon: <Columns className="w-4 h-4" />, command: (editor) => editor.chain().focus().addColumnAfter().run() },
+      { title: 'Hapus Kolom', icon: <Columns className="w-4 h-4 text-destructive" />, command: (editor) => editor.chain().focus().deleteColumn().run() },
+      { title: 'Tambah Baris', icon: <Layout className="w-4 h-4" />, command: (editor) => editor.chain().focus().addRowAfter().run() },
+      { title: 'Hapus Baris', icon: <Layout className="w-4 h-4 text-destructive" />, command: (editor) => editor.chain().focus().deleteRow().run() },
+      { title: 'Hapus Tabel', icon: <Trash2 className="w-4 h-4 text-destructive" />, command: (editor) => editor.chain().focus().deleteTable().run() },
     ]
   },
 
   { 
-    title: 'Insert Calendar', 
+    title: 'Sisipkan Kalender', 
     icon: <CalendarIcon className="w-4 h-4" />, 
-    category: 'Advanced',
+    category: 'Lanjutan',
     command: (editor, range) => editor.chain().focus().deleteRange(range).insertContent({ type: 'calendar', attrs: { date: new Date().toISOString(), autoOpen: true } }).run()
   },
 
   // History
-  { title: 'Undo', icon: <Undo className="w-4 h-4" />, shortcut: '⌘Z', category: 'History', command: (editor, range) => { editor.chain().focus().deleteRange(range).run(); editor.commands.undo(); } },
-  { title: 'Redo', icon: <Redo className="w-4 h-4" />, shortcut: '⌘Y', category: 'History', command: (editor, range) => { editor.chain().focus().deleteRange(range).run(); editor.commands.redo(); } },
+  { title: 'Urungkan', icon: <Undo className="w-4 h-4" />, shortcut: '⌘Z', category: 'Riwayat', command: (editor, range) => { editor.chain().focus().deleteRange(range).run(); editor.commands.undo(); } },
+  { title: 'Ulangi', icon: <Redo className="w-4 h-4" />, shortcut: '⌘Y', category: 'Riwayat', command: (editor, range) => { editor.chain().focus().deleteRange(range).run(); editor.commands.redo(); } },
 ];
 
 export const SlashMenu: React.FC<SlashMenuProps> = ({ 
@@ -334,7 +334,7 @@ export const SlashMenu: React.FC<SlashMenuProps> = ({
             className="flex items-center gap-2 px-3 py-2 text-xs font-semibold hover:bg-muted transition-colors border-b border-border/50 text-muted-foreground"
           >
             <ChevronLeft className="w-3.5 h-3.5" />
-            Back to menu
+            Kembali
           </button>
         )}
         <div 
@@ -518,14 +518,14 @@ const IconSearchView = ({
           className="flex items-center gap-1.5 px-2 py-1.5 text-xs font-semibold hover:bg-muted transition-colors rounded text-muted-foreground w-fit"
         >
           <ChevronLeft className="w-3.5 h-3.5" />
-          Back to menu
+          Kembali
         </button>
         <div className="relative">
           <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
           <input
             ref={inputRef}
             type="text"
-            placeholder="Search icons..."
+            placeholder="Cari"
             value={search}
             onChange={e => setSearch(e.target.value)}
             className="w-full h-8 pl-8 pr-2 text-xs bg-muted/50 border-none rounded focus:outline-none focus:ring-1 focus:ring-primary text-foreground"
@@ -537,7 +537,7 @@ const IconSearchView = ({
         {displayedIcons.length > 0 && (
           <div>
             <div className="text-[10px] uppercase tracking-widest font-bold text-muted-foreground mb-1.5 px-1">
-              {search.length < 2 && recentIcons.length > 0 ? 'Recently Used' : search.length < 2 ? 'Popular Icons' : 'Search Results'}
+              {search.length < 2 && recentIcons.length > 0 ? 'Terakhir Digunakan' : search.length < 2 ? 'Ikon Populer' : 'Hasil Pencarian'}
             </div>
             <div className="grid grid-cols-6 gap-0.5">
               {displayedIcons.map((name, idx) => {

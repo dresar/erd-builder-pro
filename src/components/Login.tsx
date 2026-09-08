@@ -149,7 +149,7 @@ export function Login({ onLogin, onGuestLogin }: LoginProps) {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (setupMode && password !== confirmPassword) {
-      toast.error("Passwords do not match");
+      toast.error("Kata sandi tidak cocok");
       return;
     }
     setLoading(true);
@@ -163,14 +163,14 @@ export function Login({ onLogin, onGuestLogin }: LoginProps) {
         const data = await res.json();
         if (data.token) setAuthToken(data.token);
         onLogin(data.user);
-        toast.success(setupMode ? "Administrator account created!" : "Welcome back!");
+        toast.success(setupMode ? "Akun administrator berhasil dibuat!" : "Selamat datang kembali!");
       } else {
         const data = await res.json();
-        toast.error(data.error || "Login failed");
+        toast.error(data.error || "Gagal masuk");
       }
     } catch (err) {
       console.error('Login error:', err);
-      const errorMessage = err instanceof Error ? err.message : 'An unexpected error occurred';
+      const errorMessage = err instanceof Error ? err.message : 'Terjadi kesalahan tidak terduga';
       toast.error(errorMessage);
     } finally {
       setLoading(false);
@@ -183,11 +183,11 @@ export function Login({ onLogin, onGuestLogin }: LoginProps) {
         <div className={cn("flex flex-col gap-6")}>
           <Card>
             <CardHeader>
-              <CardTitle>{setupMode ? 'Create administrator account' : 'Login to your account'}</CardTitle>
+              <CardTitle>{setupMode ? 'Buat Akun Admin' : 'Masuk'}</CardTitle>
               <CardDescription>
                 {setupMode
-                  ? 'Set the first administrator email and password for this Self-host installation.'
-                  : 'Enter your email below to login to your account'}
+                  ? 'Atur email dan kata sandi administrator pertama untuk instalasi ini.'
+                  : 'Masukkan email dan kata sandi Anda untuk melanjutkan.'}
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -195,11 +195,11 @@ export function Login({ onLogin, onGuestLogin }: LoginProps) {
                 <FieldGroup>
                   {setupMode && (
                     <Field>
-                      <FieldLabel htmlFor="name">Name</FieldLabel>
+                      <FieldLabel htmlFor="name">Nama</FieldLabel>
                       <Input
                         id="name"
                         type="text"
-                        placeholder="Enter administrator name"
+                        placeholder="Nama"
                         required
                         value={name}
                         onChange={(e) => setName(e.target.value)}
@@ -211,7 +211,7 @@ export function Login({ onLogin, onGuestLogin }: LoginProps) {
                     <Input
                       id="email"
                       type="email"
-                      placeholder="m@example.com"
+                      placeholder="Email"
                       required
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
@@ -219,13 +219,13 @@ export function Login({ onLogin, onGuestLogin }: LoginProps) {
                   </Field>
                   <Field>
                     <div className="flex items-center">
-                      <FieldLabel htmlFor="password">Password</FieldLabel>
+                      <FieldLabel htmlFor="password">Kata Sandi</FieldLabel>
                     </div>
                     <div className="relative">
                       <Input 
                         id="password" 
                         type={showPassword ? "text" : "password"} 
-                        placeholder={setupMode ? "Create a password" : "Enter your password"}
+                        placeholder="Kata sandi"
                         required 
                         value={password}
                         onChange={(e) => setPassword(e.target.value)}
@@ -235,7 +235,7 @@ export function Login({ onLogin, onGuestLogin }: LoginProps) {
                         type="button"
                         onClick={() => setShowPassword(!showPassword)}
                         className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground transition-colors hover:text-foreground focus:outline-none cursor-pointer"
-                        aria-label={showPassword ? "Hide password" : "Show password"}
+                        aria-label={showPassword ? "Sembunyikan sandi" : "Tampilkan sandi"}
                       >
                         {showPassword ? (
                           <EyeOff className="h-4 w-4" />
@@ -247,12 +247,12 @@ export function Login({ onLogin, onGuestLogin }: LoginProps) {
                   </Field>
                   {setupMode && (
                     <Field>
-                      <FieldLabel htmlFor="confirm-password">Confirm Password</FieldLabel>
+                      <FieldLabel htmlFor="confirm-password">Konfirmasi Kata Sandi</FieldLabel>
                       <div className="relative">
                         <Input
                           id="confirm-password"
                           type={showConfirmPassword ? "text" : "password"}
-                          placeholder="Re-enter your password"
+                          placeholder="Konfirmasi kata sandi"
                           required
                           value={confirmPassword}
                           onChange={(e) => setConfirmPassword(e.target.value)}
@@ -262,7 +262,7 @@ export function Login({ onLogin, onGuestLogin }: LoginProps) {
                           type="button"
                           onClick={() => setShowConfirmPassword(!showConfirmPassword)}
                           className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground transition-colors hover:text-foreground focus:outline-none cursor-pointer"
-                          aria-label={showConfirmPassword ? "Hide confirm password" : "Show confirm password"}
+                          aria-label={showConfirmPassword ? "Sembunyikan konfirmasi sandi" : "Tampilkan konfirmasi sandi"}
                         >
                           {showConfirmPassword ? (
                             <EyeOff className="h-4 w-4" />
@@ -275,7 +275,7 @@ export function Login({ onLogin, onGuestLogin }: LoginProps) {
                   )}
                   <Field className="flex flex-col gap-3">
                     <Button type="submit" disabled={loading} className="w-full">
-                      {loading ? (setupMode ? "Creating account..." : "Logging in...") : (setupMode ? "Create administrator" : "Login")}
+                      {loading ? (setupMode ? "Membuat..." : "Masuk...") : (setupMode ? "Buat Admin" : "Masuk")}
                     </Button>
                     {guestMode && (
                       <>
@@ -284,7 +284,7 @@ export function Login({ onLogin, onGuestLogin }: LoginProps) {
                             <span className="w-full border-t" />
                           </div>
                           <div className="relative flex justify-center text-xs uppercase">
-                            <span className="bg-background px-2 text-muted-foreground">Or</span>
+                            <span className="bg-background px-2 text-muted-foreground">Atau</span>
                           </div>
                         </div>
                         <Button 
@@ -293,16 +293,16 @@ export function Login({ onLogin, onGuestLogin }: LoginProps) {
                           className="w-full" 
                           onClick={() => {
                             onGuestLogin?.();
-                            toast.success("Welcome! You're in Guest Mode.");
+                            toast.success("Selamat datang! Anda dalam Mode Tamu.");
                           }}
                         >
-                          Try as Guest (Local Mode)
+                          Mode Tamu
                         </Button>
                       </>
                     )}
                     {setupMode && (
                       <FieldDescription className="text-center">
-                        This setup is available only once for the empty database.
+                        Pengaturan ini hanya tersedia sekali saat database kosong.
                       </FieldDescription>
                     )}
                   </Field>

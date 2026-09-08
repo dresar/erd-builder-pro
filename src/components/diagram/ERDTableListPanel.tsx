@@ -26,29 +26,29 @@ export function ERDTableListPanel({ nodes, onEdit }: { nodes: Node<Entity>[]; on
     <div className="flex h-full min-h-0 flex-col">
       <div className="shrink-0 space-y-3 border-b p-4">
         <div>
-          <h3 className="text-sm font-semibold">Tables</h3>
-          <p className="text-xs text-muted-foreground">Find a table or open its properties.</p>
+          <h3 className="text-sm font-semibold">Tabel</h3>
+          <p className="text-xs text-muted-foreground">Cari tabel atau edit properti.</p>
         </div>
         <div className="relative">
           <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
-          <Input value={search} onChange={event => setSearch(event.target.value)} placeholder="Search tables..." className="pl-9" autoFocus />
+          <Input value={search} onChange={event => setSearch(event.target.value)} placeholder="Cari" className="pl-9" autoFocus />
         </div>
-        <p className="text-[11px] text-muted-foreground">Showing {tables.length} of {nodes.length} tables</p>
+        <p className="text-[11px] text-muted-foreground">Menampilkan {tables.length} dari {nodes.length} tabel</p>
       </div>
       <div className="min-h-0 flex-1 space-y-1 overflow-y-auto p-2">
         {tables.map(node => (
           <div key={node.id} className="group flex items-center gap-1 rounded-md border border-transparent px-1 hover:border-border hover:bg-muted/50">
-            <button type="button" onClick={() => jumpToTable(node.id)} className="flex min-w-0 flex-1 items-center gap-2 px-2 py-2.5 text-left" title={`Jump to ${node.data.name}`}>
+            <button type="button" onClick={() => jumpToTable(node.id)} className="flex min-w-0 flex-1 items-center gap-2 px-2 py-2.5 text-left" title={`Lompat ke ${node.data.name}`}>
               <MapPin className="size-3.5 shrink-0 text-muted-foreground" />
               <span className="min-w-0 flex-1 truncate text-sm font-medium">{node.data.name}</span>
               <span className="text-[10px] text-muted-foreground">{node.data.columns.length}</span>
             </button>
-            <Button type="button" variant="ghost" size="icon-sm" onClick={() => editTable(node.id)} title={`Edit ${node.data.name} properties`} aria-label={`Edit ${node.data.name} properties`}>
+            <Button type="button" variant="ghost" size="icon-sm" onClick={() => editTable(node.id)} title={`Edit properti ${node.data.name}`} aria-label={`Edit properti ${node.data.name}`}>
               <Pencil className="size-3.5" />
             </Button>
           </div>
         ))}
-        {tables.length === 0 && <div className="px-3 py-10 text-center text-sm text-muted-foreground">No matching tables found.</div>}
+        {tables.length === 0 && <div className="px-3 py-10 text-center text-sm text-muted-foreground">Tidak ada tabel ditemukan.</div>}
       </div>
     </div>
   );

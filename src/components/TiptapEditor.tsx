@@ -312,10 +312,10 @@ export function TiptapEditor({ content, onChange, isReadOnly = false, disableAIS
       includeChildren: true,
       placeholder: ({ node, editor }) => {
         if (editor.isEmpty) {
-          return "Type '/' for commands or start writing...";
+          return "Ketik '/' untuk perintah atau tulis...";
         }
         if (node.type.name === 'paragraph') {
-          return "Text";
+          return "Teks";
         }
         return "";
       },

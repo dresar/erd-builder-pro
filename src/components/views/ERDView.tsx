@@ -631,7 +631,7 @@ const ERDViewComponent = ({
         <div className="absolute bottom-4 inset-x-0 z-20 flex justify-center pointer-events-none">
           <div className="flex items-center gap-2 px-4 py-2 bg-amber-500/10 border border-amber-500/30 rounded-lg pointer-events-auto text-sm text-amber-700 dark:text-amber-400 shadow-lg">
             <EyeOff className="h-4 w-4 shrink-0" />
-            <span>Read-only — imported from production database. Switch to desktop app to modify.</span>
+            <span>Hanya-baca — diimpor dari database produksi. Buka aplikasi desktop untuk mengubah.</span>
           </div>
         </div>
       )}
@@ -639,19 +639,19 @@ const ERDViewComponent = ({
       {!pendingDiff && (
         <div className="absolute top-6 inset-x-0 z-10 flex justify-center pointer-events-none">
           <div className="flex items-center gap-1.5 p-1.5 bg-background/95 backdrop-blur-md border border-border/50 rounded-2xl shadow-2xl pointer-events-auto max-w-[95vw] overflow-x-auto no-scrollbar">
-            <JumpToNode nodes={nodes} label="Table" />
+            <JumpToNode nodes={nodes} label="Tabel" />
             {!isReadOnly && <div className="w-px h-6 bg-border mx-0.5" />}
             
             {!isReadOnly && (
               <Button onClick={addEntity} size="sm" className="h-9 px-3 sm:px-4 font-bold shadow-lg shadow-primary/20 cursor-pointer">
                 <Plus className="w-4 h-4 sm:mr-2" />
-                <span className="hidden sm:inline">Add Table</span>
+                <span className="hidden sm:inline">Tambah Tabel</span>
               </Button>
             )}
             {!isReadOnly && (
               <Button onClick={onImportSQL} variant="outline" size="sm" className="h-9 px-3 border-border hover:bg-muted bg-muted/50 text-xs font-semibold cursor-pointer">
                 <Upload className="w-3.5 h-3.5 sm:mr-1.5" />
-                <span className="hidden sm:inline">Import SQL</span>
+                <span className="hidden sm:inline">Impor SQL</span>
               </Button>
             )}
             {!isProductionDb && (
@@ -663,25 +663,25 @@ const ERDViewComponent = ({
             {!isReadOnly && !isProductionDb && isInstalledApp() && (
               <Button onClick={() => setRightPanelMode('repository')} variant="outline" size="sm" className="h-9 px-3 border-border hover:bg-muted bg-muted/50 text-xs font-semibold cursor-pointer">
                 <FolderGit2 className="w-3.5 h-3.5 sm:mr-1.5" />
-                <span className="hidden sm:inline">Repository</span>
+                <span className="hidden sm:inline">Repositori</span>
               </Button>
             )}
             <Button onClick={onAutoLayout} variant="outline" size="sm" className="h-9 px-3 border-border hover:bg-muted bg-muted/50 text-xs font-semibold cursor-pointer">
               <LayoutGrid className="w-3.5 h-3.5 sm:mr-1.5" />
-              <span className="hidden sm:inline">Auto Layout</span>
+              <span className="hidden sm:inline">Tata Letak</span>
             </Button>
 
             {isProductionDb && (
               <Button onClick={handleSync} variant="outline" size="sm" className="h-9 px-3 border-amber-500/50 hover:bg-amber-500/10 bg-amber-500/5 text-amber-600 dark:text-amber-400 text-xs font-semibold cursor-pointer" disabled={isSyncing}>
                 <RefreshCw className={`w-3.5 h-3.5 sm:mr-1.5 ${isSyncing ? 'animate-spin' : ''}`} />
-                <span className="hidden sm:inline">{isSyncing ? 'Syncing...' : 'Sync'}</span>
+                <span className="hidden sm:inline">{isSyncing ? 'Sinkron...' : 'Sinkron'}</span>
               </Button>
             )}
 
             {isProductionDb && (
-              <Button onClick={handleExportImage} variant="outline" size="sm" className="h-9 px-3 border-border hover:bg-muted bg-muted/50 text-xs font-semibold cursor-pointer" title="Export SVG">
+              <Button onClick={handleExportImage} variant="outline" size="sm" className="h-9 px-3 border-border hover:bg-muted bg-muted/50 text-xs font-semibold cursor-pointer" title="Ekspor SVG">
                 <Download className="w-3.5 h-3.5 sm:mr-1.5" />
-                <span className="hidden sm:inline">Export SVG</span>
+                <span className="hidden sm:inline">Ekspor SVG</span>
               </Button>
             )}
 
@@ -693,7 +693,7 @@ const ERDViewComponent = ({
                   onClick={undo} 
                   disabled={!canUndo}
                   className="h-8 w-8 text-muted-foreground hover:text-foreground disabled:opacity-30"
-                  title="Undo (Ctrl+Z)"
+                  title="Urungkan (Ctrl+Z)"
                 >
                   <Undo2 className="w-4 h-4" />
                 </Button>
@@ -703,7 +703,7 @@ const ERDViewComponent = ({
                   onClick={redo} 
                   disabled={!canRedo}
                   className="h-8 w-8 text-muted-foreground hover:text-foreground disabled:opacity-30"
-                  title="Redo (Ctrl+Y)"
+                  title="Ulangi (Ctrl+Y)"
                 >
                   <Redo2 className="w-4 h-4" />
                 </Button>

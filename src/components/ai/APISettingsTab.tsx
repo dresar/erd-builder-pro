@@ -197,7 +197,7 @@ export const APISettingsTab: React.FC<APISettingsTabProps> = ({
               {selectedProvider.code === 'openai_compatible' && <Globe className="w-6 h-6 text-purple-500" />}
               <div>
                 <h2 className="text-base font-semibold">{selectedProvider.name}</h2>
-                <p className="text-xs text-muted-foreground">Credentials, endpoint, and default model.</p>
+                <p className="text-xs text-muted-foreground">Kredensial, endpoint, dan model default.</p>
               </div>
             </div>
 
@@ -226,7 +226,7 @@ export const APISettingsTab: React.FC<APISettingsTabProps> = ({
               <div className="relative">
                 <Input 
                   type={showKey[selectedProvider.code] ? 'text' : 'password'}
-                  placeholder={`Enter your ${selectedProvider.name} API Key`}
+                  placeholder="API Key"
                   value={selectedConfig?.api_key || ''}
                   onChange={(e) => onUpdateConfig(selectedProvider.code, { api_key: e.target.value })}
                   className="h-9 text-sm pr-10"
@@ -244,7 +244,7 @@ export const APISettingsTab: React.FC<APISettingsTabProps> = ({
             <Field>
               <FieldLabel className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/70 flex items-center gap-2 px-1">
                 <Bot className="size-3" />
-                Default Model
+                Model Default
               </FieldLabel>
               <SearchableSelect
                 value={selectedConfig?.selected_model_id && combinedModels.some(m => m.id === String(selectedConfig.selected_model_id))
@@ -252,9 +252,9 @@ export const APISettingsTab: React.FC<APISettingsTabProps> = ({
                   : ""}
                 onChange={selectModel}
                 items={combinedModels}
-                placeholder={isFetchingModels ? "Fetching models..." : "Select a model"}
-                searchPlaceholder="Search models..."
-                emptyMessage={isFetchingModels ? "Fetching models..." : "No models available"}
+                placeholder={isFetchingModels ? "Memuat..." : "Pilih Model"}
+                searchPlaceholder="Cari"
+                emptyMessage={isFetchingModels ? "Memuat..." : "Tidak ada model"}
                 className="h-9 text-sm"
                 getItemValue={(m) => m.id}
                 getItemLabel={(m) => m.display_name}
@@ -276,7 +276,7 @@ export const APISettingsTab: React.FC<APISettingsTabProps> = ({
                 {selectedConfig?.is_enabled && <Check className="w-3 h-3 text-white" />}
               </button>
               <span className="text-sm font-medium cursor-pointer select-none">
-                Enable this provider
+                Aktifkan provider
               </span>
             </div>
           </CardContent>
@@ -293,7 +293,7 @@ export const APISettingsTab: React.FC<APISettingsTabProps> = ({
               ) : (
                 <RefreshCw className="w-4 h-4" />
               )}
-              {isTesting[selectedProvider.code] ? 'Testing...' : 'Test Connection'}
+              {isTesting[selectedProvider.code] ? 'Memeriksa...' : 'Tes Koneksi'}
             </Button>
             <Button 
               onClick={() => onSave(selectedProvider.code)}
@@ -301,7 +301,7 @@ export const APISettingsTab: React.FC<APISettingsTabProps> = ({
               disabled={isSaving}
             >
               {isSaving ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
-              {isSaving ? 'Saving...' : 'Save Configuration'}
+              {isSaving ? 'Menyimpan...' : 'Simpan'}
             </Button>
           </CardFooter>
         </Card>

@@ -203,12 +203,12 @@ export const MainHeader = React.memo(({
                               <TooltipTrigger render={
                                 <Badge variant="outline" className="h-5 px-1.5 gap-1.5 bg-green-500/5 text-green-500 border-green-500/20 rounded-full hover:bg-green-500/10 cursor-help shadow-sm">
                                   <Globe className="w-2.5 h-2.5" />
-                                  <span className="text-[10px] font-bold uppercase tracking-wider hidden xs:inline">Public</span>
+                                  <span className="text-[10px] font-bold uppercase tracking-wider hidden xs:inline">Publik</span>
                                   <div className="w-1 h-1 rounded-full bg-green-500 animate-pulse ml-0.5" />
                                 </Badge>
                               } />
                               <TooltipContent side="bottom" align="center" className="text-[10px] font-medium">
-                                This document is shared publicly via a secret link.
+                                Dokumen dibagikan via tautan publik.
                               </TooltipContent>
                             </Tooltip>
                           </TooltipProvider>
@@ -217,7 +217,7 @@ export const MainHeader = React.memo(({
                     )}
                     {!activeFileName && !activeProjectName && (
                       <BreadcrumbItem className="shrink-0">
-                        <BreadcrumbPage className="font-medium text-foreground">{info?.label || 'Document'}</BreadcrumbPage>
+                        <BreadcrumbPage className="font-medium text-foreground">{info?.label || 'Dokumen'}</BreadcrumbPage>
                       </BreadcrumbItem>
                     )}
                   </>
@@ -226,7 +226,7 @@ export const MainHeader = React.memo(({
               if (path.startsWith('/trash')) {
                 return (
                   <BreadcrumbItem className="shrink-0">
-                    <BreadcrumbPage className="font-medium text-foreground">Trash</BreadcrumbPage>
+                    <BreadcrumbPage className="font-medium text-foreground">Sampah</BreadcrumbPage>
                   </BreadcrumbItem>
                 );
               }
@@ -251,7 +251,7 @@ export const MainHeader = React.memo(({
         {!isOnline && !isPublicView ? (
           <div className="hidden md:flex items-center gap-2 px-3 py-1 rounded-full bg-destructive/10 border border-destructive/20 text-destructive animate-in fade-in slide-in-from-top-1 duration-500">
             <div className="w-1.5 h-1.5 rounded-full bg-destructive animate-pulse" />
-            <span className="text-[10px] font-bold uppercase tracking-wider">Offline Mode: Navigation Disabled</span>
+            <span className="text-[10px] font-bold uppercase tracking-wider">Mode Offline</span>
           </div>
         ) : null}
       </div>
@@ -267,11 +267,11 @@ export const MainHeader = React.memo(({
                       <TooltipTrigger render={
                         <div className="flex items-center gap-1.5 px-2 py-1 text-xs text-muted-foreground">
                           <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                          <span className="hidden xs:inline">Saving</span>
+                          <span className="hidden xs:inline">Menyimpan</span>
                         </div>
                       } />
                       <TooltipContent side="bottom" className="text-[10px] font-medium">
-                        Saving changes locally...
+                        Menyimpan ke lokal...
                       </TooltipContent>
                     </Tooltip>
                   </TooltipProvider>
@@ -281,18 +281,18 @@ export const MainHeader = React.memo(({
                       <TooltipTrigger render={
                         <div className="flex items-center gap-1.5 p-0.5 sm:px-2 sm:py-1 rounded-md bg-destructive/10 sm:border sm:border-destructive/20 text-destructive cursor-help sm:shadow-sm transition-all duration-300">
                           <CloudOff className="w-3.5 h-3.5" />
-                          <span className="text-[10px] font-bold uppercase tracking-wider hidden xs:inline">Sync Failed</span>
+                          <span className="text-[10px] font-bold uppercase tracking-wider hidden xs:inline">Gagal Sinkron</span>
                         </div>
                       } />
                       <TooltipContent side="bottom" className="text-[10px] font-medium max-w-50 text-center">
-                        Changes saved locally, but cloud sync failed. We'll retry automatically.
+                        Tersimpan di lokal, gagal sinkron ke cloud.
                       </TooltipContent>
                     </Tooltip>
                   </TooltipProvider>
                 ) : isSyncing ? (
                   <div className="flex items-center gap-1.5 px-2 py-1 text-xs text-muted-foreground">
                     <Cloud className="w-3.5 h-3.5" />
-                    <span className="hidden xs:inline">Syncing</span>
+                    <span className="hidden xs:inline">Sinkronisasi</span>
                   </div>
                 ) : hasPendingSyncs ? (
                   <TooltipProvider delay={0}>
@@ -306,12 +306,12 @@ export const MainHeader = React.memo(({
                           className="h-6 sm:h-7 px-1 sm:px-2 gap-1 sm:gap-2 bg-primary/10 text-primary hover:bg-primary/20 hover:text-primary-foreground border border-primary/20 transition-all duration-300 sm:shadow-sm"
                         >
                           <Save className="w-3.5 h-3.5 animate-in zoom-in-50" />
-                          <span className="text-[10px] font-bold uppercase tracking-wider hidden xs:inline">Save</span>
+                          <span className="text-[10px] font-bold uppercase tracking-wider hidden xs:inline">Simpan</span>
                         </Button>
                       } />
                       <TooltipContent side="bottom" className="text-[10px] font-medium">
                         <div className="flex flex-col items-center gap-0.5">
-                          <span>Save changes to cloud</span>
+                          <span>Simpan ke cloud</span>
                           <span className="opacity-50 text-[9px]">{isMac ? '⌘' : 'Ctrl'} + S</span>
                         </div>
                       </TooltipContent>
@@ -323,11 +323,11 @@ export const MainHeader = React.memo(({
                       <TooltipTrigger render={
                         <div className="flex items-center gap-1.5 px-2 py-1 text-xs text-muted-foreground">
                           <Check className="w-3.5 h-3.5" />
-                          <span className="hidden xs:inline">Saved</span>
+                          <span className="hidden xs:inline">Tersimpan</span>
                         </div>
                       } />
                       <TooltipContent side="bottom" className="text-[10px] font-medium">
-                        All changes are saved and synced
+                        Tersimpan dan tersinkron
                       </TooltipContent>
                     </Tooltip>
                   </TooltipProvider>

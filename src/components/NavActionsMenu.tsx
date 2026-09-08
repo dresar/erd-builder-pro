@@ -82,7 +82,7 @@ export const NavActionsMenu = ({
 
   const handleCopyLink = () => {
     if (!activeFileUid) {
-      toast.error("Document link not available");
+      toast.error("Tautan tidak tersedia");
       return;
     }
     
@@ -96,7 +96,7 @@ export const NavActionsMenu = ({
     const url = `${window.location.origin}/view/${urlType}/${activeFileUid}`;
     
     navigator.clipboard.writeText(url);
-    toast.success("Public share link copied to clipboard");
+    toast.success("Tautan publik disalin");
   };
 
   return (
@@ -108,7 +108,7 @@ export const NavActionsMenu = ({
             size="sm" 
             className="h-8 text-muted-foreground hover:bg-muted/80 hover:text-foreground hover:shadow-sm active:scale-95 transition-all duration-200"
           >
-            <span className="hidden sm:inline mr-1.5 text-xs font-medium">Actions</span>
+            <span className="hidden sm:inline mr-1.5 text-xs font-medium">Aksi</span>
             <MoreHorizontal className="h-4 w-4" />
           </Button>
         } />
@@ -119,7 +119,7 @@ export const NavActionsMenu = ({
               className="gap-2 cursor-pointer"
             >
               <Link2 className="h-4 w-4 text-muted-foreground" />
-              <span>Copy Public Link</span>
+              <span>Salin Tautan</span>
             </DropdownMenuItem>
           ) : (
             <>
@@ -129,7 +129,7 @@ export const NavActionsMenu = ({
                 className="gap-2 cursor-pointer"
               >
                 <Share2 className="h-4 w-4 text-muted-foreground" />
-                <span>Share</span>
+                <span>Bagikan</span>
               </DropdownMenuItem>
               
               {isPublic && (
@@ -139,7 +139,7 @@ export const NavActionsMenu = ({
                   className="gap-2 cursor-pointer"
                 >
                   <Link2 className="h-4 w-4 text-muted-foreground" />
-                  <span>Copy Public Link</span>
+                  <span>Salin Tautan</span>
                 </DropdownMenuItem>
               )}
 
@@ -155,13 +155,13 @@ export const NavActionsMenu = ({
                 ) : (
                   <Edit2 className="h-4 w-4 text-muted-foreground" />
                 )}
-                <span>{documentType === 'erd' ? 'Settings' : 'Edit Document'}</span>
+                <span>{documentType === 'erd' ? 'Pengaturan' : 'Edit Dokumen'}</span>
               </DropdownMenuItem>
 
               {onOpenHistory && (
                 <DropdownMenuItem disabled={!historyEnabled} onClick={() => onOpenHistory()} className="gap-2 cursor-pointer">
                   <History className="h-4 w-4 text-muted-foreground" />
-                  <span>Version History</span>
+                  <span>Riwayat Versi</span>
                 </DropdownMenuItem>
               )}
 
@@ -173,7 +173,7 @@ export const NavActionsMenu = ({
                 className="gap-2 text-destructive focus:text-destructive focus:bg-destructive/10 cursor-pointer"
               >
                 <Trash2 className="h-4 w-4" />
-                <span>Move to Trash</span>
+                <span>Hapus</span>
               </DropdownMenuItem>
             </>
           )}
@@ -187,7 +187,7 @@ export const NavActionsMenu = ({
                 className="gap-2 cursor-pointer"
               >
                 <Copy className="h-4 w-4 text-muted-foreground" />
-                <span>Duplicate</span>
+                <span>Duplikat</span>
               </DropdownMenuItem>
             </>
           )}
@@ -198,14 +198,14 @@ export const NavActionsMenu = ({
               <DropdownMenuSub>
                 <DropdownMenuSubTrigger className="gap-2 cursor-pointer">
                   <Download className="h-4 w-4 text-muted-foreground" />
-                  <span>Export All</span>
+                  <span>Ekspor</span>
                 </DropdownMenuSubTrigger>
                 <DropdownMenuSubContent className="w-48">
                   <DropdownMenuItem onClick={onExportAll} className="gap-2 cursor-pointer">
-                    <span>Export Schemas</span>
+                    <span>Ekspor Skema</span>
                   </DropdownMenuItem>
                   <DropdownMenuItem onClick={onExportImage} className="gap-2 cursor-pointer">
-                    <span>Download SVG</span>
+                    <span>Unduh SVG</span>
                   </DropdownMenuItem>
                 </DropdownMenuSubContent>
               </DropdownMenuSub>
@@ -225,7 +225,7 @@ export const NavActionsMenu = ({
               >
                 <div className="flex items-center gap-2 flex-1">
                   <Copy className="h-4 w-4 text-muted-foreground" />
-                  <span>Copy Markdown</span>
+                  <span>Salin Markdown</span>
                 </div>
               </DropdownMenuItem>
               <DropdownMenuItem 
@@ -235,7 +235,7 @@ export const NavActionsMenu = ({
               >
                 <div className="flex items-center gap-2 flex-1">
                   <Upload className="h-4 w-4 text-muted-foreground" />
-                  <span>Import</span>
+                  <span>Impor</span>
                 </div>
                 <div className="ml-auto flex items-center gap-0.5 text-muted-foreground/60">
                   <span className="text-[13px] font-sans leading-none">⌘</span>
@@ -250,7 +250,7 @@ export const NavActionsMenu = ({
               >
                 <div className="flex items-center gap-2 flex-1">
                   <Download className="h-4 w-4 text-muted-foreground" />
-                  <span>Export</span>
+                  <span>Ekspor</span>
                 </div>
                 <div className="ml-auto flex items-center gap-0.5 text-muted-foreground/60">
                   <span className="text-[13px] font-sans leading-none">⌘</span>
@@ -264,25 +264,25 @@ export const NavActionsMenu = ({
               <DropdownMenuSub>
                 <DropdownMenuSubTrigger className="gap-2 cursor-pointer">
                   <BarChart3 className="h-4 w-4 text-muted-foreground" />
-                  <span>Text Stats</span>
+                  <span>Statistik</span>
                 </DropdownMenuSubTrigger>
                 <DropdownMenuSubContent className="w-52 p-1">
                   <div className="px-3 py-1.5 space-y-1">
                     <div className="flex items-center justify-between text-xs">
-                      <span className="text-muted-foreground">Words</span>
+                      <span className="text-muted-foreground">Kata</span>
                       <span className="font-medium tabular-nums">{stats.words.toLocaleString()}</span>
                     </div>
                     <div className="flex items-center justify-between text-xs">
-                      <span className="text-muted-foreground">Sentences</span>
+                      <span className="text-muted-foreground">Kalimat</span>
                       <span className="font-medium tabular-nums">{stats.sentences.toLocaleString()}</span>
                     </div>
                     <div className="flex items-center justify-between text-xs">
-                      <span className="text-muted-foreground">Paragraphs</span>
+                      <span className="text-muted-foreground">Paragraf</span>
                       <span className="font-medium tabular-nums">{stats.paragraphs.toLocaleString()}</span>
                     </div>
                     <DropdownMenuSeparator className="my-1.5" />
                     <div className="flex items-center justify-between text-xs">
-                      <span className="text-muted-foreground">Characters</span>
+                      <span className="text-muted-foreground">Karakter</span>
                       <span className="font-medium tabular-nums">{stats.characters.toLocaleString()}</span>
                     </div>
                   </div>
