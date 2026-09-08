@@ -1,6 +1,7 @@
 import React from 'react';
 import { FileText, Database, Network, FolderPlus } from 'lucide-react';
 import { FieldLabel } from '@/components/ui/field';
+import { InfoTip } from './InfoTip';
 
 interface ParsedExternalBundle {
   project?: {
@@ -42,93 +43,90 @@ export function ExternalAIImportTab({
   projectName,
 }: ExternalAIImportTabProps) {
   return (
-    <div className="space-y-5">
+    <div className="space-y-4">
       <div>
-        <FieldLabel className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/70 px-1 mb-1.5 block">
-          Tempelkan Hasil dari Claude / ChatGPT
-        </FieldLabel>
+        <div className="flex items-center gap-1.5 mb-1.5">
+          <FieldLabel className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/70 px-1">
+            Hasil AI
+          </FieldLabel>
+          <InfoTip text="Mendukung bundel JSON lengkap, skema DBML, flowchart JSON, atau dokumen PRD Markdown." />
+        </div>
         <textarea 
-          placeholder="JSON"
+          placeholder="Tempel"
           value={rawJson}
           onChange={(e) => setRawJson(e.target.value)}
-          rows={10}
-          className="w-full p-3 font-mono text-xs rounded-lg bg-muted/20 border border-border/40 resize-y text-foreground outline-none focus:border-indigo-500/50 leading-relaxed"
+          rows={8}
+          className="w-full p-2.5 font-mono text-xs rounded-lg bg-muted/20 border border-border/40 resize-y text-foreground outline-none focus:border-indigo-500/50 leading-relaxed"
         />
-        <p className="text-[11px] text-muted-foreground mt-1.5 px-1">
-          Mendukung bundel JSON lengkap, skema DBML, flowchart JSON murni, atau dokumen PRD Markdown.
-        </p>
       </div>
 
       {/* Validation Status Cards */}
       {rawJson.trim() && (
-        <div className="p-4 rounded-xl border border-border/40 bg-muted/10 space-y-3">
-          <p className="text-xs font-semibold text-foreground">Hasil Analisis:</p>
+        <div className="p-3 rounded-xl border border-border/40 bg-muted/10 space-y-2">
+          <div className="flex items-center gap-1.5">
+            <span className="text-xs font-semibold text-foreground">Analisis</span>
+            <InfoTip text="Status deteksi aset dari teks yang ditempelkan." />
+          </div>
           
           {parsedData ? (
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-              {/* PRD Status */}
-              <div className="p-3 rounded-lg border border-border/30 bg-background flex items-center gap-2.5">
-                <FileText className={`size-4 ${parsedData.prd ? 'text-emerald-500' : 'text-muted-foreground'}`} />
-                <div>
-                  <p className="text-xs font-bold">Catatan PRD</p>
-                  <p className="text-[10px] text-muted-foreground">
-                    {parsedData.prd?.content_markdown 
-                      ? `✓ ${parsedData.prd.content_markdown.length} karakter` 
-                      : 'Tidak ditemukan'}
+            <div className="grid grid-cols-3 gap-2">
+              <div className="p-2 rounded-lg border border-border/30 bg-background flex items-center gap-2">
+                <FileText className={`size-3.5 ${parsedData.prd ? 'text-emerald-500' : 'text-muted-foreground'}`} />
+                <div className="truncate">
+                  <p className="text-xs font-bold truncate">PRD</p>
+                  <p className="text-[10px] text-muted-foreground truncate">
+                    {parsedData.prd?.content_markdown ? `✓ ${parsedData.prd.content_markdown.length} kar` : '–'}
                   </p>
                 </div>
               </div>
 
-              {/* ERD Status */}
-              <div className="p-3 rounded-lg border border-border/30 bg-background flex items-center gap-2.5">
-                <Database className={`size-4 ${detectedTableCount > 0 ? 'text-indigo-400' : 'text-muted-foreground'}`} />
-                <div>
-                  <p className="text-xs font-bold">ERD Database</p>
-                  <p className="text-[10px] text-muted-foreground">
-                    {detectedTableCount > 0 
-                      ? `✓ ${detectedTableCount} tabel terdeteksi` 
-                      : 'Tidak ditemukan'}
+              <div className="p-2 rounded-lg border border-border/30 bg-background flex items-center gap-2">
+                <Database className={`size-3.5 ${detectedTableCount > 0 ? 'text-indigo-400' : 'text-muted-foreground'}`} />
+                <div className="truncate">
+                  <p className="text-xs font-bold truncate">ERD</p>
+                  <p className="text-[10px] text-muted-foreground truncate">
+                    {detectedTableCount > 0 ? `✓ ${detectedTableCount} tabel` : '–'}
                   </p>
                 </div>
               </div>
 
-              {/* Flowchart Status */}
-              <div className="p-3 rounded-lg border border-border/30 bg-background flex items-center gap-2.5">
-                <Network className={`size-4 ${parsedData.flowchart?.nodes?.length ? 'text-amber-500' : 'text-muted-foreground'}`} />
-                <div>
-                  <p className="text-xs font-bold">Flowchart</p>
-                  <p className="text-[10px] text-muted-foreground">
-                    {parsedData.flowchart?.nodes?.length 
-                      ? `✓ ${parsedData.flowchart.nodes.length} node logika` 
-                      : 'Tidak ditemukan'}
+              <div className="p-2 rounded-lg border border-border/30 bg-background flex items-center gap-2">
+                <Network className={`size-3.5 ${parsedData.flowchart?.nodes?.length ? 'text-amber-500' : 'text-muted-foreground'}`} />
+                <div className="truncate">
+                  <p className="text-xs font-bold truncate">Alur</p>
+                  <p className="text-[10px] text-muted-foreground truncate">
+                    {parsedData.flowchart?.nodes?.length ? `✓ ${parsedData.flowchart.nodes.length} node` : '–'}
                   </p>
                 </div>
               </div>
             </div>
           ) : (
-            <p className="text-xs text-destructive font-mono">Format belum sesuai atau ada sintaks yang belum lengkap.</p>
+            <p className="text-xs text-destructive font-mono">Format belum sesuai.</p>
           )}
         </div>
       )}
 
       {/* Target Project Selection */}
-      <div className="p-4 rounded-xl border border-border/40 bg-muted/5 space-y-3">
-        <FieldLabel className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/70 block">
-          Target Proyek
-        </FieldLabel>
-        <div className="grid grid-cols-2 gap-3">
+      <div className="p-3 rounded-xl border border-border/40 bg-muted/5 space-y-2">
+        <div className="flex items-center gap-1.5">
+          <FieldLabel className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/70">
+            Target Proyek
+          </FieldLabel>
+          <InfoTip text="Pilih membuat proyek baru untuk bundel ini atau menggabungkan ke proyek saat ini." />
+        </div>
+        <div className="grid grid-cols-2 gap-2">
           <button
             type="button"
             onClick={() => setTargetMode('new_project')}
-            className={`p-3 rounded-lg border text-left transition-all flex items-center gap-2.5 ${
+            className={`p-2.5 rounded-lg border text-left transition-all flex items-center gap-2 ${
               targetMode === 'new_project'
                 ? 'bg-indigo-500/10 border-indigo-500/40 text-foreground font-semibold ring-1 ring-indigo-500/20'
                 : 'bg-muted/10 border-border/40 text-muted-foreground hover:bg-muted/20'
             }`}
           >
-            <FolderPlus className="size-4 text-indigo-400" />
-            <div>
-              <p className="text-xs font-semibold">Buat Proyek Baru</p>
+            <FolderPlus className="size-4 text-indigo-400 shrink-0" />
+            <div className="truncate">
+              <p className="text-xs font-semibold truncate">Proyek Baru</p>
               <p className="text-[10px] text-muted-foreground truncate">
                 {parsedData?.project?.name || projectName || 'Proyek Baru'}
               </p>
@@ -138,16 +136,16 @@ export function ExternalAIImportTab({
           <button
             type="button"
             onClick={() => setTargetMode('current_project')}
-            className={`p-3 rounded-lg border text-left transition-all flex items-center gap-2.5 ${
+            className={`p-2.5 rounded-lg border text-left transition-all flex items-center gap-2 ${
               targetMode === 'current_project'
                 ? 'bg-indigo-500/10 border-indigo-500/40 text-foreground font-semibold ring-1 ring-indigo-500/20'
                 : 'bg-muted/10 border-border/40 text-muted-foreground hover:bg-muted/20'
             }`}
           >
-            <Database className="size-4 text-amber-400" />
-            <div>
-              <p className="text-xs font-semibold">Gunakan Proyek Aktif</p>
-              <p className="text-[10px] text-muted-foreground">Gabungkan ke ruang kerja saat ini</p>
+            <Database className="size-4 text-amber-400 shrink-0" />
+            <div className="truncate">
+              <p className="text-xs font-semibold truncate">Proyek Aktif</p>
+              <p className="text-[10px] text-muted-foreground truncate">Gabungkan aset</p>
             </div>
           </button>
         </div>

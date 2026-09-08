@@ -18,43 +18,43 @@ export interface PromptConfig {
 export const STRATEGY_PRESETS = [
   {
     id: 'all_in_one' as PromptStrategy,
-    label: 'Paket Lengkap All-in-One',
+    label: 'All-in-One',
     badge: 'Rekomendasi',
-    description: 'Menghasilkan PRD komprehensif, 50+ tabel ERD DBML, dan Flowchart logika bisnis dalam 1 bundel JSON.',
+    description: 'PRD komprehensif, 50+ tabel ERD DBML, dan Flowchart logika bisnis dalam 1 bundel JSON.',
   },
   {
     id: 'prd_only' as PromptStrategy,
-    label: '1. Generator PRD (Catatan)',
+    label: 'Catatan PRD',
     badge: 'Tahap 1',
-    description: 'Menyusun dokumen PRD lengkap ribuan kata untuk ditempel langsung di tab Catatan (Notes).',
+    description: 'Dokumen PRD ribuan kata siap pakai untuk ditempel di modul Catatan (Notes).',
   },
   {
     id: 'notes_to_erd' as PromptStrategy,
-    label: '2. Sintesis PRD → ERD',
+    label: 'PRD → ERD',
     badge: 'Tahap 2',
-    description: 'Mengubah catatan PRD yang ada menjadi skema relasional DBML minimal 50 tabel terstruktur.',
+    description: 'Sintesis catatan PRD menjadi skema relasional DBML minimal 50 tabel terstruktur.',
   },
   {
     id: 'notes_to_flowchart' as PromptStrategy,
-    label: '3. Sintesis PRD → Flowchart',
+    label: 'PRD → Alur',
     badge: 'Tahap 3',
-    description: 'Mengubah PRD dan entitas ERD menjadi alur flowchart kaya percabangan keputusan (diamond nodes).',
+    description: 'Sintesis PRD & ERD menjadi flowchart logika bisnis kaya simbol keputusan.',
   },
 ];
 
 export const DOMAIN_PRESETS = [
-  { id: 'saas', label: 'SaaS Multi-Tenant', description: 'Organisasi, keanggotaan, RBAC, langganan, tagihan, audit log, webhook.' },
-  { id: 'fintech', label: 'FinTech & Pembayaran', description: 'Dompet digital, transaksi multi-mata uang, ledger ganda, KYC, deteksi fraud.' },
-  { id: 'ecommerce', label: 'E-Commerce & Logistik', description: 'Multi-vendor, katalog produk, keranjang, pesanan, pengiriman, ulasan, komisi.' },
-  { id: 'healthcare', label: 'Kesehatan & EMR/EHR', description: 'Pasien, dokter, janji temu, rekam medis, resep, asuransi, privasi data.' },
-  { id: 'erp', label: 'ERP & Rantai Pasok', description: 'Inventaris, vendor, purchase order, gudang, faktur, aset, alur persetujuan.' },
-  { id: 'custom', label: 'Kustom', description: 'Tentukan domain dan spesifikasi bisnis khusus sesuai kebutuhan Anda.' },
+  { id: 'saas', label: 'SaaS', description: 'Organisasi, keanggotaan, RBAC, billing, audit, webhook.' },
+  { id: 'fintech', label: 'FinTech', description: 'Dompet digital, transaksi, double-entry ledger, KYC, fraud.' },
+  { id: 'ecommerce', label: 'E-Commerce', description: 'Katalog, keranjang, pesanan, kurir, ulasan, komisi.' },
+  { id: 'healthcare', label: 'Kesehatan', description: 'Pasien, dokter, janji temu, rekam medis, resep, asuransi.' },
+  { id: 'erp', label: 'ERP', description: 'Inventaris, vendor, purchase order, gudang, faktur, aset.' },
+  { id: 'custom', label: 'Kustom', description: 'Tentukan domain bisnis sendiri sesuai kebutuhan.' },
 ];
 
 export const SCALE_PRESETS = [
-  { id: 'large', label: '25–35 Tabel', minTables: 25, description: 'Sistem core enterprise lengkap dengan relasi dan audit trail.' },
-  { id: 'enterprise', label: '35–50 Tabel', minTables: 35, description: 'Skala enterprise penuh mencakup modul billing, notifikasi, dan analitik.' },
-  { id: 'ecosystem', label: '50+ Tabel', minTables: 50, description: 'Ekosistem komprehensif multi-modul untuk skala perusahaan besar.' },
+  { id: 'large', label: '25+ Tabel', minTables: 25, description: 'Sistem core terpadu lengkap dengan relasi dan audit trail.' },
+  { id: 'enterprise', label: '35+ Tabel', minTables: 35, description: 'Skala enterprise penuh mencakup billing, notifikasi, dan analitik.' },
+  { id: 'ecosystem', label: '50+ Tabel', minTables: 50, description: 'Ekosistem besar multi-modul untuk skala korporasi.' },
 ];
 
 function resolveInfrastructure(config: PromptConfig) {
@@ -81,33 +81,35 @@ function resolveInfrastructure(config: PromptConfig) {
 // ─────────────────────────────────────────────────────────────
 export function generateAllInOnePrompt(config: PromptConfig): string {
   const { resolvedDeployment, resolvedArch, minTables, complianceList } = resolveInfrastructure(config);
+  const proj = config.projectName?.trim() || 'Proyek';
 
   const contextSection = config.existingNotesContext?.trim()
-    ? `\n\n=== EXISTING PRD / NOTES CONTEXT (MANDATORY BASIS) ===\nYou MUST base the entire architecture, domain modules, and database schema directly on this existing PRD specification:\n"""\n${config.existingNotesContext.trim()}\n"""\n`
+    ? `\n\n=== EXISTING PRD / NOTES CONTEXT ===\nYou MUST base the entire architecture, domain modules, and database schema directly on this existing PRD specification:\n"""\n${config.existingNotesContext.trim()}\n"""\n`
     : '';
 
-  return `You are a Senior Principal Software & Database Architect.
-
-Your task is to design a COMPLETE, PRODUCTION-GRADE, ENTERPRISE-LEVEL SYSTEM SPECIFICATION for:
-PROJECT NAME: "${config.projectName || 'Sistem Enterprise Terpadu'}"
+  return `PROJECT NAME: "${proj}"
 BUSINESS DOMAIN: ${config.domain}
 DEPLOYMENT TARGET: ${resolvedDeployment}
 ARCHITECTURE STYLE: ${resolvedArch}
 TECH STACK TARGET: ${config.techStack || 'Serverless on Vercel + Supabase PostgreSQL + Edge Functions'}
 SECURITY & COMPLIANCE: ${complianceList}${contextSection}
 
+ROLE & OBJECTIVE:
+You are a Senior Principal Software & Database Architect.
+Your task is to design a COMPLETE, PRODUCTION-GRADE, ENTERPRISE-LEVEL SYSTEM SPECIFICATION for the project above.
+
 CRITICAL RULES — DO NOT VIOLATE:
 1. NO TOY OR SIMPLIFIED SCHEMAS: You MUST produce an exhaustive, real-world enterprise database schema with AT LEAST ${minTables} TABLES in valid DBML. Do not group multiple tables into one generic table. Break down the system into realistic, normalized relational modules.
-2. EXHAUSTIVE PRD (NO SHORT SUMMARY): The PRD in "content_markdown" must be written in formal Indonesian (Bahasa Indonesia baku kelas enterprise) with rich technical depth. It must include complete functional domain modules, business rules, state transition matrices, API contracts, RBAC matrix, and disaster recovery strategies.
+2. EXHAUSTIVE PRD: The PRD in "content_markdown" must be written in formal Indonesian (Bahasa Indonesia baku kelas enterprise) with rich technical depth. Include functional domain modules, business rules, state transition matrices, API contracts, RBAC matrix, and disaster recovery strategies.
 3. HOSTING & DEPLOYMENT: The application architecture must be optimized for ${resolvedDeployment}.
-4. FLOWCHART MUST BE DECISION-RICH: The flowchart must contain decision logic diamonds for validations, auth checks, status transitions, and error paths. Never produce a trivial linear sequence. Include at least 15–25 connected nodes.
+4. FLOWCHART MUST BE DECISION-RICH: The flowchart must contain decision logic diamonds for validations, auth checks, status transitions, and error paths. Include at least 15–25 connected nodes.
 5. STRICT JSON OUTPUT CONTRACT: You must respond ONLY with a single valid JSON object enclosed within \`\`\`json ... \`\`\` code fence. No conversational filler before or after the JSON.
 
 REQUIRED JSON STRUCTURE:
 \`\`\`json
 {
   "project": {
-    "name": "${config.projectName || 'Sistem Enterprise Terpadu'}",
+    "name": "${proj}",
     "description": "Short executive summary of the system architecture."
   },
   "prd": {
@@ -160,30 +162,12 @@ REQUIRED JSON STRUCTURE:
 \`\`\`
 
 DETAILED DBML SPECIFICATION RULES:
-1. Minimum ${minTables} Tables:
-   - Tenancy & Organization (tenants, tenant_domains, tenant_subscriptions, billing_invoices)
-   - Identity & Access Management (users, user_credentials, roles, permissions, role_permissions, user_roles, user_sessions, api_keys, mfa_factors)
-   - Audit & Observability (audit_logs, system_events, security_incidents, data_access_logs)
-   - Domain Specific Entities (at least 20 tables for ${config.domain})
-   - Workflows & State Tracking (approvals, state_histories, tasks)
-   - Notifications & Webhooks (notification_templates, notifications, webhook_endpoints, webhook_deliveries)
-   - Storage & Documents (attachments, document_versions, media_assets)
-   - Settings & System Configurations (system_settings, feature_flags)
-2. Column Types: Use uppercase portable SQL types: BIGINT, UUID, VARCHAR(length), TEXT, BOOLEAN, DATE, TIMESTAMP, DECIMAL(precision, scale), JSONB. Every VARCHAR must have explicit length, e.g. VARCHAR(255).
-3. Audit Columns on EVERY Table:
-   - \`created_at TIMESTAMP [not null, default: \`now()\`]\`
-   - \`updated_at TIMESTAMP [not null, default: \`now()\`]\`
-   - \`deleted_at TIMESTAMP\` (for soft-deletable records)
-4. Enums: Every enum-typed column must reference a dedicated Enum formatted as {table_name}_{column_name} (e.g. \`users_status\`, \`orders_payment_status\`).
-5. Relationships: Explicit standalone relationships using \`Ref: child.parent_id > parent.id\`.
-6. Indexes: Include \`Indexes { ... }\` blocks inside tables for foreign keys and lookup queries.
-
-DETAILED FLOWCHART RULES:
-1. Include at least 15–25 connected nodes covering end-to-end business workflows.
-2. Mandatory "diamond" decision nodes for validation, permissions, error checks, and conditional branches.
-3. Every edge originating from a decision node must have a distinct label (e.g. "Lolos", "Gagal", "Valid", "Ditolak").
-4. Allowed shapes: "oval", "rectangle", "diamond", "database", "cloud", "document", "circle".
-5. Proper colors: Emerald (#10b981) for success/endpoints, Amber (#f59e0b) for decisions, Violet (#8b5cf6) for compute/process, Sky (#0ea5e9) for database/storage, Rose (#f43f5e) for errors/external.
+1. Minimum ${minTables} Tables covering Tenancy, IAM, Audit, Domain Specific (${config.domain}), Workflows, Notifications, Storage, and System Settings.
+2. Column Types: Uppercase portable SQL types: BIGINT, UUID, VARCHAR(length), TEXT, BOOLEAN, DATE, TIMESTAMP, DECIMAL(p,s), JSONB. Every VARCHAR must have explicit length.
+3. Audit Columns on EVERY Table: created_at TIMESTAMP [not null], updated_at TIMESTAMP [not null], deleted_at TIMESTAMP.
+4. Enums: Every enum-typed column must reference dedicated Enum formatted as {table_name}_{column_name}.
+5. Relationships: Explicit standalone Ref: child.parent_id > parent.id.
+6. Indexes: Include Indexes { ... } blocks inside tables.
 
 Now generate the complete JSON package. Ensure the JSON is completely valid, parseable, and matches all constraints.`;
 }
@@ -193,21 +177,23 @@ Now generate the complete JSON package. Ensure the JSON is completely valid, par
 // ─────────────────────────────────────────────────────────────
 export function generatePrdOnlyPrompt(config: PromptConfig): string {
   const { resolvedDeployment, resolvedArch, complianceList } = resolveInfrastructure(config);
+  const proj = config.projectName?.trim() || 'Proyek';
 
-  return `Bertindaklah sebagai Senior Principal Solutions & Enterprise Software Architect.
+  return `NAMA PROYEK: "${proj}"
+DOMAIN BISNIS: ${config.domain}
+TARGET INFRASTRUKTUR: ${resolvedDeployment}
+GAYA ARSITEKTUR: ${resolvedArch}
+TECH STACK: ${config.techStack || 'Serverless on Vercel + Supabase PostgreSQL + Edge Functions'}
+KEAMANAN & KEPATUHAN: ${complianceList}
 
-Tugas Anda adalah menyusun DOKUMEN PERSYARATAN PRODUK (PRD) & ARSITEKTUR SISTEM ENTERPRISE LENGKAP untuk:
-- NAMA PROYEK: "${config.projectName || 'Sistem Enterprise Terpadu'}"
-- DOMAIN BISNIS: ${config.domain}
-- TARGET INFRASTRUKTUR: ${resolvedDeployment}
-- GAYA ARSITEKTUR: ${resolvedArch}
-- TECH STACK: ${config.techStack || 'Serverless on Vercel + Supabase PostgreSQL + Edge Functions'}
-- KEAMANAN & KEPATUHAN: ${complianceList}
+TUGAS ARSITEK:
+Bertindaklah sebagai Senior Principal Solutions & Enterprise Software Architect.
+Susun DOKUMEN PERSYARATAN PRODUK (PRD) & ARSITEKTUR SISTEM LENGKAP untuk proyek di atas.
 
 ATURAN PENULISAN:
 1. Format dokumen murni dalam GitHub Flavored Markdown yang siap ditempel ke editor Catatan (Notes).
 2. Tuliskan dalam Bahasa Indonesia formal, terstruktur, mendalam, dan komprehensif (target: 2.000–3.500 kata).
-3. Hindari placeholder singkat atau ringkasan dangkal. Uraikan setiap sub-bab secara konkret dan actionable untuk tim rekayasa perangkat lunak.
+3. Hindari placeholder singkat. Uraikan setiap sub-bab secara konkret dan actionable.
 
 STRUKTUR DOKUMEN YANG WAJIB DIIKUTI:
 # DOKUMEN SPESIFIKASI PERSYARATAN PRODUK & ARSITEKTUR TEKNIS (PRD)
@@ -217,9 +203,9 @@ STRUKTUR DOKUMEN YANG WAJIB DIIKUTI:
 - Sasaran strategis, nilai pembeda, dan metrik keberhasilan utama (KPI / OKR).
 
 ## 2. Arsitektur Solusi & Topologi Infrastruktur
-- Pola arsitektur (${resolvedArch}) dan batas domain layanan (Bounded Contexts).
-- Runtime Hosting: ${resolvedDeployment} (Edge Middleware, Serverless Compute, Cold-start mitigation).
-- Database Tier: Supabase PostgreSQL (Connection Pooling via Supavisor, Read Replicas, Partitioning strategy).
+- Pola arsitektur (${resolvedArch}) dan batas domain layanan.
+- Runtime Hosting: ${resolvedDeployment}.
+- Database Tier: Supabase PostgreSQL (Connection Pooling, Read Replicas).
 - State, Caching & Queue: Serverless Redis & Background Event Bus.
 - Media & Document Storage: Encrypted Object Storage.
 
@@ -228,24 +214,24 @@ STRUKTUR DOKUMEN YANG WAJIB DIIKUTI:
 Untuk setiap modul, jelaskan:
 - Deskripsi & Tanggung Jawab Modul
 - Entitas Data Inti & Atribut Kunci
-- Aturan Bisnis & Batasan Invarian (Business Rules & Constraints)
-- State Machine (Alur transisi status dan validasi perpindahan state)
+- Aturan Bisnis & Batasan Invarian
+- State Machine & Alur Transisi Status
 
 ## 4. Keamanan, Tata Kelola & Kepatuhan Regulasi
-- Matriks Role-Based Access Control (RBAC): Tabel peran (Super Admin, Branch Admin, Operator, Reviewer, Auditor) vs izin operasi (CRUD, Approve, Export).
+- Matriks Role-Based Access Control (RBAC): Tabel peran vs izin operasi.
 - Isolasi Multi-Tenant: Implementasi Row-Level Security (RLS) berbasis tenant_id.
-- Jejak Audit & Observabilitas: Skema pencatatan audit log yang tidak dapat diubah (immutable audit trail).
-- Proteksi Data Sensitif: Enkripsi field-level data PII, HIPAA/GDPR compliance.
+- Jejak Audit & Observabilitas: Skema pencatatan audit log immutable.
+- Proteksi Data Sensitif: Enkripsi field-level data PII.
 
 ## 5. Kontrak Data & Spesifikasi Integrasi API
-- Standar Envelope Response (Format respons sukses, pagination, dan error handler RFC 7807).
+- Standar Envelope Response (Format sukses, pagination, error RFC 7807).
 - Konvensi Header: X-Tenant-ID, X-Correlation-ID, Idempotency-Key.
 - Spesifikasi Webhook & Alur Retry Eksponensial.
 
 ## 6. Persyaratan Non-Fungsional (NFR) & SLA
-- Ketersediaan Layanan: SLA 99.99% (uptime guarantee).
-- Target Performa: P95 Latency < 200ms untuk Serverless Function execution.
-- Pemulihan Bencana: Recovery Point Objective (RPO) < 5 menit, Recovery Time Objective (RTO) < 30 menit.
+- Ketersediaan Layanan: SLA 99.99%.
+- Target Performa: P95 Latency < 200ms.
+- Pemulihan Bencana: RPO < 5 menit, RTO < 30 menit.
 
 Mulai susun dokumen PRD lengkap sekarang.`;
 }
@@ -255,28 +241,25 @@ Mulai susun dokumen PRD lengkap sekarang.`;
 // ─────────────────────────────────────────────────────────────
 export function generateNotesToErdPrompt(config: PromptConfig, notesText?: string): string {
   const { minTables } = resolveInfrastructure(config);
+  const proj = config.projectName?.trim() || 'Proyek';
   const prdContent = notesText?.trim() || config.existingNotesContext?.trim() || '<<<TEMPELKAN_TEKS_PRD_DARI_CATATAN_DI_SINI>>>';
 
-  return `You are a Principal Database Architect for ERD Builder Pro.
-
-I have an enterprise PRD specification below for:
-PROJECT: "${config.projectName || 'Sistem Enterprise Terpadu'}"
+  return `PROJECT: "${proj}"
 DOMAIN: ${config.domain}
+TARGET: Relational Database Schema in DBML (Minimal ${minTables} Tables)
 
-YOUR TASK:
-Analyze EVERY module, entity, relationship, and business rule in the PRD, and convert them into an exhaustive, production-ready relational database schema in DBML format with AT LEAST ${minTables} TABLES.
+ROLE:
+You are a Principal Database Architect for ERD Builder Pro.
+Analyze EVERY module, entity, relationship, and business rule in the PRD below, and convert them into an exhaustive, production-ready relational database schema in DBML format with AT LEAST ${minTables} TABLES.
 
 CRITICAL RULES:
 1. Output ONLY a valid \`\`\`dbml ... \`\`\` code block. No explanations before or after.
 2. Minimum ${minTables} relational tables covering all modules described in the PRD.
-3. Every table MUST have:
-   - \`created_at TIMESTAMP [not null, default: \`now()\`]\`
-   - \`updated_at TIMESTAMP [not null, default: \`now()\`]\`
-   - \`deleted_at TIMESTAMP\`
-4. Standard portable uppercase types: BIGINT, UUID, VARCHAR(length), TEXT, BOOLEAN, DATE, TIMESTAMP, DECIMAL(p,s), JSONB. Every VARCHAR must have explicit length, e.g. VARCHAR(255).
-5. All relationships must be standalone \`Ref: child_table.fk_id > parent_table.id\`.
-6. Enums must be named \`{table_name}_{column_name}\` with matching Enum blocks.
-7. Include \`Indexes { ... }\` for all foreign keys and search query lookups.
+3. Every table MUST have: created_at TIMESTAMP [not null], updated_at TIMESTAMP [not null], deleted_at TIMESTAMP.
+4. Standard portable uppercase types: BIGINT, UUID, VARCHAR(length), TEXT, BOOLEAN, DATE, TIMESTAMP, DECIMAL(p,s), JSONB. Every VARCHAR must have explicit length.
+5. All relationships must be standalone Ref: child_table.fk_id > parent_table.id.
+6. Enums must be named {table_name}_{column_name} with matching Enum blocks.
+7. Include Indexes { ... } for all foreign keys and search lookups.
 
 === DOKUMEN PRD / CATATAN SISTEM ===
 ${prdContent}`;
@@ -286,11 +269,16 @@ ${prdContent}`;
 // 4. NOTES-TO-FLOWCHART PROMPT (Sintesis PRD & ERD → Flowchart)
 // ─────────────────────────────────────────────────────────────
 export function generateNotesToFlowchartPrompt(config: PromptConfig, notesText?: string, erdText?: string): string {
+  const proj = config.projectName?.trim() || 'Proyek';
   const prdContent = notesText?.trim() || config.existingNotesContext?.trim() || '<<<TEMPELKAN_RINGKASAN_PRD_DI_SINI>>>';
   const erdContent = erdText?.trim() || config.existingErdContext?.trim() || '<<<TEMPELKAN_DAFTAR_TABEL_ERD_DI_SINI>>>';
 
-  return `You are a Principal Systems & Workflow Architect for ERD Builder Pro.
+  return `PROJECT: "${proj}"
+DOMAIN: ${config.domain}
+TARGET: Decision-Rich Business Logic Flowchart JSON
 
+ROLE:
+You are a Principal Systems & Workflow Architect for ERD Builder Pro.
 Based on the PRD specification and Database Entities provided below, design a DECISION-RICH, END-TO-END BUSINESS LOGIC FLOWCHART.
 
 RULES:
@@ -331,4 +319,3 @@ export function generateExternalAIPrompt(config: PromptConfig): string {
       return generateAllInOnePrompt(config);
   }
 }
-

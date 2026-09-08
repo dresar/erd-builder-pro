@@ -2,7 +2,6 @@ import React, { useState, useMemo } from 'react';
 import { 
   Bot, 
   Check, 
-  AlertCircle, 
   Loader2,
 } from 'lucide-react';
 import { toast } from 'sonner';
@@ -14,12 +13,6 @@ import {
   DialogDescription,
   DialogFooter,
 } from '@/components/ui/dialog';
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from '@/components/ui/tooltip';
 import { Button } from '@/components/ui/button';
 import { useWorkspace } from '@/providers/WorkspaceContext';
 import { 
@@ -30,6 +23,7 @@ import {
 } from './externalPromptTemplates';
 import { ExternalAIPromptTab } from './ExternalAIPromptTab';
 import { ExternalAIImportTab } from './ExternalAIImportTab';
+import { InfoTip } from './InfoTip';
 
 interface ExternalAIGeneratorDialogProps {
   isOpen: boolean;
@@ -75,7 +69,7 @@ export function ExternalAIGeneratorDialog({ isOpen, onClose }: ExternalAIGenerat
 
   // Form states for prompt builder
   const [selectedStrategy, setSelectedStrategy] = useState<PromptStrategy>('all_in_one');
-  const [projectName, setProjectName] = useState('Sistem Enterprise Terpadu');
+  const [projectName, setProjectName] = useState('Sistem Enterprise');
   const [selectedDomain, setSelectedDomain] = useState('saas');
   const [customDomain, setCustomDomain] = useState('');
   const [selectedScale, setSelectedScale] = useState<'large' | 'enterprise' | 'ecosystem'>('enterprise');
@@ -96,15 +90,15 @@ export function ExternalAIGeneratorDialog({ isOpen, onClose }: ExternalAIGenerat
   const [rawJson, setRawJson] = useState('');
   const [targetMode, setTargetMode] = useState<'new_project' | 'current_project'>('new_project');
 
-  // Computed generated prompt
+  // Computed generated prompt — instantly updates on projectName keystrokes
   const generatedPrompt = useMemo(() => {
     const domainLabel = selectedDomain === 'custom' 
-      ? (customDomain.trim() || 'Sistem Bisnis Khusus') 
+      ? (customDomain.trim() || 'Bisnis Khusus') 
       : (DOMAIN_PRESETS.find(d => d.id === selectedDomain)?.label || 'SaaS');
 
     const config: PromptConfig = {
       strategy: selectedStrategy,
-      projectName: projectName.trim() || 'Sistem Enterprise',
+      projectName: projectName || 'Proyek',
       domain: domainLabel,
       scale: selectedScale,
       deploymentMethod,
@@ -126,7 +120,7 @@ export function ExternalAIGeneratorDialog({ isOpen, onClose }: ExternalAIGenerat
       toast.success('✓ Disalin!');
       setTimeout(() => setCopied(false), 2000);
     } catch {
-      toast.error('Gagal menyalin prompt.');
+      toast.error('Gagal menyalin.');
     }
   };
 
@@ -144,15 +138,13 @@ export function ExternalAIGeneratorDialog({ isOpen, onClose }: ExternalAIGenerat
     try {
       const parsed = JSON.parse(cleaned);
       if (typeof parsed === 'object' && parsed !== null) {
-        // Full bundle
         if (parsed.prd || parsed.erd || parsed.flowchart || parsed.project) {
           return parsed as ParsedExternalBundle;
         }
-        // Direct Flowchart JSON
         if (Array.isArray(parsed.nodes)) {
           return {
             flowchart: {
-              title: `Flowchart - ${projectName || 'Sistem'}`,
+              title: `Alur - ${projectName || 'Sistem'}`,
               nodes: parsed.nodes,
               edges: parsed.edges || []
             }
@@ -224,7 +216,7 @@ export function ExternalAIGeneratorDialog({ isOpen, onClose }: ExternalAIGenerat
 
       // 1. Create PRD Note
       if (parsedData.prd?.content_markdown) {
-        toast.info('Membuat Catatan PRD...');
+        toast.info('Membuat Catatan...');
         localStorage.setItem('pending_note_content', parsedData.prd.content_markdown);
         localStorage.setItem('pending_note_strategy', 'replace');
         const prdTitle = parsedData.prd.title || 'PRD Arsitektur';
@@ -241,7 +233,7 @@ export function ExternalAIGeneratorDialog({ isOpen, onClose }: ExternalAIGenerat
 
       // 3. Create ERD Diagram
       if (parsedData.erd?.dbml) {
-        toast.info('Membuat ERD Enterprise...');
+        toast.info('Membuat ERD...');
         localStorage.setItem('pending_create_erd_schema', parsedData.erd.dbml);
         const erdBundlename = parsedData.erd.title || `ERD - ${effectiveName}`;
         await handleSidebarDiagramCreate(erdBundlename, projectId, { silent: false });
@@ -251,10 +243,10 @@ export function ExternalAIGeneratorDialog({ isOpen, onClose }: ExternalAIGenerat
         await handleViewChange('notes', true, projectId);
       }
 
-      toast.success('✓ Berhasil diterapkan!');
+      toast.success('✓ Berhasil!');
       onClose();
     } catch {
-      toast.error('Gagal menerapkan data.');
+      toast.error('Gagal menerapkan.');
     } finally {
       setIsApplying(false);
     }
@@ -263,40 +255,25 @@ export function ExternalAIGeneratorDialog({ isOpen, onClose }: ExternalAIGenerat
   return (
     <Dialog open={isOpen} onOpenChange={(open) => { if (!open) onClose(); }}>
       <DialogContent className="sm:max-w-225 max-h-[90vh] p-0 overflow-hidden flex flex-col border-border/50 shadow-2xl">
-        <DialogHeader className="px-6 pt-5 pb-4 border-b border-border/40 bg-muted/10 shrink-0">
+        <DialogHeader className="px-5 py-3 border-b border-border/40 bg-muted/10 shrink-0">
           <div className="flex items-center justify-between gap-3">
             <div className="flex items-center gap-2.5">
-              <div className="p-2 bg-indigo-500/10 rounded-lg text-indigo-400">
-                <Bot className="size-5" />
+              <div className="p-1.5 bg-indigo-500/10 rounded-lg text-indigo-400">
+                <Bot className="size-4" />
               </div>
-              <div>
-                <div className="flex items-center gap-1.5">
-                  <DialogTitle className="text-base font-bold">AI Eksternal</DialogTitle>
-                  <TooltipProvider>
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <button type="button" className="text-muted-foreground hover:text-foreground cursor-pointer" aria-label="Penjelasan">
-                          <AlertCircle className="size-3.5 text-indigo-400" />
-                        </button>
-                      </TooltipTrigger>
-                      <TooltipContent className="text-xs max-w-xs leading-relaxed">
-                        Hasilkan mega-prompt enterprise untuk Claude atau ChatGPT, lalu tempelkan hasilnya ke tab Impor untuk membuat Catatan (PRD), ERD (50+ tabel), dan Flowchart sekaligus.
-                      </TooltipContent>
-                    </Tooltip>
-                  </TooltipProvider>
-                </div>
-                <DialogDescription className="text-xs text-muted-foreground">
-                  Generator prompt enterprise &amp; importer multi-aset.
-                </DialogDescription>
+              <div className="flex items-center gap-1.5">
+                <DialogTitle className="text-sm font-bold">AI Eksternal</DialogTitle>
+                <InfoTip text="Generator prompt arsitektur dan pengimpor multi-aset untuk Claude dan ChatGPT." />
               </div>
             </div>
+            <DialogDescription className="sr-only">AI Eksternal Generator</DialogDescription>
 
             {/* Tab switch buttons */}
-            <div className="flex gap-1 bg-muted border border-border/40 rounded-lg p-1">
+            <div className="flex gap-1 bg-muted border border-border/40 rounded-lg p-0.5">
               <button
                 type="button"
                 onClick={() => setActiveTab('prompt')}
-                className={`px-3 py-1.5 rounded-md text-xs font-semibold transition-all ${
+                className={`px-2.5 py-1 rounded text-xs font-semibold transition-all cursor-pointer ${
                   activeTab === 'prompt' 
                     ? 'bg-background text-foreground shadow-sm' 
                     : 'text-muted-foreground hover:text-foreground'
@@ -307,7 +284,7 @@ export function ExternalAIGeneratorDialog({ isOpen, onClose }: ExternalAIGenerat
               <button
                 type="button"
                 onClick={() => setActiveTab('import')}
-                className={`px-3 py-1.5 rounded-md text-xs font-semibold transition-all flex items-center gap-1.5 ${
+                className={`px-2.5 py-1 rounded text-xs font-semibold transition-all cursor-pointer flex items-center gap-1.5 ${
                   activeTab === 'import' 
                     ? 'bg-background text-foreground shadow-sm' 
                     : 'text-muted-foreground hover:text-foreground'
@@ -320,7 +297,7 @@ export function ExternalAIGeneratorDialog({ isOpen, onClose }: ExternalAIGenerat
           </div>
         </DialogHeader>
 
-        <div className="flex-1 overflow-y-auto custom-scrollbar p-6">
+        <div className="flex-1 overflow-y-auto custom-scrollbar p-5">
           {activeTab === 'prompt' ? (
             <ExternalAIPromptTab
               projectName={projectName}
@@ -362,8 +339,8 @@ export function ExternalAIGeneratorDialog({ isOpen, onClose }: ExternalAIGenerat
           )}
         </div>
 
-        <DialogFooter className="px-6 py-4 border-t border-border/40 bg-muted/5 flex items-center justify-between gap-3 shrink-0">
-          <Button variant="ghost" onClick={onClose} className="h-9 px-4 text-xs font-medium">
+        <DialogFooter className="px-5 py-3 border-t border-border/40 bg-muted/5 flex items-center justify-between gap-3 shrink-0">
+          <Button variant="ghost" onClick={onClose} className="h-8 px-3 text-xs font-medium cursor-pointer">
             Batal
           </Button>
 
@@ -372,16 +349,16 @@ export function ExternalAIGeneratorDialog({ isOpen, onClose }: ExternalAIGenerat
               onClick={() => setActiveTab('import')} 
               variant="outline" 
               size="sm" 
-              className="h-9 gap-1.5 px-4 text-xs"
+              className="h-8 gap-1.5 px-3.5 text-xs cursor-pointer"
             >
-              Lanjut ke Impor
+              Lanjut
             </Button>
           ) : (
             <Button 
               disabled={!parsedData || isApplying} 
               onClick={handleApplyBundle}
               size="sm" 
-              className="h-9 gap-1.5 px-5 text-xs font-semibold bg-emerald-600 hover:bg-emerald-700 text-white"
+              className="h-8 gap-1.5 px-4 text-xs font-semibold bg-emerald-600 hover:bg-emerald-700 text-white cursor-pointer"
             >
               {isApplying ? <Loader2 className="size-3.5 animate-spin" /> : <Check className="size-3.5" />}
               Terapkan
