@@ -1,13 +1,14 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { Radio } from '@base-ui/react/radio';
 import { RadioGroup } from '@base-ui/react/radio-group';
-import { CheckCircle2, ChevronLeft, ChevronRight, LoaderCircle, RotateCcw, Send, X } from 'lucide-react';
+import { AlertCircle, CheckCircle2, ChevronLeft, ChevronRight, LoaderCircle, RotateCcw, Send, Sparkles, X } from 'lucide-react';
 import type { AIChatMessage } from '@/types';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Textarea } from '@/components/ui/textarea';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import {
   clearPlanDraft,
   loadPlanDraft,
@@ -63,72 +64,69 @@ export function PlanInterviewCard({ sessionUid, messages, isStreaming, onSubmit,
     return () => onVisibilityChange?.(false);
   }, [collapsed, hasInterview, onVisibilityChange]);
 
-  useLayoutEffect(() => {
-    if (entries.length) {
-      setPage(entries.length - 1);
-    }
-  }, [entries.length]);
-
-  const setCollapsedPreference = (value: boolean) => {
-    setCollapsed(value);
+  const setCollapsedPreference = (nextCollapsed: boolean) => {
+    setCollapsed(nextCollapsed);
     try {
-      const key = collapsedStorageKey(sessionUid);
-      if (value) localStorage.setItem(key, 'true');
-      else localStorage.removeItem(key);
-    } catch {}
+      localStorage.setItem(collapsedStorageKey(sessionUid), String(nextCollapsed));
+    } catch {
+      // Ignore storage write failures
+    }
   };
 
-  const entry = entries[page];
-  // Reset before paint when the active question changes. Without this, a
-  // controlled radio can briefly retain "Other answer" from the prior card.
   useLayoutEffect(() => {
-    if (!entry) return;
-    let active = true;
-    setHydratedKey('');
-    const answer = entry.response?.kind === 'answer' ? entry.response : null;
-    if (answer) {
-      setSelected(answer.selected);
-      setCustomSelected(Boolean(answer.customAnswer));
-      setCustomAnswer(answer.customAnswer);
-      setHydratedKey(entry.key);
-      return;
-    }
+    if (entries.length === 0) return;
+    const unansweredIndex = entries.findIndex(entry => !entry.response);
+    setPage(unansweredIndex >= 0 ? unansweredIndex : entries.length - 1);
+  }, [entries.length]);
 
-    setSelected([]);
-    setCustomSelected(false);
-    setCustomAnswer('');
-    loadPlanDraft(sessionUid, entry.key)
-      .then(draft => {
-        if (!active || !draft) return;
+  const entry = entries[page];
+
+  useEffect(() => {
+    if (!entry) return;
+    let cancelled = false;
+    void (async () => {
+      const draft = await loadPlanDraft(sessionUid, entry.key);
+      if (cancelled) return;
+      if (draft) {
         setSelected(draft.selected);
         setCustomSelected(draft.customSelected);
         setCustomAnswer(draft.customAnswer);
-      })
-      .finally(() => { if (active) setHydratedKey(entry.key); });
-    return () => { active = false; };
-  }, [entry?.key, entry?.response, sessionUid]);
+      } else {
+        setSelected(entry.response?.selected ?? []);
+        setCustomSelected(Boolean(entry.response?.customAnswer));
+        setCustomAnswer(entry.response?.customAnswer ?? '');
+      }
+      setHydratedKey(entry.key);
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [entry, sessionUid]);
 
   useEffect(() => {
-    if (!entry || entry.response || hydratedKey !== entry.key) return;
-    const timer = window.setTimeout(() => {
-      savePlanDraft(sessionUid, entry.key, { selected, customSelected, customAnswer }).catch(() => {});
-    }, 150);
-    return () => window.clearTimeout(timer);
+    if (!entry || entry.key !== hydratedKey) return;
+    if (entry.response) return;
+    void savePlanDraft(sessionUid, entry.key, {
+      selected,
+      customSelected,
+      customAnswer,
+      updatedAt: Date.now(),
+    });
   }, [customAnswer, customSelected, entry, hydratedKey, selected, sessionUid]);
 
   useEffect(() => {
-    const textarea = textareaRef.current;
-    if (!textarea) return;
-    textarea.style.height = 'auto';
-    textarea.style.height = `${textarea.scrollHeight}px`;
-  }, [customAnswer]);
+    if (customSelected) {
+      textareaRef.current?.focus();
+    }
+  }, [customSelected]);
 
-  if (!entry && !pendingInitialRequest) return null;
+  if (!hasInterview) return null;
+
   if (collapsed) {
     return (
       <div className="shrink-0 border-t bg-background px-3 py-2">
         <Button variant="outline" size="sm" className="w-full" onClick={() => setCollapsedPreference(false)}>
-          Open Plan interview{entries.length ? ` · ${entries.length} ${entries.length === 1 ? 'question' : 'questions'}` : ''}
+          Rencana Arsitektur{entries.length ? ` · ${entries.length} pertanyaan` : ''}
         </Button>
       </div>
     );
@@ -139,18 +137,18 @@ export function PlanInterviewCard({ sessionUid, messages, isStreaming, onSubmit,
       <div className="shrink-0 border-t bg-background p-3">
         <Card size="sm">
           <CardHeader>
-            <CardTitle className="text-sm">Plan interview</CardTitle>
+            <CardTitle className="text-sm">Rencana Arsitektur</CardTitle>
           </CardHeader>
           <CardFooter className="justify-between gap-3 border-t">
             <Badge variant="secondary" className="gap-1.5">
-              {isStreaming ? <><LoaderCircle className="size-3 animate-spin" /> Preparing your first question</>
-                : needsResume ? 'Needs resume'
-                : pendingInitialRequest.delivery_status === 'pending-assistant' ? 'Saving response'
-                : 'Waiting for connection'}
+              {isStreaming ? <><LoaderCircle className="size-3 animate-spin" /> Menyiapkan pertanyaan...</>
+                : needsResume ? 'Perlu dilanjutkan'
+                : pendingInitialRequest.delivery_status === 'pending-assistant' ? 'Menyimpan...'
+                : 'Menghubungkan...'}
             </Badge>
             {needsResume && (
               <Button size="sm" onClick={() => onResume(pendingInitialRequest.content, pendingInitialRequest.client_message_id, 'initial')}>
-                <RotateCcw data-icon="inline-start" /> Resume
+                <RotateCcw data-icon="inline-start" /> Lanjut
               </Button>
             )}
           </CardFooter>
@@ -177,6 +175,10 @@ export function PlanInterviewCard({ sessionUid, messages, isStreaming, onSubmit,
     await onSubmit(content);
   };
 
+  const handleAutoSelectAI = async () => {
+    await submit("Biarkan AI yang memilih arsitektur terbaik secara otomatis (Gunakan Serverless / Vercel untuk website dan standar Production-Grade).");
+  };
+
   const toggleOption = (option: string, checked: boolean) => {
     setSelected(previous => checked ? [...previous, option] : previous.filter(value => value !== option));
   };
@@ -186,16 +188,30 @@ export function PlanInterviewCard({ sessionUid, messages, isStreaming, onSubmit,
       <Card size="sm" className="max-h-[55vh] overflow-y-auto">
         <CardHeader className="border-b">
           <div className="flex items-center justify-between gap-3">
-            <CardTitle className="text-sm">{entry.question.question}</CardTitle>
+            <div className="flex items-center gap-2">
+              <CardTitle className="text-sm">{entry.question.question}</CardTitle>
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <button type="button" className="text-muted-foreground hover:text-foreground cursor-pointer" aria-label="Informasi">
+                      <AlertCircle className="size-3.5 text-amber-500/80 hover:text-amber-500" />
+                    </button>
+                  </TooltipTrigger>
+                  <TooltipContent className="text-xs max-w-xs">
+                    Pilih opsi atau klik &quot;Pilihkan AI&quot; untuk arsitektur serverless otomatis.
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            </div>
             <div className="flex shrink-0 items-center gap-1">
-              <Button variant="ghost" size="icon-xs" disabled={page === 0} onClick={() => setPage(value => value - 1)} title="Previous question">
+              <Button variant="ghost" size="icon-xs" disabled={page === 0} onClick={() => setPage(value => value - 1)} title="Sebelumnya">
                 <ChevronLeft />
               </Button>
-              <span className="text-xs tabular-nums text-muted-foreground">{page + 1} of {entries.length}</span>
-              <Button variant="ghost" size="icon-xs" disabled={page === entries.length - 1} onClick={() => setPage(value => value + 1)} title="Next question">
+              <span className="text-xs tabular-nums text-muted-foreground">{page + 1} dari {entries.length}</span>
+              <Button variant="ghost" size="icon-xs" disabled={page === entries.length - 1} onClick={() => setPage(value => value + 1)} title="Berikutnya">
                 <ChevronRight />
               </Button>
-              <Button variant="ghost" size="icon-xs" onClick={() => setCollapsedPreference(true)} title="Collapse Plan interview">
+              <Button variant="ghost" size="icon-xs" onClick={() => setCollapsedPreference(true)} title="Tutup">
                 <X />
               </Button>
             </div>
@@ -225,7 +241,7 @@ export function PlanInterviewCard({ sessionUid, messages, isStreaming, onSubmit,
                     <Radio.Root value={option} className="mt-0.5 flex size-4 shrink-0 items-center justify-center rounded-full border border-input bg-background outline-none data-checked:border-primary data-checked:bg-primary focus-visible:ring-2 focus-visible:ring-ring/50">
                       <Radio.Indicator className="size-1.5 rounded-full bg-primary-foreground" />
                     </Radio.Root>
-                    <span>{entry.question.recommendedOptions.includes(option) && <Badge variant="secondary" className="mr-1">Recommended</Badge>}{option}</span>
+                    <span>{entry.question.recommendedOptions.includes(option) && <Badge variant="secondary" className="mr-1">Rekomendasi</Badge>}{option}</span>
                   </label>
                 ))}
                 {entry.question.allowCustom && (
@@ -233,7 +249,7 @@ export function PlanInterviewCard({ sessionUid, messages, isStreaming, onSubmit,
                     <Radio.Root value={CUSTOM_OPTION} className="flex size-4 shrink-0 items-center justify-center rounded-full border border-input bg-background outline-none data-checked:border-primary data-checked:bg-primary focus-visible:ring-2 focus-visible:ring-ring/50">
                       <Radio.Indicator className="size-1.5 rounded-full bg-primary-foreground" />
                     </Radio.Root>
-                    Other answer
+                    Jawaban lain
                   </label>
                 )}
               </RadioGroup>
@@ -241,14 +257,14 @@ export function PlanInterviewCard({ sessionUid, messages, isStreaming, onSubmit,
               entry.question.options.map(option => (
                 <label key={option} className="flex cursor-pointer items-start gap-3 rounded-lg px-3 py-2 text-xs text-muted-foreground has-[[data-checked]]:bg-muted has-[[data-checked]]:text-foreground">
                   <Checkbox checked={selected.includes(option)} onCheckedChange={value => toggleOption(option, Boolean(value))} />
-                  <span>{entry.question.recommendedOptions.includes(option) && <Badge variant="secondary" className="mr-1">Recommended</Badge>}{option}</span>
+                  <span>{entry.question.recommendedOptions.includes(option) && <Badge variant="secondary" className="mr-1">Rekomendasi</Badge>}{option}</span>
                 </label>
               ))
             )}
             {entry.question.type === 'multiple' && entry.question.allowCustom && (
               <label className="flex cursor-pointer items-center gap-3 rounded-lg px-3 py-2 text-xs text-muted-foreground has-[[data-checked]]:bg-muted has-[[data-checked]]:text-foreground">
                 <Checkbox checked={customSelected} onCheckedChange={value => setCustomSelected(Boolean(value))} />
-                Other answer
+                Jawaban lain
               </label>
             )}
           </fieldset>
@@ -256,11 +272,11 @@ export function PlanInterviewCard({ sessionUid, messages, isStreaming, onSubmit,
           {entry.question.allowCustom && (
             <Textarea
               ref={textareaRef}
-              aria-label="Other answer"
+              aria-label="Jawaban"
               rows={1}
               value={customAnswer}
               onChange={event => setCustomAnswer(event.target.value)}
-              placeholder="Other answer"
+              placeholder="Jawaban"
               disabled={!canEdit || !customSelected}
               className="min-h-10 resize-none text-xs"
             />
@@ -269,23 +285,26 @@ export function PlanInterviewCard({ sessionUid, messages, isStreaming, onSubmit,
 
         <CardFooter className="justify-between gap-3 border-t">
           <div className="flex items-center gap-2 text-xs text-muted-foreground">
-            {isStreaming ? <><LoaderCircle className="size-4 animate-spin" /> AI is preparing the next question...</>
-              : waitingForConnection ? <Badge variant="secondary">Waiting for connection</Badge>
-              : savingResponse ? <Badge variant="secondary">Saving response</Badge>
-              : needsResume ? <Badge variant="secondary">Needs resume</Badge>
-              : entry.response ? <><CheckCircle2 className="size-4" /> Answered</>
-              : 'Choose an option or add your own answer.'}
+            {isStreaming ? <><LoaderCircle className="size-4 animate-spin" /> Menyiapkan pertanyaan...</>
+              : waitingForConnection ? <Badge variant="secondary">Menghubungkan...</Badge>
+              : savingResponse ? <Badge variant="secondary">Menyimpan...</Badge>
+              : needsResume ? <Badge variant="secondary">Perlu dilanjutkan</Badge>
+              : entry.response ? <><CheckCircle2 className="size-4" /> ✓ Terjawab</>
+              : 'Pilih opsi atau isi jawaban.'}
           </div>
           <div className="flex shrink-0 items-center gap-2">
             {needsResume ? (
               <Button size="sm" onClick={() => onResume(entry.responseMessage!.content, entry.responseMessage!.client_message_id, 'follow-up')}>
-                <RotateCcw data-icon="inline-start" /> Resume
+                <RotateCcw data-icon="inline-start" /> Lanjut
               </Button>
             ) : !entry.response ? (
               <>
-                <Button variant="outline" size="sm" disabled={!canEdit} onClick={() => submit(formatPlanFeedback(entry.question, 'skip'))}>Skip</Button>
+                <Button variant="secondary" size="sm" disabled={!canEdit} onClick={handleAutoSelectAI} title="Biarkan AI memilih opsi terbaik">
+                  <Sparkles className="size-3.5 mr-1" /> Pilihkan AI
+                </Button>
+                <Button variant="outline" size="sm" disabled={!canEdit} onClick={() => submit(formatPlanFeedback(entry.question, 'skip'))}>Lewati</Button>
                 <Button size="sm" disabled={!canEdit || !hasAnswer} onClick={() => submit(formatPlanAnswer(entry.question, selected, customSelected ? customAnswer : ''))}>
-                  <Send data-icon="inline-start" /> Continue
+                  <Send data-icon="inline-start" /> Lanjut
                 </Button>
               </>
             ) : null}

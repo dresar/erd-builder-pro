@@ -146,17 +146,17 @@ export function SettingsModal() {
     if (isGuest) {
       return [
         {
-          label: "General",
+          label: "Umum",
           items: [
-            { id: 'appearance', label: 'Appearance', icon: <Palette className="size-4" /> },
+            { id: 'appearance', label: 'Tampilan', icon: <Palette className="size-4" /> },
           ]
         },
         {
-          label: "More",
+          label: "Lainnya",
           items: [
-            { id: 'keymap', label: 'Keymap', icon: <Keyboard className="size-4" /> },
-            { id: 'export-data', label: 'Export Data', icon: <Download className="size-4" /> },
-            { id: 'changelog', label: "What's New", icon: <History className="size-4" /> },
+            { id: 'keymap', label: 'Pintasan', icon: <Keyboard className="size-4" /> },
+            { id: 'export-data', label: 'Ekspor Data', icon: <Download className="size-4" /> },
+            { id: 'changelog', label: "Pembaruan", icon: <History className="size-4" /> },
           ]
         },
       ];
@@ -164,30 +164,30 @@ export function SettingsModal() {
 
     return [
       {
-        label: "General",
+        label: "Umum",
         items: [
-          { id: 'account', label: 'Account', icon: <User className="size-4" /> },
-          { id: 'appearance', label: 'Appearance', icon: <Palette className="size-4" /> },
-          ...(isDesktopApp ? [{ id: 'storage', label: 'Storage', icon: <HardDrive className="size-4" /> }] : []),
+          { id: 'account', label: 'Akun', icon: <User className="size-4" /> },
+          { id: 'appearance', label: 'Tampilan', icon: <Palette className="size-4" /> },
+          ...(isDesktopApp ? [{ id: 'storage', label: 'Penyimpanan', icon: <HardDrive className="size-4" /> }] : []),
         ]
       },
       {
-        label: "Feature",
+        label: "Fitur",
         items: [
-          { id: 'ai-config', label: 'AI Configuration', icon: <Sparkles className="size-4" /> },
-          { id: 'mcp-server', label: 'MCP Integration', icon: <ServerCog className="size-4" /> },
-          { id: 'ai-rules', label: 'AI Rules', icon: <ListChecks className="size-4" /> },
-          { id: 'ai-prompts', label: 'System Prompts', icon: <Brain className="size-4" /> },
+          { id: 'ai-config', label: 'Konfigurasi AI', icon: <Sparkles className="size-4" /> },
+          { id: 'mcp-server', label: 'Server MCP', icon: <ServerCog className="size-4" /> },
+          { id: 'ai-rules', label: 'Aturan AI', icon: <ListChecks className="size-4" /> },
+          { id: 'ai-prompts', label: 'Instruksi Sistem', icon: <Brain className="size-4" /> },
         ]
       },
       {
-        label: "More",
+        label: "Lainnya",
         items: [
-          { id: 'keymap', label: 'Keymap', icon: <Keyboard className="size-4" /> },
-          { id: 'export-data', label: 'Export Data', icon: <Download className="size-4" /> },
-          { id: 'import-data', label: 'Import Data', icon: <Upload className="size-4" /> },
-          { id: 'backups', label: 'Database Backup', icon: <Database className="size-4" /> },
-          { id: 'changelog', label: "What's New", icon: <History className="size-4" /> },
+          { id: 'keymap', label: 'Pintasan', icon: <Keyboard className="size-4" /> },
+          { id: 'export-data', label: 'Ekspor Data', icon: <Download className="size-4" /> },
+          { id: 'import-data', label: 'Impor Data', icon: <Upload className="size-4" /> },
+          { id: 'backups', label: 'Cadangan DB', icon: <Database className="size-4" /> },
+          { id: 'changelog', label: "Pembaruan", icon: <History className="size-4" /> },
         ]
       }
     ];
@@ -201,9 +201,9 @@ export function SettingsModal() {
   return (
     <Dialog open={isSettingsOpen} onOpenChange={setIsSettingsOpen}>
       <DialogContent className="overflow-hidden p-0 md:max-h-150 md:max-w-175 lg:max-w-237.5 bg-background border-border/40 shadow-2xl">
-        <DialogTitle className="sr-only">Settings</DialogTitle>
+        <DialogTitle className="sr-only">Pengaturan</DialogTitle>
         <DialogDescription className="sr-only">
-          Manage your application settings and AI configuration.
+          Kelola pengaturan aplikasi dan konfigurasi AI.
         </DialogDescription>
         
         <SidebarProvider className="items-start min-h-0! h-full">
@@ -213,7 +213,7 @@ export function SettingsModal() {
               <div className="px-4 py-2 mb-2">
                 <h2 className="text-sm font-bold flex items-center gap-2">
                   <Settings className="size-4" />
-                  Settings
+                  Pengaturan
                 </h2>
               </div>
 
@@ -312,7 +312,7 @@ export function SettingsModal() {
                       }`}
                     >
                       <Settings className="w-3.5 h-3.5" />
-                      Configuration
+                      Konfigurasi
                     </button>
                     <button
                       onClick={() => setAiSettingsTab('models')}
@@ -323,7 +323,7 @@ export function SettingsModal() {
                       }`}
                     >
                       <Brain className="w-3.5 h-3.5" />
-                      AI Models
+                      Model AI
                     </button>
                   </div>
 

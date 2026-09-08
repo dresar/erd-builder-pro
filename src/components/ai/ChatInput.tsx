@@ -42,23 +42,23 @@ function getActionIcon(actionId: string) {
   }
 }
 
-function getPlaceholder(actionId: string | null | undefined, hasProject: boolean): string {
+function getPlaceholder(actionId: string | null | undefined, _hasProject: boolean): string {
   switch (actionId) {
-    case 'notes-summarize':       return 'Describe what to summarize...';
-    case 'notes-improve-grammar': return 'Describe which part to improve...';
-    case 'notes-generate-docs':   return 'Describe what documentation to generate...';
-    case 'erd-generate-sql':      return 'Describe the DBML schema to generate...';
-    case 'erd-edit-column':       return 'Describe column changes...';
-    case 'erd-explain-table':     return 'Ask about this table...';
-    case 'erd-suggest-indexes':   return 'Describe indexing needs...';
-    case 'erd-seed-data':         return 'Describe seed data...';
-    case 'flowchart-generate':    return 'Describe the flowchart to create...';
-    case 'flowchart-explain':     return 'Ask about this flow...';
-    case 'flowchart-pseudocode':  return 'Describe pseudocode needs...';
-    case 'flowchart-insert':      return 'Describe where to insert a symbol...';
-    case 'flowchart-import':      return 'Describe the process to diagram...';
-    case 'grill-me':               return 'Describe what you want to plan...';
-    default:                      return hasProject ? 'Ask anything... Type @ to reference a file' : 'Ask anything...';
+    case 'notes-summarize':       return 'Ringkas';
+    case 'notes-improve-grammar': return 'Perbaiki';
+    case 'notes-generate-docs':   return 'Dokumentasi';
+    case 'erd-generate-sql':      return 'Skema';
+    case 'erd-edit-column':       return 'Kolom';
+    case 'erd-explain-table':     return 'Tabel';
+    case 'erd-suggest-indexes':   return 'Indeks';
+    case 'erd-seed-data':         return 'Data';
+    case 'flowchart-generate':    return 'Alur';
+    case 'flowchart-explain':     return 'Alur';
+    case 'flowchart-pseudocode':  return 'Pseudocode';
+    case 'flowchart-insert':      return 'Simbol';
+    case 'flowchart-import':      return 'Proses';
+    case 'grill-me':               return 'Rencana';
+    default:                      return 'Tanya';
   }
 }
 
@@ -292,7 +292,7 @@ export const ChatInput = memo(function ChatInput({
 
         <div className="mt-1 flex items-center gap-1">
           {mentionFiles.length > 0 && (
-            <Button ref={mentionTriggerRef} variant="outline" size="icon-xs" onClick={openMentionPicker} title="Reference a file">
+            <Button ref={mentionTriggerRef} variant="outline" size="icon-xs" onClick={openMentionPicker} title="Sebut file">
               <AtSign className="size-3.5" />
             </Button>
           )}
@@ -302,10 +302,10 @@ export const ChatInput = memo(function ChatInput({
               size="sm"
               className="h-7 rounded-full px-2.5 text-xs"
               onClick={() => onSelectAction(planAction)}
-              title="Plan mode"
+              title="Mode rencana"
             >
               <Sparkles data-icon="inline-start" />
-              Plan
+              Rencana
             </Button>
           )}
           {showActions && (
@@ -319,11 +319,11 @@ export const ChatInput = memo(function ChatInput({
                 activeAction ? 'border-primary/30 bg-primary/10 text-primary' : 'border-border bg-background text-muted-foreground hover:bg-muted'
               }`}>
                 <SlidersHorizontal className="size-3.5" />
-                <span className="max-w-28 truncate">{activeToolAction?.label || actionGroup?.toolsLabel || 'Tools'}</span>
+                <span className="max-w-28 truncate">{activeToolAction?.label || actionGroup?.toolsLabel || 'Alat'}</span>
                 <ChevronDown className="size-3 transition-transform group-open:rotate-180" />
               </summary>
               <div className="absolute bottom-8 left-0 z-50 w-64 rounded-xl border bg-popover p-1.5 shadow-lg">
-                <p className="px-2 py-1 text-[10px] font-medium text-muted-foreground">{actionGroup?.heading || 'AI actions'}</p>
+                <p className="px-2 py-1 text-[10px] font-medium text-muted-foreground">{actionGroup?.heading || 'Aksi AI'}</p>
                 <button
                   onClick={() => {
                     onClearAction();
@@ -333,8 +333,8 @@ export const ChatInput = memo(function ChatInput({
                 >
                   <SlidersHorizontal className="mt-0.5 size-3 text-muted-foreground" />
                   <span>
-                    <span className="block text-xs font-medium">No tool</span>
-                    <span className="block text-[10px] leading-relaxed text-muted-foreground">Use general chat without an action mode.</span>
+                    <span className="block text-xs font-medium">Tanpa alat</span>
+                    <span className="block text-[10px] leading-relaxed text-muted-foreground">Percakapan umum tanpa mode khusus.</span>
                   </span>
                 </button>
                 {toolActions.map(action => (
@@ -356,13 +356,13 @@ export const ChatInput = memo(function ChatInput({
               </div>
             </details>
           )}
-          <span className="ml-1 text-[10px] text-muted-foreground/50">{isStreaming ? 'Generating...' : 'Enter to send'}</span>
+          <span className="ml-1 text-[10px] text-muted-foreground/50">{isStreaming ? 'Menulis...' : 'Enter untuk kirim'}</span>
           <Button
             variant={isStreaming ? 'outline' : 'default'}
             size="icon"
             className="ml-auto size-8 rounded-full"
             onClick={isStreaming ? onAbort : onSend}
-            title={isStreaming ? 'Stop generating' : 'Send message'}
+            title={isStreaming ? 'Hentikan' : 'Kirim'}
           >
             {isStreaming ? <StopCircle className="size-3.5 text-destructive" /> : <Send className="size-3.5" />}
           </Button>

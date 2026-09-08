@@ -3,12 +3,18 @@ import { BookText, Cable, Database, Share2, Save, Loader2, AlertCircle } from 'l
 import { Button } from '@/components/ui/button';
 import { useAIRules, ViewType } from '@/hooks/useAIRules';
 import { toast } from 'sonner';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui/tooltip';
 
 const VIEW_TABS: { id: ViewType; label: string; icon: React.ReactNode }[] = [
   { id: 'erd', label: 'ERD', icon: <Database className="w-4 h-4" /> },
-  { id: 'notes', label: 'Notes', icon: <BookText className="w-4 h-4" /> },
+  { id: 'notes', label: 'Catatan', icon: <BookText className="w-4 h-4" /> },
   { id: 'flowchart', label: 'Flowchart', icon: <Share2 className="w-4 h-4" /> },
-  { id: 'db-client', label: 'DB Client', icon: <Cable className="w-4 h-4" /> },
+  { id: 'db-client', label: 'Koneksi DB', icon: <Cable className="w-4 h-4" /> },
 ];
 
 export function AIRulesTab() {
@@ -22,17 +28,29 @@ export function AIRulesTab() {
 
   const handleSave = async () => {
     await saveRules(draft);
-    toast.success(`Rules saved for ${activeView.toUpperCase()}`);
+    toast.success('✓ Tersimpan!');
   };
 
   return (
     <div className="p-6 space-y-6">
       <div>
-        <h2 className="text-lg font-semibold text-foreground">AI Rules</h2>
+        <div className="flex items-center gap-1.5">
+          <h2 className="text-lg font-semibold text-foreground">Aturan AI</h2>
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <button type="button" className="text-muted-foreground hover:text-foreground cursor-pointer" aria-label="Penjelasan">
+                  <AlertCircle className="size-3.5 text-amber-500/80 hover:text-amber-500" />
+                </button>
+              </TooltipTrigger>
+              <TooltipContent className="text-xs max-w-xs">
+                Aturan khusus yang otomatis aktif saat Anda membuka tampilan ini.
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+        </div>
         <p className="text-sm text-muted-foreground mt-1 max-w-2xl">
-          Define custom rules the AI should follow when generating content in each view.
-          Rules are injected as system instructions — if you explicitly ask the AI to do something
-          that contradicts a rule, your request takes precedence.
+          Aturan per tampilan kerja.
         </p>
       </div>
 
@@ -58,12 +76,12 @@ export function AIRulesTab() {
       <div className="space-y-3">
         <div className="flex items-center justify-between">
           <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
-            Rules for {activeView.toUpperCase()}
+            Aturan {activeView.toUpperCase()}
           </label>
           {rules && !rules.is_enabled && (
             <span className="flex items-center gap-1 text-[10px] text-amber-400 font-semibold">
               <AlertCircle className="w-3 h-3" />
-              Disabled
+              Nonaktif
             </span>
           )}
         </div>
@@ -76,7 +94,7 @@ export function AIRulesTab() {
           <textarea
             value={draft}
             onChange={(e) => setDraft(e.target.value)}
-            placeholder={`e.g. for ${activeView.toUpperCase()}:\n- Always use snake_case for naming\n- Every table must have created_at and updated_at columns\n- Use English for all identifiers\n- ...`}
+            placeholder="Instruksi"
             className="w-full min-h-70 bg-muted/30 border border-border rounded-lg p-4 text-sm font-mono text-foreground focus:outline-none focus:border-primary/50 resize-y placeholder:text-muted-foreground/50"
           />
         )}
@@ -85,7 +103,7 @@ export function AIRulesTab() {
       {/* Footer */}
       <div className="flex items-center justify-between pt-2">
         <p className="text-[11px] text-muted-foreground max-w-lg">
-          Rules are advisory — the AI will follow them unless you explicitly request otherwise in your prompt.
+          Aturan ditaati kecuali Anda meminta hal lain di pesan.
         </p>
         <Button
           onClick={handleSave}
@@ -99,7 +117,7 @@ export function AIRulesTab() {
           ) : (
             <Save className="w-3.5 h-3.5 mr-1.5" />
           )}
-          Save Rules
+          Simpan
         </Button>
       </div>
     </div>

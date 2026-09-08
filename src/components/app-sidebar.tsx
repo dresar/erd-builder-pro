@@ -132,13 +132,13 @@ export const AppSidebar = React.memo(({
   const showDbClient = isInstalledApp();
 
   const searchFilterOptions = [
-    { value: 'all', label: 'All' },
-    { value: 'workspace', label: 'Workspaces' },
-    { value: 'erd', label: 'ERD Builder' },
-    ...(showDbClient ? [{ value: 'db-client', label: 'DB Client' }] : []),
-    { value: 'notes', label: 'Notes' },
-    { value: 'flowchart', label: 'Flowcharts' },
-    { value: 'drawings', label: 'Drawings' },
+    { value: 'all', label: 'Semua' },
+    { value: 'workspace', label: 'Ruang Kerja' },
+    { value: 'erd', label: 'ERD' },
+    ...(showDbClient ? [{ value: 'db-client', label: 'Koneksi DB' }] : []),
+    { value: 'notes', label: 'Catatan' },
+    { value: 'flowchart', label: 'Flowchart' },
+    { value: 'drawings', label: 'Gambar' },
   ];
   const visibleSearchResults = searchFilter === 'all'
     ? globalSearchResults
@@ -176,21 +176,21 @@ export const AppSidebar = React.memo(({
   // Navigation items for the feature section
   const navMain = [
     {
-      title: "Notes",
+      title: "Catatan",
       url: "#",
       icon: FileText,
       isActive: activeFeatureView === 'notes',
       onClick: () => onViewChange('notes', true),
     },
     {
-      title: "ERD Builder",
+      title: "ERD",
       url: "#",
       icon: Database,
       isActive: activeFeatureView === 'erd',
       onClick: () => onViewChange('erd', true),
     },
     ...(showDbClient ? [{
-      title: "DB Client",
+      title: "Koneksi DB",
       url: "/table/db-client",
       icon: DatabaseZap,
       isActive: activeFeatureView === 'db-client',
@@ -208,7 +208,7 @@ export const AppSidebar = React.memo(({
       onClick: () => onViewChange('flowchart', true),
     },
     {
-      title: "Drawings",
+      title: "Gambar",
       url: "#",
       icon: PenTool,
       isActive: activeFeatureView === 'drawings',
@@ -246,7 +246,7 @@ export const AppSidebar = React.memo(({
               className="flex h-9 w-full items-center gap-2 rounded-lg border border-border/60 bg-background px-2.5 text-left text-sm text-muted-foreground transition-colors hover:border-border hover:bg-accent/40 disabled:pointer-events-none disabled:opacity-50"
             >
               <Search className="size-4 shrink-0" />
-              <span className="flex-1">Search</span>
+              <span className="flex-1">Cari</span>
               <span className="flex items-center gap-0.5">
                 {searchShortcutKeys.map((key) => (
                   <kbd key={key} className="rounded border border-border/60 bg-muted/60 px-1.5 py-0.5 text-[10px] font-medium text-muted-foreground">{key}</kbd>
@@ -257,7 +257,7 @@ export const AppSidebar = React.memo(({
         </SidebarGroup>
         <SidebarGroup className="group-data-[collapsible=icon]:p-0">
           <SidebarGroupLabel className="flex items-center justify-between">
-            Features
+            Fitur
             {!isOnline && (
               <span className="flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-destructive/10 text-[10px] font-bold text-destructive uppercase tracking-wider">
                 <span className="w-1 h-1 rounded-full bg-destructive animate-pulse" />
@@ -272,7 +272,7 @@ export const AppSidebar = React.memo(({
         {/* Workspaces section */}
         <SidebarGroup className="px-4 group-data-[collapsible=icon]:p-2">
           <SidebarGroupLabel className="flex items-center justify-between">
-            <span>Workspaces</span>
+            <span>Ruang Kerja</span>
             <TooltipProvider>
               <Tooltip>
                 <TooltipTrigger
@@ -284,7 +284,7 @@ export const AppSidebar = React.memo(({
                 >
                   <Plus className="h-3.5 w-3.5" />
                 </TooltipTrigger>
-                <TooltipContent side="right">Create Workspace</TooltipContent>
+                <TooltipContent side="right">Tambah Ruang Kerja</TooltipContent>
               </Tooltip>
             </TooltipProvider>
           </SidebarGroupLabel>
@@ -293,22 +293,22 @@ export const AppSidebar = React.memo(({
             <SidebarMenu>
               <SidebarMenuItem>
                 <SidebarMenuButton
-                  tooltip="All Workspaces"
+                  tooltip="Semua Ruang Kerja"
                   isActive={selectedWorkspaceUid === null || selectedWorkspaceUid === ''}
                   onClick={() => handleWorkspaceClick(null)}
                 >
                   <Folder className="h-4 w-4 shrink-0" />
-                  <span>All Workspaces</span>
+                  <span>Semua Ruang Kerja</span>
                 </SidebarMenuButton>
               </SidebarMenuItem>
 
               {isProjectsLoading ? (
                 <div className="px-3 py-2 text-xs text-muted-foreground animate-pulse group-data-[collapsible=icon]:hidden">
-                  Loading workspaces...
+                  Memuat...
                 </div>
               ) : activeProjects.length === 0 ? (
                 <div className="px-3 py-2 text-xs text-muted-foreground group-data-[collapsible=icon]:hidden">
-                  No workspaces yet
+                  Belum ada ruang kerja
                 </div>
               ) : (
                 activeProjects.map(project => (
@@ -339,7 +339,7 @@ export const AppSidebar = React.memo(({
                             <DropdownMenuSeparator />
                             <DropdownMenuItem onClick={() => setDeletingProject(project)}>
                               <Trash2 className="h-3.5 w-3.5 mr-2 text-destructive" />
-                              Delete
+                              Hapus
                             </DropdownMenuItem>
                           </DropdownMenuContent>
                         </DropdownMenu>
@@ -407,10 +407,10 @@ export const AppSidebar = React.memo(({
             <div className="max-h-[min(26rem,60vh)] overflow-y-auto p-2">
               {isGlobalSearchLoading ? (
                 <div className="flex items-center justify-center gap-2 py-10 text-sm text-muted-foreground">
-                  <Loader2 className="size-4 animate-spin" /> Searching...
+                  <Loader2 className="size-4 animate-spin" /> Mencari...
                 </div>
               ) : visibleSearchResults.length === 0 ? (
-                <p className="py-10 text-center text-sm text-muted-foreground">No results found.</p>
+                <p className="py-10 text-center text-sm text-muted-foreground">Tidak ada hasil.</p>
               ) : (
                 visibleSearchResults.map((result: any) => (
                   <button
@@ -428,9 +428,9 @@ export const AppSidebar = React.memo(({
                               : <PenTool className="size-4 text-muted-foreground" />}
                     </div>
                     <div className="min-w-0 flex-1">
-                      <p className="truncate text-sm font-medium">{result.name || '(Untitled)'}</p>
+                      <p className="truncate text-sm font-medium">{result.name || '(Tanpa Nama)'}</p>
                       <p className="truncate text-xs text-muted-foreground">
-                        {result.type === 'workspace' ? 'Workspace' : result.type === 'erd' ? 'ERD Builder' : result.type === 'db-client' ? 'DB Client' : result.type === 'flowchart' ? 'Flowchart' : result.type === 'notes' ? 'Note' : 'Drawing'}
+                        {result.type === 'workspace' ? 'Ruang Kerja' : result.type === 'erd' ? 'ERD' : result.type === 'db-client' ? 'Koneksi DB' : result.type === 'flowchart' ? 'Flowchart' : result.type === 'notes' ? 'Catatan' : 'Gambar'}
                         {result.workspace?.name && ` · ${result.workspace.name}`}
                       </p>
                     </div>
@@ -446,16 +446,17 @@ export const AppSidebar = React.memo(({
       <Dialog open={editingProject !== null} onOpenChange={(open) => { if (!open) setEditingProject(null); }}>
         <DialogContent className="sm:max-w-sm">
           <DialogHeader>
-            <DialogTitle>Rename Workspace</DialogTitle>
+            <DialogTitle>Ubah Nama</DialogTitle>
           </DialogHeader>
           <DialogBody>
             <Field>
               <FieldLabel htmlFor="rename-project-input" className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/70 px-1">
-                Name
+                Nama
               </FieldLabel>
               <Input
                 id="rename-project-input"
                 type="text"
+                placeholder="Nama"
                 value={renameValue}
                 onChange={(e) => setRenameValue(e.target.value)}
                 onKeyDown={(e) => {
@@ -470,7 +471,7 @@ export const AppSidebar = React.memo(({
           </DialogBody>
           <DialogFooter>
             <DialogClose render={<Button variant="outline" className="h-9" />}>
-              Cancel
+              Batal
             </DialogClose>
             <Button
               className="h-9 px-6"
@@ -482,7 +483,7 @@ export const AppSidebar = React.memo(({
                 }
               }}
             >
-              Save Changes
+              Simpan
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -492,16 +493,17 @@ export const AppSidebar = React.memo(({
       <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
         <DialogContent className="sm:max-w-sm">
           <DialogHeader>
-            <DialogTitle>Create Workspace</DialogTitle>
+            <DialogTitle>Tambah Ruang Kerja</DialogTitle>
           </DialogHeader>
           <DialogBody>
             <Field>
               <FieldLabel htmlFor="create-project-input" className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/70 px-1">
-                Name
+                Nama
               </FieldLabel>
               <Input
                 id="create-project-input"
                 type="text"
+                placeholder="Nama"
                 value={createName}
                 onChange={(e) => setCreateName(e.target.value)}
                 onKeyDown={(e) => {
@@ -517,7 +519,7 @@ export const AppSidebar = React.memo(({
           </DialogBody>
           <DialogFooter>
             <DialogClose render={<Button variant="outline" className="h-9" />}>
-              Cancel
+              Batal
             </DialogClose>
             <Button
               className="h-9 px-6"
@@ -530,7 +532,7 @@ export const AppSidebar = React.memo(({
                 }
               }}
             >
-              Create
+              Buat
             </Button>
           </DialogFooter>
         </DialogContent>

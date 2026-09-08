@@ -12,6 +12,7 @@ import {
   Layout,
   FileText,
   AlertTriangle,
+  AlertCircle,
   Settings2
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -45,6 +46,12 @@ import {
   AlertDialogMedia,
   AlertDialogBody,
 } from '@/components/ui/alert-dialog';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui/tooltip';
 import { Field, FieldLabel } from '@/components/ui/field';
 import { AISystemPrompt } from '@/types';
 
@@ -57,10 +64,10 @@ interface DefaultPromptsTabProps {
 }
 
 const CATEGORY_MAP: Record<string, { label: string; icon: React.ReactNode; color: string }> = {
-  system: { label: 'System Instruction', icon: <Terminal className="size-4" />, color: 'text-blue-500' },
-  context: { label: 'Context', icon: <Layout className="size-4" />, color: 'text-purple-500' },
+  system: { label: 'Instruksi', icon: <Terminal className="size-4" />, color: 'text-blue-500' },
+  context: { label: 'Konteks', icon: <Layout className="size-4" />, color: 'text-purple-500' },
   format: { label: 'Format', icon: <FileText className="size-4" />, color: 'text-orange-500' },
-  custom: { label: 'Custom', icon: <MessageSquare className="size-4" />, color: 'text-slate-500' }
+  custom: { label: 'Kustom', icon: <MessageSquare className="size-4" />, color: 'text-slate-500' }
 };
 
 export const DefaultPromptsTab: React.FC<DefaultPromptsTabProps> = ({
@@ -108,10 +115,11 @@ export const DefaultPromptsTab: React.FC<DefaultPromptsTabProps> = ({
 
   const handleSave = async () => {
     if (!formData.name?.trim() || !formData.content?.trim()) {
-      toast.error('Please fill in name and content');
+      toast.error('Nama dan isi wajib diisi.');
       return;
     }
     await onSave(formData, editingId);
+    toast.success('✓ Tersimpan!');
     setIsDialogOpen(false);
   };
 
@@ -123,6 +131,7 @@ export const DefaultPromptsTab: React.FC<DefaultPromptsTabProps> = ({
   const executeDelete = async () => {
     if (itemToDelete) {
       await onDelete(itemToDelete);
+      toast.success('✓ Terhapus!');
       setShowDeleteConfirm(false);
       setItemToDelete(null);
     }
@@ -131,7 +140,7 @@ export const DefaultPromptsTab: React.FC<DefaultPromptsTabProps> = ({
   const handleCopy = async (prompt: AISystemPrompt) => {
     await navigator.clipboard.writeText(prompt.content);
     setCopiedId(prompt.id);
-    toast.success('Copied to clipboard');
+    toast.success('✓ Disalin!');
     setTimeout(() => setCopiedId(null), 2000);
   };
 
@@ -143,13 +152,27 @@ export const DefaultPromptsTab: React.FC<DefaultPromptsTabProps> = ({
             <Terminal className="w-5 h-5 text-purple-500" />
           </div>
           <div>
-            <h2 className="text-lg font-semibold">System Prompts</h2>
-            <p className="text-xs text-muted-foreground">Define system instructions and context for AI behavior.</p>
+            <div className="flex items-center gap-1.5">
+              <h2 className="text-lg font-semibold">Instruksi Sistem</h2>
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <button type="button" className="text-muted-foreground hover:text-foreground cursor-pointer" aria-label="Penjelasan">
+                      <AlertCircle className="size-3.5 text-purple-400" />
+                    </button>
+                  </TooltipTrigger>
+                  <TooltipContent className="text-xs max-w-xs">
+                    Instruksi dasar yang otomatis disuntikkan pada setiap percakapan AI di seluruh aplikasi.
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            </div>
+            <p className="text-xs text-muted-foreground">Atur perilaku dasar dan konteks AI.</p>
           </div>
         </div>
         <Button onClick={handleOpenAdd} size="sm" className="gap-2">
-          <Plus/>
-          Create Prompt
+          <Plus className="size-4" />
+          Tambah
         </Button>
       </div>
 
@@ -157,7 +180,7 @@ export const DefaultPromptsTab: React.FC<DefaultPromptsTabProps> = ({
         <div className="relative flex-1 group">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground/50 group-focus-within:text-purple-500 transition-colors" />
           <Input 
-            placeholder="Search prompts..." 
+            placeholder="Cari" 
             className="pl-9 h-10 bg-muted/20 border-border/40 focus:bg-background transition-all"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
@@ -171,8 +194,8 @@ export const DefaultPromptsTab: React.FC<DefaultPromptsTabProps> = ({
             <div className="p-4 bg-muted/30 rounded-full mb-4">
               <MessageSquare className="size-8 text-muted-foreground/30" />
             </div>
-            <h3 className="font-bold text-muted-foreground/70">No prompts found</h3>
-            <p className="text-xs text-muted-foreground/50 mt-1">Try creating a new system prompt to get started.</p>
+            <h3 className="font-bold text-muted-foreground/70">Belum ada prompt</h3>
+            <p className="text-xs text-muted-foreground/50 mt-1">Buat instruksi sistem baru untuk memulai.</p>
           </div>
         ) : (
           filteredPrompts.map((prompt) => {
@@ -195,7 +218,7 @@ export const DefaultPromptsTab: React.FC<DefaultPromptsTabProps> = ({
                       <div className="flex items-center gap-2 mb-1">
                         <h3 className="font-bold text-sm truncate">{prompt.name}</h3>
                         <span className="shrink-0 px-1.5 py-0.5 rounded-lg text-[8px] font-bold bg-muted text-muted-foreground/70 uppercase tracking-tighter">
-                          {prompt.category}
+                          {cat.label}
                         </span>
                       </div>
                       <p className="text-[11px] text-muted-foreground/80 line-clamp-2 leading-relaxed">
@@ -214,17 +237,17 @@ export const DefaultPromptsTab: React.FC<DefaultPromptsTabProps> = ({
                         : 'bg-muted/50 hover:bg-muted text-muted-foreground'
                     }`}
                   >
-                    {prompt.is_default ? 'Active' : 'Set Active'}
+                    {prompt.is_default ? 'Aktif' : 'Pilih'}
                   </button>
                   
                   <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-all duration-200">
-                    <Button variant="ghost" size="icon" className="size-8 h-8 w-8 hover:bg-background border border-transparent hover:border-border/40" onClick={() => handleCopy(prompt)}>
+                    <Button variant="ghost" size="icon" className="size-8 h-8 w-8 hover:bg-background border border-transparent hover:border-border/40" onClick={() => handleCopy(prompt)} title="Salin">
                       {copiedId === prompt.id ? <Check className="size-3.5 text-green-500" /> : <Copy className="size-3.5 text-muted-foreground" />}
                     </Button>
-                    <Button variant="ghost" size="icon" className="size-8 h-8 w-8 hover:bg-background border border-transparent hover:border-border/40" onClick={() => handleOpenEdit(prompt)}>
+                    <Button variant="ghost" size="icon" className="size-8 h-8 w-8 hover:bg-background border border-transparent hover:border-border/40" onClick={() => handleOpenEdit(prompt)} title="Edit">
                       <Pencil className="size-3.5 text-muted-foreground" />
                     </Button>
-                    <Button variant="ghost" size="icon" className="size-8 h-8 w-8 hover:bg-destructive/10 border border-transparent hover:border-destructive/20" onClick={() => handleDeleteClick(prompt.id)}>
+                    <Button variant="ghost" size="icon" className="size-8 h-8 w-8 hover:bg-destructive/10 border border-transparent hover:border-destructive/20" onClick={() => handleDeleteClick(prompt.id)} title="Hapus">
                       <Trash className="size-3.5 text-destructive/70" />
                     </Button>
                   </div>
@@ -239,31 +262,31 @@ export const DefaultPromptsTab: React.FC<DefaultPromptsTabProps> = ({
         <DialogContent className="sm:max-w-125 p-0 overflow-hidden border-border/40 shadow-2xl">
           <DialogHeader className="px-6 pt-6 pb-4 border-b border-border/40 bg-muted/5">
             <DialogTitle className="text-lg font-bold tracking-tight">
-              {editingId ? 'Edit Prompt' : 'Create New Prompt'}
+              {editingId ? 'Edit Prompt' : 'Buat Prompt'}
             </DialogTitle>
             <DialogDescription className="text-xs text-muted-foreground">
-              Define how the AI should behave and structure its responses.
+              Atur instruksi untuk memandu AI.
             </DialogDescription>
           </DialogHeader>
 
           <div className="p-6 space-y-5">
             <div className="grid grid-cols-2 gap-4">
               <Field>
-                <FieldLabel className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/70 px-1">Name</FieldLabel>
+                <FieldLabel className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/70 px-1">Nama</FieldLabel>
                 <Input 
-                  placeholder="e.g. Concise Mode"
+                  placeholder="Nama"
                   value={formData.name}
                   onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
                 />
               </Field>
               <Field>
-                <FieldLabel className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/70 px-1">Category</FieldLabel>
+                <FieldLabel className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/70 px-1">Kategori</FieldLabel>
                 <Select 
                   value={formData.category}
                   onValueChange={(val: string | null) => setFormData(prev => ({ ...prev, category: (val || 'custom') as any }))}
                 >
                   <SelectTrigger className="h-9">
-                    <SelectValue>{formData.category ? CATEGORY_MAP[formData.category].label : "Select Category"}</SelectValue>
+                    <SelectValue>{formData.category ? CATEGORY_MAP[formData.category].label : "Pilih Kategori"}</SelectValue>
                   </SelectTrigger>
                   <SelectContent>
                     {Object.entries(CATEGORY_MAP).map(([key, val]) => (
@@ -276,10 +299,10 @@ export const DefaultPromptsTab: React.FC<DefaultPromptsTabProps> = ({
 
             <Field>
               <FieldLabel className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/70 px-1">
-                Instruction Content
+                Instruksi
               </FieldLabel>
               <textarea 
-                placeholder="You are an expert architect. Always answer in JSON format..."
+                placeholder="Instruksi"
                 className="w-full min-h-37.5 p-3 text-sm rounded-lg bg-muted/20 border border-border/40 focus:bg-background focus:ring-1 focus:ring-purple-500/20 transition-all outline-none"
                 value={formData.content}
                 onChange={(e) => setFormData(prev => ({ ...prev, content: e.target.value }))}
@@ -288,8 +311,8 @@ export const DefaultPromptsTab: React.FC<DefaultPromptsTabProps> = ({
 
             <div className="flex items-center justify-between p-3 rounded-lg border border-border/40 bg-muted/5">
               <div className="space-y-0.5">
-                <FieldLabel className="text-xs font-semibold m-0 p-0 text-foreground">Set as Global Default</FieldLabel>
-                <p className="text-[10px] text-muted-foreground">Use this prompt for all AI interactions.</p>
+                <FieldLabel className="text-xs font-semibold m-0 p-0 text-foreground">Jadikan Default</FieldLabel>
+                <p className="text-[10px] text-muted-foreground">Gunakan untuk semua percakapan AI.</p>
               </div>
               <Switch 
                 checked={formData.is_default}
@@ -300,10 +323,10 @@ export const DefaultPromptsTab: React.FC<DefaultPromptsTabProps> = ({
 
           <DialogFooter className="px-6 py-4 border-t border-border/40 gap-3">
             <Button variant="ghost" onClick={() => setIsDialogOpen(false)} className="h-9 px-4 font-medium text-sm">
-              Cancel
+              Batal
             </Button>
             <Button onClick={handleSave} className="h-9 px-6 font-semibold text-sm shadow-sm">
-              {editingId ? 'Save Changes' : 'Create Template'}
+              Simpan
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -316,20 +339,20 @@ export const DefaultPromptsTab: React.FC<DefaultPromptsTabProps> = ({
             <AlertDialogMedia className="bg-destructive/10 mb-4">
               <AlertTriangle className="size-5 text-destructive" />
             </AlertDialogMedia>
-            <AlertDialogTitle className="text-xl font-bold tracking-tight">Delete System Prompt?</AlertDialogTitle>
+            <AlertDialogTitle className="text-xl font-bold tracking-tight">Hapus Prompt?</AlertDialogTitle>
           </AlertDialogHeader>
           <AlertDialogBody className="px-6 pb-6">
             <AlertDialogDescription className="text-sm leading-relaxed">
-              This action cannot be undone. This will permanently remove this system prompt template.
+              Tindakan ini permanen. Prompt akan dihapus dari sistem.
             </AlertDialogDescription>
           </AlertDialogBody>
           <AlertDialogFooter className="px-6 py-4 bg-muted/30 border-t border-border/40 gap-3">
-            <AlertDialogCancel className="h-9 px-4 text-sm font-medium">Cancel</AlertDialogCancel>
+            <AlertDialogCancel className="h-9 px-4 text-sm font-medium">Batal</AlertDialogCancel>
             <AlertDialogAction 
               onClick={executeDelete}
               className="h-9 px-5 text-sm font-semibold bg-destructive hover:bg-destructive/90 text-destructive-foreground shadow-sm"
             >
-              Delete
+              Hapus
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

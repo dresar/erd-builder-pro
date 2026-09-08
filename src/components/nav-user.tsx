@@ -143,7 +143,7 @@ export function NavUser({
                   disabled={!isGuest && !isOnline}
                 >
                   <Settings className="mr-2 size-4" />
-                  Settings
+                  Pengaturan
                 </DropdownMenuItem>
 
                 {/* Backup Data - guest only */}
@@ -153,7 +153,7 @@ export function NavUser({
                     className="cursor-pointer"
                   >
                     <Download className="mr-2 size-4" />
-                    Backup Data
+                    Cadangkan
                   </DropdownMenuItem>
                 )}
 
@@ -170,7 +170,7 @@ export function NavUser({
                   ) : (
                     <Info className="mr-2 size-4" />
                   )}
-                  About
+                  Tentang
                   {showOutdatedBadge && (
                     <span className={`ml-auto flex size-2 rounded-full ${hasUpdate ? 'bg-emerald-400' : 'bg-amber-500'}`} />
                   )}
@@ -184,7 +184,7 @@ export function NavUser({
                 className="cursor-pointer"
               >
                 <MessageSquarePlus className="mr-2 size-4" />
-                Feedback
+                Umpan Balik
               </DropdownMenuItem>
               </DropdownMenuGroup>
 
@@ -197,7 +197,7 @@ export function NavUser({
                   className={`text-destructive focus:bg-accent focus:text-destructive cursor-pointer ${!isOnline && 'opacity-50 cursor-not-allowed'}`}
                 >
                   <Trash2 className="mr-2 size-4" />
-                  Trash
+                  Sampah
                 </DropdownMenuItem>
               </DropdownMenuGroup>
               
@@ -211,7 +211,7 @@ export function NavUser({
                   title={!isOnline ? "Logging out while offline may cause data loss of unsynced changes" : ""}
                 >
                   <LogOut className="mr-2 size-4" />
-                  Log out
+                  Keluar
                 </DropdownMenuItem>
               )}
             </DropdownMenuContent>
