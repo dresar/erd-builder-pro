@@ -1,134 +1,88 @@
 import * as React from "react"
 import { useSidebar } from "@/components/ui/sidebar"
 import { Diagram, Project, Note, Drawing, Flowchart } from "../types"
-import { Database, StickyNote, PenTool, Network } from "lucide-react"
+import { Database, StickyNote, PenTool, Network, FileText } from "lucide-react"
 import { toast } from "sonner"
 
-// Refactored Components
-import { SidebarModals } from "./sidebar/modals/SidebarModals"
-import { ProjectGroup } from "./sidebar/sections/ProjectGroup"
-
-export function NavProjects({
-  projects,
-  activeProjectId,
-  onProjectSelect,
-  onProjectDelete,
-  onProjectUpdate,
-  onProjectCreate,
-  onDiagramCreate,
-  onNoteCreate,
-  onDrawingCreate,
-  onFlowchartCreate,
-  diagrams,
-  notes,
-  drawings,
-  flowcharts,
-  onDiagramSelect,
-  onNoteSelect,
-  onDrawingSelect,
-  onFlowchartSelect,
-  activeDiagramId,
-  activeNoteUid,
-  activeDrawingId,
-  activeFlowchartId,
-  view,
-  sidebarView,
-  onDiagramDelete,
-  onNoteDelete,
-  onDrawingDelete,
-  onFlowchartDelete,
-  onDiagramUpdate,
-  onNoteUpdate,
-  onDrawingUpdate,
-  onFlowchartUpdate,
-  onMoveDiagramToProject,
-  onMoveNoteToProject,
-  onMoveDrawingToProject,
-  onMoveFlowchartToProject,
-  allProjects,
-  searchQuery,
-  hasMoreProjects,
-  hasMoreDiagrams,
-  hasMoreNotes,
-  hasMoreDrawings,
-  hasMoreFlowcharts,
-  onLoadMoreProjects,
-  onLoadMoreDiagrams,
-  onLoadMoreNotes,
-  onLoadMoreDrawings,
-  onLoadMoreFlowcharts,
-  isOnline,
-  isProjectsLoading,
-  isDiagramsLoading,
-  isNotesLoading,
-  isDrawingsLoading,
-  isFlowchartsLoading,
-  uncategorized,
-}: {
-  projects: any[]
-  activeProjectId: number | string | null
-  onProjectSelect: (id: number | string | null) => void
-  onProjectDelete: (id: number | string) => void
-  onProjectUpdate: (id: number | string, name: string) => void
-  onProjectCreate: (name: string) => void
-  onDiagramCreate: (name: string, projectId: number | string | null) => void
-  onNoteCreate: (title: string, projectId: number | string | null) => void
-  onDrawingCreate: (title: string, projectId: number | string | null) => void
-  onFlowchartCreate: (title: string, projectId: number | string | null) => void
-  diagrams: Diagram[]
-  notes: Note[]
-  drawings: Drawing[]
-  flowcharts: Flowchart[]
-  onDiagramSelect: (id: number | string) => void
-  onNoteSelect: (uid: string) => void
-  onDrawingSelect: (uid: string) => void
-  onFlowchartSelect: (uid: string) => void
-  activeDiagramId: number | string | null
-  activeNoteUid: string | null
-  activeDrawingId: string | null
-  activeFlowchartId: number | string | null
-  view: 'erd' | 'notes' | 'drawings' | 'trash' | 'flowchart' | 'changelog' | 'backups'
-  sidebarView: 'erd' | 'notes' | 'drawings' | 'flowchart' | 'changelog'
-  onDiagramDelete: (id: number | string) => void
-  onNoteDelete: (id: number | string) => void
-  onDrawingDelete: (uid: string) => void
-  onFlowchartDelete: (uid: string) => void
-  onDiagramUpdate: (id: number | string, name: string, options?: { silent?: boolean }) => void
-  onNoteUpdate: (id: number | string, title: string, options?: { silent?: boolean }) => void
-  onDrawingUpdate: (uid: string, title: string, options?: { silent?: boolean }) => void
-  onFlowchartUpdate: (uid: string, title: string, options?: { silent?: boolean }) => void
-  onMoveDiagramToProject: (diagramId: number | string, projectId: number | string | null, options?: { silent?: boolean }) => void
-  onMoveNoteToProject: (noteId: number | string, projectId: number | string | null, options?: { silent?: boolean }) => void
-  onMoveDrawingToProject: (uid: string, projectId: number | string | null, options?: { silent?: boolean }) => void
-  onMoveFlowchartToProject: (uid: string, projectId: number | string | null, options?: { silent?: boolean }) => void
-  allProjects: Project[]
-  searchQuery: string
-  hasMoreProjects?: boolean
-  hasMoreDiagrams?: boolean
-  hasMoreNotes?: boolean
-  hasMoreDrawings?: boolean
-  hasMoreFlowcharts?: boolean
-  onLoadMoreProjects?: () => void
-  onLoadMoreDiagrams?: () => void
-  onLoadMoreNotes?: () => void
-  onLoadMoreDrawings?: () => void
-  onLoadMoreFlowcharts?: () => void
-  onNoteCopyMarkdown?: (id: number | string) => void
-  onNoteImportMarkdown?: (id: number | string) => void
-  onNoteExportMarkdown?: (id: number | string) => void
-  isOnline: boolean
-  isProjectsLoading?: boolean
-  isDiagramsLoading?: boolean
-  isNotesLoading?: boolean
-  isDrawingsLoading?: boolean
-  isFlowchartsLoading?: boolean
+interface NavProjectsProps {
+  projects: any[];
+  activeProjectId: number | string | null;
+  onProjectSelect: (id: number | string | null) => void;
+  onProjectDelete: (id: number | string) => void;
+  onProjectUpdate: (id: number | string, name: string) => void;
+  onProjectCreate: (name: string) => void;
+  onDiagramCreate: (name: string, projectId: number | string | null) => void;
+  onNoteCreate: (title: string, projectId: number | string | null) => void;
+  onDrawingCreate: (title: string, projectId: number | string | null) => void;
+  onFlowchartCreate: (title: string, projectId: number | string | null) => void;
+  diagrams: Diagram[];
+  notes: Note[];
+  drawings: Drawing[];
+  flowcharts: Flowchart[];
+  onDiagramSelect: (id: number | string) => void;
+  onNoteSelect: (uid: string) => void;
+  onDrawingSelect: (uid: string) => void;
+  onFlowchartSelect: (uid: string) => void;
+  activeDiagramId: number | string | null;
+  activeNoteUid: string | null;
+  activeDrawingId: string | null;
+  activeFlowchartId: number | string | null;
+  view: string;
+  sidebarView: string;
+  onDiagramDelete: (id: number | string) => void;
+  onNoteDelete: (id: number | string) => void;
+  onDrawingDelete: (uid: string) => void;
+  onFlowchartDelete: (uid: string) => void;
+  onDiagramUpdate: (id: number | string, name: string, options?: { silent?: boolean }) => void;
+  onNoteUpdate: (id: number | string, title: string, options?: { silent?: boolean }) => void;
+  onDrawingUpdate: (uid: string, title: string, options?: { silent?: boolean }) => void;
+  onFlowchartUpdate: (uid: string, title: string, options?: { silent?: boolean }) => void;
+  onMoveDiagramToProject: (diagramId: number | string, projectId: number | string | null, options?: { silent?: boolean }) => void;
+  onMoveNoteToProject: (noteId: number | string, projectId: number | string | null, options?: { silent?: boolean }) => void;
+  onMoveDrawingToProject: (uid: string, projectId: number | string | null, options?: { silent?: boolean }) => void;
+  onMoveFlowchartToProject: (uid: string, projectId: number | string | null, options?: { silent?: boolean }) => void;
+  allProjects: Project[];
+  searchQuery: string;
+  hasMoreProjects?: boolean;
+  hasMoreDiagrams?: boolean;
+  hasMoreNotes?: boolean;
+  hasMoreDrawings?: boolean;
+  hasMoreFlowcharts?: boolean;
+  onLoadMoreProjects?: () => void;
+  onLoadMoreDiagrams?: () => void;
+  onLoadMoreNotes?: () => void;
+  onLoadMoreDrawings?: () => void;
+  onLoadMoreFlowcharts?: () => void;
+  onNoteCopyMarkdown?: (id: number | string) => void;
+  onNoteImportMarkdown?: (id: number | string) => void;
+  onNoteExportMarkdown?: (id: number | string) => void;
+  isOnline: boolean;
+  isProjectsLoading?: boolean;
+  isDiagramsLoading?: boolean;
+  isNotesLoading?: boolean;
+  isDrawingsLoading?: boolean;
+  isFlowchartsLoading?: boolean;
   uncategorized: {
     diagrams: Diagram[];
     notes: Note[];
     drawings: Drawing[];
     flowcharts: Flowchart[];
   };
-}) {
+}
+
+export function NavProjects(props: NavProjectsProps) {
+  const {
+    projects, activeProjectId, onProjectSelect, onProjectDelete, onProjectUpdate, onProjectCreate,
+    onDiagramCreate, onNoteCreate, onDrawingCreate, onFlowchartCreate, diagrams, notes, drawings,
+    flowcharts, onDiagramSelect, onNoteSelect, onDrawingSelect, onFlowchartSelect, activeDiagramId,
+    activeNoteUid, activeDrawingId, activeFlowchartId, view, sidebarView, onDiagramDelete,
+    onNoteDelete, onDrawingDelete, onFlowchartDelete, onDiagramUpdate, onNoteUpdate, onDrawingUpdate,
+    onFlowchartUpdate, onMoveDiagramToProject, onMoveNoteToProject, onMoveDrawingToProject,
+    onMoveFlowchartToProject, allProjects, searchQuery, hasMoreProjects, hasMoreDiagrams,
+    hasMoreNotes, hasMoreDrawings, hasMoreFlowcharts, onLoadMoreProjects, onLoadMoreDiagrams,
+    onLoadMoreNotes, onLoadMoreDrawings, onLoadMoreFlowcharts, isOnline, isProjectsLoading,
+    isDiagramsLoading, isNotesLoading, isDrawingsLoading, isFlowchartsLoading, uncategorized
+  } = props;
   const { isMobile } = useSidebar()
   
   // Dialog States
@@ -216,75 +170,83 @@ export function NavProjects({
 
   const getFileCount = (projectId: number | string | null, viewFilter?: string) => {
     const currentView = viewFilter || sidebarView;
-    const dCount = (diagrams || []).filter(f => !f.is_deleted && (projectId === null || String(f.project_id) === String(projectId)) && (currentView === 'erd')).length
-    const nCount = (notes || []).filter(n => !n.is_deleted && (projectId === null || String(n.project_id) === String(projectId)) && (currentView === 'notes')).length
-    const drCount = (drawings || []).filter(d => !d.is_deleted && (projectId === null || String(d.project_id) === String(projectId)) && (currentView === 'drawings')).length
-    const fCount = (flowcharts || []).filter(f => !f.is_deleted && (projectId === null || String(f.project_id) === String(projectId)) && (currentView === 'flowchart')).length
+    const isPrd = currentView === 'prd';
+    const isNotes = currentView === 'notes';
+    const dCount = (diagrams || []).filter(f => !f.is_deleted && (projectId === null || String(f.project_id) === String(projectId)) && (currentView === 'erd')).length;
+    const nCount = (notes || []).filter(n => !n.is_deleted && (projectId === null || String(n.project_id) === String(projectId)) && (isNotes ? !n.title?.startsWith('[PRD] ') : false)).length;
+    const prdCount = (notes || []).filter(n => !n.is_deleted && (projectId === null || String(n.project_id) === String(projectId)) && (isPrd ? n.title?.startsWith('[PRD] ') : false)).length;
+    const drCount = (drawings || []).filter(d => !d.is_deleted && (projectId === null || String(d.project_id) === String(projectId)) && (currentView === 'drawings')).length;
+    const fCount = (flowcharts || []).filter(f => !f.is_deleted && (projectId === null || String(f.project_id) === String(projectId)) && (currentView === 'flowchart')).length;
     
     if (currentView === 'erd') return dCount;
     if (currentView === 'notes') return nCount;
+    if (currentView === 'prd') return prdCount;
     if (currentView === 'drawings') return drCount;
     if (currentView === 'flowchart') return fCount;
-    return dCount + nCount + drCount + fCount;
-  }
+    return dCount + nCount + prdCount + drCount + fCount;
+  };
 
   const getFilesForCurrentView = () => {
     const pFiles = projects.flatMap(p => {
       switch (sidebarView) {
-        case 'erd': return p.diagrams || []
-        case 'notes': return p.notes || []
-        case 'drawings': return p.drawings || []
-        case 'flowchart': return p.flowcharts || []
-        default: return []
+        case 'erd': return p.diagrams || [];
+        case 'notes': return (p.notes || []).filter((n: any) => !n.title?.startsWith('[PRD] '));
+        case 'prd': return (p.notes || []).filter((n: any) => n.title?.startsWith('[PRD] '));
+        case 'drawings': return p.drawings || [];
+        case 'flowchart': return p.flowcharts || [];
+        default: return [];
       }
     });
 
     const uFiles = (() => {
       switch (sidebarView) {
-        case 'erd': return uncategorized.diagrams || []
-        case 'notes': return uncategorized.notes || []
-        case 'drawings': return uncategorized.drawings || []
-        case 'flowchart': return uncategorized.flowcharts || []
-        default: return []
+        case 'erd': return uncategorized.diagrams || [];
+        case 'notes': return (uncategorized.notes || []).filter((n: any) => !n.title?.startsWith('[PRD] '));
+        case 'prd': return (uncategorized.notes || []).filter((n: any) => n.title?.startsWith('[PRD] '));
+        case 'drawings': return uncategorized.drawings || [];
+        case 'flowchart': return uncategorized.flowcharts || [];
+        default: return [];
       }
     })();
 
     return [...pFiles, ...uFiles];
-  }
+  };
 
   const getActiveFileId = () => {
     switch (sidebarView) {
-      case 'erd': return activeDiagramId
-      case 'notes': return activeNoteUid
-      case 'drawings': return activeDrawingId
+      case 'erd': return activeDiagramId;
+      case 'notes':
+      case 'prd': return activeNoteUid;
+      case 'drawings': return activeDrawingId;
       case 'flowchart': {
-        // Map numeric activeFlowchartId to uid for sidebar highlighting
         const fc = flowcharts.find(f => String(f.id) === String(activeFlowchartId));
         return fc?.uid ?? activeFlowchartId;
       }
-      default: return null
+      default: return null;
     }
-  }
+  };
 
   const getOnFileSelect = () => {
     switch (sidebarView) {
-      case 'erd': return onDiagramSelect
-      case 'notes': return (id: number | string) => onNoteSelect(String(id))
-      case 'drawings': return (id: number | string) => onDrawingSelect(String(id))
-      case 'flowchart': return (id: number | string) => onFlowchartSelect(String(id))
-      default: return () => {}
+      case 'erd': return onDiagramSelect;
+      case 'notes':
+      case 'prd': return (id: number | string) => onNoteSelect(String(id));
+      case 'drawings': return (id: number | string) => onDrawingSelect(String(id));
+      case 'flowchart': return (id: number | string) => onFlowchartSelect(String(id));
+      default: return () => {};
     }
-  }
+  };
 
   const getIcon = () => {
     switch (sidebarView) {
-      case 'erd': return Database
-      case 'notes': return StickyNote
-      case 'drawings': return PenTool
-      case 'flowchart': return Network
-      default: return Database
+      case 'erd': return Database;
+      case 'notes': return StickyNote;
+      case 'prd': return FileText;
+      case 'drawings': return PenTool;
+      case 'flowchart': return Network;
+      default: return Database;
     }
-  }
+  };
 
   const allFiles = getFilesForCurrentView().filter(f => !f.is_deleted);
   const activeFileId = getActiveFileId();

@@ -32,7 +32,9 @@ export async function update(req: ExpressRequest, res: ExpressResponse): Promise
   try {
     const { name } = req.body;
     const userId = (req as any).user.id;
-    res.json(await svc.updateProject(Number(req.params.id), userId, name));
+    const result = await svc.updateProject(req.params.id, userId, name);
+    if (!result.success) { res.status(404).json(result); return; }
+    res.json(result);
   } catch (err: any) {
     handleError(res, err, "Failed to update project");
   }
@@ -40,9 +42,10 @@ export async function update(req: ExpressRequest, res: ExpressResponse): Promise
 
 export async function remove(req: ExpressRequest, res: ExpressResponse): Promise<void> {
   try {
-    const projectId = Number(req.params.id);
     const userId = (req as any).user.id;
-    res.json(await svc.softDeleteProject(projectId, userId));
+    const result = await svc.softDeleteProject(req.params.id, userId);
+    if (!result.success) { res.status(404).json(result); return; }
+    res.json(result);
   } catch (err: any) {
     handleError(res, err, "Failed to delete project");
   }
@@ -50,9 +53,10 @@ export async function remove(req: ExpressRequest, res: ExpressResponse): Promise
 
 export async function restore(req: ExpressRequest, res: ExpressResponse): Promise<void> {
   try {
-    const projectId = Number(req.params.id);
     const userId = (req as any).user.id;
-    res.json(await svc.restoreProject(projectId, userId));
+    const result = await svc.restoreProject(req.params.id, userId);
+    if (!result.success) { res.status(404).json(result); return; }
+    res.json(result);
   } catch (err: any) {
     handleError(res, err, "Failed to restore project");
   }
@@ -60,9 +64,10 @@ export async function restore(req: ExpressRequest, res: ExpressResponse): Promis
 
 export async function permanentDelete(req: ExpressRequest, res: ExpressResponse): Promise<void> {
   try {
-    const projectId = Number(req.params.id);
     const userId = (req as any).user.id;
-    res.json(await svc.permanentDeleteProject(projectId, userId));
+    const result = await svc.permanentDeleteProject(req.params.id, userId);
+    if (!result.success) { res.status(404).json(result); return; }
+    res.json(result);
   } catch (err: any) {
     handleError(res, err, "Failed to permanently delete project");
   }
@@ -70,9 +75,8 @@ export async function permanentDelete(req: ExpressRequest, res: ExpressResponse)
 
 export async function siblings(req: ExpressRequest, res: ExpressResponse): Promise<void> {
   try {
-    const projectId = Number(req.params.id);
     const userId = (req as any).user.id;
-    res.json(await svc.getProjectSiblings(projectId, userId));
+    res.json(await svc.getProjectSiblings(req.params.id, userId));
   } catch (err: any) {
     handleError(res, err, "Failed to fetch siblings");
   }
@@ -80,10 +84,9 @@ export async function siblings(req: ExpressRequest, res: ExpressResponse): Promi
 
 export async function summary(req: ExpressRequest, res: ExpressResponse): Promise<void> {
   try {
-    const projectId = Number(req.params.id);
     const userId = (req as any).user.id;
     const includeDbClient = req.query.include_db_client !== "false";
-    res.json(await svc.getProjectSummary(projectId, userId, includeDbClient));
+    res.json(await svc.getProjectSummary(req.params.id, userId, includeDbClient));
   } catch (err: any) {
     handleError(res, err, "Failed to fetch project summary");
   }
@@ -91,10 +94,9 @@ export async function summary(req: ExpressRequest, res: ExpressResponse): Promis
 
 export async function files(req: ExpressRequest, res: ExpressResponse): Promise<void> {
   try {
-    const projectId = Number(req.params.id);
     const userId = (req as any).user.id;
     const includeDbClient = req.query.include_db_client !== "false";
-    res.json(await svc.listProjectFiles(projectId, userId, includeDbClient));
+    res.json(await svc.listProjectFiles(req.params.id, userId, includeDbClient));
   } catch (err: any) {
     handleError(res, err, "Failed to fetch project files");
   }

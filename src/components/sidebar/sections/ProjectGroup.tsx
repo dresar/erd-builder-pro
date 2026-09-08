@@ -111,7 +111,8 @@ export function ProjectGroup({
   const uncategorizedFiles = React.useMemo(() => {
     switch (sidebarView) {
       case 'erd': return uncategorized.diagrams || []
-      case 'notes': return uncategorized.notes || []
+      case 'notes': return (uncategorized.notes || []).filter((n: any) => !n.title?.startsWith('[PRD] '))
+      case 'prd': return (uncategorized.notes || []).filter((n: any) => n.title?.startsWith('[PRD] '))
       case 'drawings': return uncategorized.drawings || []
       case 'flowchart': return uncategorized.flowcharts || []
       default: return []
@@ -181,7 +182,8 @@ export function ProjectGroup({
             files={(() => {
               switch (sidebarView) {
                 case 'erd': return item.diagrams || []
-                case 'notes': return item.notes || []
+                case 'notes': return (item.notes || []).filter((n: any) => !n.title?.startsWith('[PRD] '))
+                case 'prd': return (item.notes || []).filter((n: any) => n.title?.startsWith('[PRD] '))
                 case 'drawings': return item.drawings || []
                 case 'flowchart': return item.flowcharts || []
                 default: return []

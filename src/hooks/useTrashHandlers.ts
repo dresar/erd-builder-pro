@@ -50,11 +50,18 @@ export function useTrashHandlers(params: UseTrashHandlersParams) {
 
   const deletedProjects = trashData?.projects || [];
 
-  const handleTrashRestoreProject = useCallback(async (id: any) => {
+  const handleTrashRestoreProject = useCallback(async (file: any) => {
+    const id = typeof file === 'object' ? (file.id ?? file.uid) : file;
     await restoreProject(id);
     await fetchTrash();
     await fetchProjects();
-  }, [restoreProject, fetchTrash, fetchProjects]);
+    await Promise.all([
+      fetchDiagrams(false, 'all', debouncedSearchQuery, null, 50, undefined, { silent: true }),
+      fetchNotes(false, 'all', debouncedSearchQuery, null, 50, undefined, { silent: true }),
+      fetchDrawings(false, 'all', debouncedSearchQuery, null, 50, undefined, { silent: true }),
+      fetchFlowcharts(false, 'all', debouncedSearchQuery, null, 50, undefined, { silent: true }),
+    ]);
+  }, [restoreProject, fetchTrash, fetchProjects, fetchDiagrams, fetchNotes, fetchDrawings, fetchFlowcharts, debouncedSearchQuery]);
 
   /** Restore a diagram, warning if its project is also deleted. Accepts file object or numeric ID. */
   const handleTrashRestoreDiagram = useCallback(async (file: any) => {
@@ -105,8 +112,9 @@ export function useTrashHandlers(params: UseTrashHandlersParams) {
   }, [restoreDbClient, fetchTrash, fetchProjects, deletedProjects]);
 
   const handleTrashProjectPermanentDelete = useCallback((file: any) => {
-    const id = typeof file === 'object' ? file.id : file;
-    setItemToDelete({ id, type: 'project' });
+    const id = typeof file === 'object' ? (file.id ?? file.uid) : file;
+    const uid = typeof file === 'object' ? file.uid : undefined;
+    setItemToDelete({ id, uid, type: 'project' });
     setIsPermanentDeleteConfirmOpen(true);
   }, [setItemToDelete, setIsPermanentDeleteConfirmOpen]);
 

@@ -826,7 +826,46 @@ export function WorkspaceProvider({
     };
   }, []);
 
-  // ── handleViewChange ──
+  useEffect(() => {
+    const handleProjectDeleted = (e: any) => {
+      const targetIds = new Set<string>((e.detail?.targetIds || []).map(String));
+      if (targetIds.size === 0) return;
+
+      setNotes(prev => prev.filter(n => !targetIds.has(String(n.project_id))));
+      setDrawings(prev => prev.filter(dw => !targetIds.has(String(dw.project_id))));
+      setFlowcharts(prev => prev.filter(fc => !targetIds.has(String(fc.project_id))));
+      setDiagrams(prev => prev.filter(d => !targetIds.has(String(d.project_id))));
+
+      const currentWs = tableSearchParams.get('workspace');
+      if (currentWs && targetIds.has(String(currentWs))) {
+        const nextParams = new URLSearchParams(tableSearchParams);
+        nextParams.delete('workspace');
+        nextParams.set('page', '1');
+        setTableSearchParams(nextParams, { replace: true });
+      }
+
+      triggerTableRefresh();
+      fetchTrash();
+    };
+
+    const handleProjectRestored = () => {
+      triggerTableRefresh();
+      fetchTrash();
+      fetchProjects();
+      fetchDiagrams();
+      fetchNotes();
+      fetchDrawings();
+      fetchFlowcharts();
+    };
+
+    window.addEventListener('workspace:project-deleted', handleProjectDeleted);
+    window.addEventListener('workspace:project-restored', handleProjectRestored);
+    return () => {
+      window.removeEventListener('workspace:project-deleted', handleProjectDeleted);
+      window.removeEventListener('workspace:project-restored', handleProjectRestored);
+    };
+  }, [setNotes, setDrawings, setFlowcharts, setDiagrams, tableSearchParams, setTableSearchParams, triggerTableRefresh, fetchTrash, fetchProjects, fetchDiagrams, fetchNotes, fetchDrawings, fetchFlowcharts]);
+
   const handleViewChange = useCallback(async (newView: AppView, showTable?: boolean, workspaceUid?: string | null) => {
     if (!isOnline && !isPublicView) {
       toast.error('Offline Mode: Navigation is disabled.', { duration: 5000 });
@@ -879,7 +918,7 @@ export function WorkspaceProvider({
   const confirmPermanentDelete = useCallback(async () => {
     if (itemToDelete) {
       const { id, type, uid } = itemToDelete;
-      if (type === 'project') await deleteProjectPermanent(id);
+      if (type === 'project') await deleteProjectPermanent(uid || id);
       else if (type === 'erd') await deleteDiagramPermanent(uid || String(id));
       else if (type === 'notes') await deleteNotePermanent(uid || String(id));
       else if (type === 'drawings') await deleteDrawingPermanent(uid || String(id));

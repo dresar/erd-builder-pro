@@ -43,10 +43,10 @@ export const useActiveItemGuard = ({
 
     const checkActiveItemHealth = () => {
       let activeItem: any = null;
-      if (view === 'erd' && activeDiagramId) activeItem = diagrams.find(f => String(f.id) === String(activeDiagramId));
-      else if (view === 'notes' && activeNoteUid) activeItem = notes.find(n => String(n.uid) === String(activeNoteUid));
-      else if (view === 'drawings' && activeDrawingId) activeItem = drawings.find(d => String(d.id) === String(activeDrawingId));
-      else if (view === 'flowchart' && activeFlowchartId) activeItem = flowcharts.find(f => String(f.id) === String(activeFlowchartId));
+      if (view === 'erd' && activeDiagramId) activeItem = diagrams.find(f => String(f.id) === String(activeDiagramId) || String(f.uid) === String(activeDiagramId));
+      else if (view === 'notes' && activeNoteUid) activeItem = notes.find(n => String(n.uid) === String(activeNoteUid) || String(n.id) === String(activeNoteUid));
+      else if (view === 'drawings' && activeDrawingId) activeItem = drawings.find(d => String(d.id) === String(activeDrawingId) || String(d.uid) === String(activeDrawingId));
+      else if (view === 'flowchart' && activeFlowchartId) activeItem = flowcharts.find(f => String(f.id) === String(activeFlowchartId) || String(f.uid) === String(activeFlowchartId));
 
       if (activeItem && activeItem.is_deleted) {
         if (view === 'erd') setActiveDiagramId(null);
@@ -59,8 +59,8 @@ export const useActiveItemGuard = ({
       }
 
       if (activeItem && activeItem.project_id) {
-        const parentProject = projects.find(p => String(p.id) === String(activeItem.project_id));
-        if (parentProject && parentProject.is_deleted) {
+        const parentProject = projects.find(p => String(p.id) === String(activeItem.project_id) || String(p.uid) === String(activeItem.project_id));
+        if (!parentProject || parentProject.is_deleted) {
           setActiveProjectId(null);
           setActiveDiagramId(null);
           setActiveNoteUid(null);

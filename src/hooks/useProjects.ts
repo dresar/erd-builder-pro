@@ -47,10 +47,10 @@ export function useProjects(isGuest: boolean = false) {
       // To match the backend structure:
       const projectsWithFiles = filteredProjects.map(p => ({
         ...p,
-        diagrams: uDiagrams.filter(f => !f.is_deleted && String(f.project_id) === String(p.id)),
-        notes: uNotes.filter(f => !f.is_deleted && String(f.project_id) === String(p.id)),
-        drawings: uDrawings.filter(f => !f.is_deleted && String(f.project_id) === String(p.id)),
-        flowcharts: uFlowcharts.filter(f => !f.is_deleted && String(f.project_id) === String(p.id)),
+        diagrams: uDiagrams.filter(f => !f.is_deleted && (String(f.project_id) === String(p.id) || String(f.project_id) === String(p.uid))),
+        notes: uNotes.filter(f => !f.is_deleted && (String(f.project_id) === String(p.id) || String(f.project_id) === String(p.uid))),
+        drawings: uDrawings.filter(f => !f.is_deleted && (String(f.project_id) === String(p.id) || String(f.project_id) === String(p.uid))),
+        flowcharts: uFlowcharts.filter(f => !f.is_deleted && (String(f.project_id) === String(p.id) || String(f.project_id) === String(p.uid))),
       }));
 
       setProjects(projectsWithFiles);
@@ -167,17 +167,19 @@ export function useProjects(isGuest: boolean = false) {
 
     try {
       if (isGuestCheck()) {
-        const project = await localPersistence.getResource(id);
+        const allProjects = await localPersistence.getAllResources('project');
+        const project = allProjects.find((p: any) => String(p.id) === idStr || String(p.uid) === idStr);
         if (project) {
           const deleted_at = new Date().toISOString();
           project.is_deleted = true;
           project.deleted_at = deleted_at;
           await localPersistence.saveResource(project);
           
+          const targetIds = new Set([idStr, String(project.id), String(project.uid)].filter(Boolean));
           const types = ['erd', 'notes', 'drawings', 'flowchart'];
           for (const type of types) {
             const items = await localPersistence.getAllResources(type);
-            const projectItems = items.filter(item => String(item.project_id) === String(id));
+            const projectItems = items.filter(item => targetIds.has(String(item.project_id)));
             for (const item of projectItems) {
               item.is_deleted = true;
               item.deleted_at = deleted_at;
@@ -185,8 +187,11 @@ export function useProjects(isGuest: boolean = false) {
             }
           }
 
-          setProjects(prev => prev.filter(p => p.id !== id));
-          if (activeProjectId === id) setActiveProjectId(null);
+          setProjects(prev => prev.filter(p => String(p.id) !== idStr && String(p.uid) !== idStr));
+          if (String(activeProjectId) === idStr || targetIds.has(String(activeProjectId))) {
+            setActiveProjectId(null);
+          }
+          window.dispatchEvent(new CustomEvent('workspace:project-deleted', { detail: { targetIds: Array.from(targetIds) } }));
           toast.success('Project and its items moved to local trash', { id: `proj-${idStr}` });
         }
         return true;
@@ -194,8 +199,18 @@ export function useProjects(isGuest: boolean = false) {
 
       const res = await apiFetch(`/api/projects/${id}`, { method: 'DELETE' });
       if (res.ok) {
-        setProjects(prev => prev.filter(p => p.id !== id));
-        if (activeProjectId === id) setActiveProjectId(null);
+        const data = await res.json().catch(() => ({}));
+        if (data && data.success === false) {
+          toast.error(data.error || 'Failed to delete workspace');
+          return false;
+        }
+        const currentProject = projects.find(p => String(p.id) === idStr || String(p.uid) === idStr);
+        const targetIds = new Set([idStr, String(currentProject?.id), String(currentProject?.uid)].filter(Boolean));
+        setProjects(prev => prev.filter(p => String(p.id) !== idStr && String(p.uid) !== idStr));
+        if (String(activeProjectId) === idStr || targetIds.has(String(activeProjectId))) {
+          setActiveProjectId(null);
+        }
+        window.dispatchEvent(new CustomEvent('workspace:project-deleted', { detail: { targetIds: Array.from(targetIds) } }));
         toast.success('Project moved to trash', { id: `proj-${idStr}` });
         return true;
       }
@@ -207,18 +222,20 @@ export function useProjects(isGuest: boolean = false) {
   };
 
   const restoreProject = async (id: number | string) => {
+    const idStr = String(id);
     if (isGuestCheck()) {
-      const project = await localPersistence.getResource(id);
+      const allProjects = await localPersistence.getAllResources('project');
+      const project = allProjects.find((p: any) => String(p.id) === idStr || String(p.uid) === idStr);
       if (project) {
         project.is_deleted = false;
         project.deleted_at = undefined;
         await localPersistence.saveResource(project);
 
-        // Cascading restore for local resources
+        const targetIds = new Set([idStr, String(project.id), String(project.uid)].filter(Boolean));
         const types = ['erd', 'notes', 'drawings', 'flowchart'];
         for (const type of types) {
           const items = await localPersistence.getAllResources(type);
-          const projectItems = items.filter(item => String(item.project_id) === String(id));
+          const projectItems = items.filter(item => targetIds.has(String(item.project_id)));
           for (const item of projectItems) {
             item.is_deleted = false;
             item.deleted_at = undefined;
@@ -227,23 +244,44 @@ export function useProjects(isGuest: boolean = false) {
         }
 
         fetchProjects();
+        window.dispatchEvent(new CustomEvent('workspace:project-restored', { detail: { targetIds: Array.from(targetIds) } }));
         toast.success('Project and its items restored locally');
       }
       return;
     }
     await apiFetch(`/api/projects/${id}/restore`, { method: 'POST' });
     fetchProjects();
+    window.dispatchEvent(new CustomEvent('workspace:project-restored', { detail: { targetIds: [idStr] } }));
   };
 
   const deleteProjectPermanent = async (id: number | string) => {
+    const idStr = String(id);
     if (isGuestCheck()) {
-      await localPersistence.deleteResource(id);
-      setProjects(prev => prev.filter(p => p.id !== id));
+      const allProjects = await localPersistence.getAllResources('project');
+      const project = allProjects.find((p: any) => String(p.id) === idStr || String(p.uid) === idStr);
+      if (project) {
+        const targetIds = new Set([idStr, String(project.id), String(project.uid)].filter(Boolean));
+        const types = ['erd', 'notes', 'drawings', 'flowchart'];
+        for (const type of types) {
+          const items = await localPersistence.getAllResources(type);
+          const projectItems = items.filter(item => targetIds.has(String(item.project_id)));
+          for (const item of projectItems) {
+            const itemId = item.id ?? item.uid;
+            await localPersistence.deleteResource(itemId);
+          }
+        }
+        await localPersistence.deleteResource(project.id ?? id);
+      } else {
+        await localPersistence.deleteResource(id);
+      }
+      setProjects(prev => prev.filter(p => String(p.id) !== idStr && String(p.uid) !== idStr));
+      window.dispatchEvent(new CustomEvent('workspace:project-deleted', { detail: { targetIds: [idStr] } }));
       toast.success('Project permanently deleted from local');
       return;
     }
     await apiFetch(`/api/projects/${id}/permanent`, { method: 'DELETE' });
-    setProjects(prev => prev.filter(p => p.id !== id));
+    setProjects(prev => prev.filter(p => String(p.id) !== idStr && String(p.uid) !== idStr));
+    window.dispatchEvent(new CustomEvent('workspace:project-deleted', { detail: { targetIds: [idStr] } }));
   };
 
   return {

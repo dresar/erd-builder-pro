@@ -131,7 +131,7 @@ export function SidebarModals({
     isDeletingRef.current = true;
     setIsDeleting(true);
     try {
-      await onProjectDelete(deletingProject.id);
+      await onProjectDelete(deletingProject.uid ?? deletingProject.id);
       setIsProjectDeleteConfirmOpen(false);
       setDeletingProject(null);
     } finally {

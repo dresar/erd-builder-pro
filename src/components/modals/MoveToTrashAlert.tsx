@@ -81,9 +81,7 @@ export const MoveToTrashAlert: React.FC<MoveToTrashAlertProps> = ({
         return;
       }
 
-      const currentId = view === 'erd' || view === 'notes' || view === 'flowchart' || view === 'drawings'
-        ? (activeDocument?.uid ?? activeDocument?.id)
-        : activeDocument?.id;
+      const currentId = activeDocument?.uid ?? activeDocument?.id ?? (activeDocument as any)?.id;
       if (!currentId) return;
 
       if (view === 'erd') await deleteDiagram?.(currentId);

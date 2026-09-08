@@ -563,7 +563,7 @@ export const AppSidebar = React.memo(({
         onOpenChange={(open) => { if (!open) setDeletingProject(null); }}
         mode="move-to-trash"
         view="project"
-        activeDocument={deletingProject ? { id: deletingProject.id, name: deletingProject.name } : undefined}
+        activeDocument={deletingProject ? { id: deletingProject.id, uid: (deletingProject as any).uid, name: deletingProject.name } : undefined}
         deleteProject={onProjectDelete}
         onAfterDelete={() => setDeletingProject(null)}
       />
