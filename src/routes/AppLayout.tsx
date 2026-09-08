@@ -139,10 +139,11 @@ function AppLayoutInner() {
 
   // ─── Derive AI entity context from current route ─────
   const entityContext = useMemo(() => {
-    const m = location.pathname.match(/^\/(notes|diagrams|flowcharts|drawings|db-client)\/([^/]+)$/);
+    const m = location.pathname.match(/^\/(notes|prd|diagrams|flowcharts|drawings|db-client)\/([^/]+)$/);
     if (!m) return null;
     const typeMap: Record<string, string> = {
       notes: 'note',
+      prd: 'note',
       diagrams: 'diagram',
       flowcharts: 'flowchart',
       drawings: 'drawing',
@@ -217,7 +218,7 @@ function AppLayoutInner() {
     moveDiagramToProject, moveNoteToProject, moveDrawingToProject, moveFlowchartToProject,
     deleteDiagram, deleteNote, deleteDrawing, deleteFlowchart,
     handleEntityUpdate,
-    handleSidebarDiagramCreate, handleSidebarNoteCreate, handleSidebarDrawingCreate, handleSidebarFlowchartCreate,
+    handleSidebarDiagramCreate, handleSidebarNoteCreate, handleSidebarPrdCreate, handleSidebarDrawingCreate, handleSidebarFlowchartCreate,
     isMoveToTrashAlertOpen, setIsMoveToTrashAlertOpen,
     isDeleteAlertOpen, setIsDeleteAlertOpen,
     isRenameDialogOpen, setIsRenameDialogOpen,
@@ -889,6 +890,7 @@ function AppLayoutInner() {
             onCreate={(title, projectId) => {
               const viewCb = createDialogView;
               if (viewCb === 'notes') handleSidebarNoteCreate(title, projectId);
+              else if (viewCb === 'prd') handleSidebarPrdCreate(title, projectId);
               else if (viewCb === 'erd') handleSidebarDiagramCreate(title, projectId);
               else if (viewCb === 'drawings') handleSidebarDrawingCreate(title, projectId);
               else if (viewCb === 'flowchart') handleSidebarFlowchartCreate(title, projectId);

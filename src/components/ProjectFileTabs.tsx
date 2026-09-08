@@ -1,17 +1,18 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
-import { Check, Database, DatabaseZap, FileText, GitBranch, PenTool, Plus } from 'lucide-react'
+import { Check, Database, DatabaseZap, FileText, FileCheck, GitBranch, PenTool, Plus } from 'lucide-react'
 import { useWorkspace } from '@/providers/WorkspaceProvider'
 import { Input } from '@/components/ui/input'
 import { apiFetch } from '@/lib/api'
 import { localPersistence } from '@/lib/localPersistence'
 import { cn } from '@/lib/utils'
 
-type FeatureTab = 'notes' | 'erd' | 'flowchart' | 'drawings' | 'db-client'
+type FeatureTab = 'notes' | 'prd' | 'erd' | 'flowchart' | 'drawings' | 'db-client'
 type CreateFileType = Exclude<FeatureTab, 'db-client'>
 
 const FEATURES: { id: FeatureTab; label: string; icon: React.ElementType; route: string }[] = [
   { id: 'notes', label: 'Catatan', icon: FileText, route: '/notes' },
+  { id: 'prd', label: 'PRD', icon: FileCheck, route: '/prd' },
   { id: 'erd', label: 'ERD', icon: Database, route: '/diagrams' },
   { id: 'db-client', label: 'Koneksi DB', icon: DatabaseZap, route: '/db-client' },
   { id: 'flowchart', label: 'Flowchart', icon: GitBranch, route: '/flowcharts' },
@@ -50,8 +51,12 @@ export function collectProjectFiles(
     .map(file => toWorkspaceFile(file, type))
     .filter((file): file is WorkspaceFile => file !== null)
 
+  const prdNotes = (sources.notes || []).filter(file => file.title?.startsWith('[PRD] '))
+  const regularNotes = (sources.notes || []).filter(file => !file.title?.startsWith('[PRD] '))
+
   return [
-    ...mapFiles(sources.notes, 'notes'),
+    ...mapFiles(regularNotes, 'notes'),
+    ...mapFiles(prdNotes, 'prd'),
     ...mapFiles(sources.diagrams.filter(file => (file.source_type ?? file.sourceType) !== 'production_db'), 'erd'),
     ...mapFiles(sources.flowcharts, 'flowchart'),
     ...mapFiles(sources.drawings, 'drawings'),
@@ -107,7 +112,7 @@ export function ProjectFileTabs({ currentView, currentFile }: Props) {
     activeDiagram, activeNote, activeDrawing, activeFlowchart,
     activeDiagramId, activeNoteUid, activeDrawingId, activeFlowchartId,
     handleDiagramSelect,
-    handleSidebarDiagramCreate, handleSidebarNoteCreate,
+    handleSidebarDiagramCreate, handleSidebarNoteCreate, handleSidebarPrdCreate,
     handleSidebarDrawingCreate, handleSidebarFlowchartCreate,
   } = useWorkspace()
 
@@ -186,7 +191,7 @@ export function ProjectFileTabs({ currentView, currentFile }: Props) {
 
   const projectFiles = useMemo(() => {
     if (!projectId) return []
-    const activeFile = currentFile ?? (currentView === 'notes'
+    const activeFile = currentFile ?? (currentView === 'notes' || currentView === 'prd'
       ? activeNote
       : currentView === 'erd'
         ? activeDiagram
@@ -198,7 +203,7 @@ export function ProjectFileTabs({ currentView, currentFile }: Props) {
       .map(file => ({ file, type: file.type } satisfies ProjectFileTab))
   }, [projectId, workspaceFiles, localProjectFiles, currentView, currentFile, activeNote, activeDiagram, activeFlowchart, activeDrawing])
 
-  const activeUid = currentFile ? getFileUid(currentFile) : currentView === 'notes'
+  const activeUid = currentFile ? getFileUid(currentFile) : (currentView === 'notes' || currentView === 'prd')
     ? activeNoteUid
     : currentView === 'erd'
       ? activeDiagram?.uid || activeDiagramId
@@ -224,6 +229,7 @@ export function ProjectFileTabs({ currentView, currentFile }: Props) {
     try {
       const pid = String(projectId)
       if (createType === 'notes') await handleSidebarNoteCreate(name, pid)
+      else if (createType === 'prd') await handleSidebarPrdCreate(name, pid)
       else if (createType === 'erd') await handleSidebarDiagramCreate(name, pid)
       else if (createType === 'flowchart') await handleSidebarFlowchartCreate(name, pid)
       else await handleSidebarDrawingCreate(name, pid)

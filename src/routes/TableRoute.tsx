@@ -1,9 +1,10 @@
 import React from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 
 import { useWorkspace } from '@/providers/WorkspaceProvider';
 
 import { NotesTableView } from '@/components/views/NotesTableView';
+import { PRDTableView } from '@/components/prd/PRDTableView';
 import { ErdTableView } from '@/components/views/ErdTableView';
 import { DrawingsTableView } from '@/components/views/DrawingsTableView';
 import { FlowchartTableView } from '@/components/views/FlowchartTableView';
@@ -12,6 +13,7 @@ import { DbClientTableRoute } from './DbClientTableRoute';
 
 export function TableRoute() {
   const { feature } = useParams<{ feature: string }>();
+  const navigate = useNavigate();
   const {
     notes, notesTotal, diagrams, diagramsTotal, drawings, drawingsTotal,
     flowcharts, flowchartsTotal, projects,
@@ -56,15 +58,18 @@ export function TableRoute() {
     setIsMoveToTrashAlertOpen(true);
   };
 
+  const prdNotes = React.useMemo(() => (notes || []).filter((n: any) => n.title?.startsWith('[PRD] ')), [notes]);
+  const regularNotes = React.useMemo(() => (notes || []).filter((n: any) => !n.title?.startsWith('[PRD] ')), [notes]);
+
   switch (feature) {
     case 'notes':
       return (
         <NotesTableView
-          notes={notes}
+          notes={regularNotes}
           projects={projects}
           selectedWorkspace={selectedWorkspaceUid}
           page={tablePage}
-          totalNotes={notesTotal}
+          totalNotes={regularNotes.length}
           isLoading={isNotesLoading}
           onSelectNote={handleNoteSelect}
           onCreateNote={() => handleOpenCreateDocument('notes')}
@@ -72,6 +77,26 @@ export function TableRoute() {
           onWorkspaceClick={handleWorkspaceClick}
           onOpenEditDocument={(uid: string) => handleOpenEditDocument(uid)}
           onDeleteNote={makeDeleteHandler(notes)}
+          searchQuery={fileSearchQuery}
+          onSearchChange={setFileSearchQuery}
+          searchRef={fileSearchRef}
+        />
+      );
+    case 'prd':
+      return (
+        <PRDTableView
+          prds={prdNotes}
+          projects={projects}
+          selectedWorkspace={selectedWorkspaceUid}
+          page={tablePage}
+          totalPrds={prdNotes.length}
+          isLoading={isNotesLoading}
+          onSelectPrd={(uid) => navigate(`/prd/${uid}`)}
+          onCreatePrd={() => handleOpenCreateDocument('prd')}
+          onPageChange={handlePageChange}
+          onWorkspaceClick={handleWorkspaceClick}
+          onOpenEditDocument={(uid: string) => handleOpenEditDocument(uid)}
+          onDeletePrd={makeDeleteHandler(notes)}
           searchQuery={fileSearchQuery}
           onSearchChange={setFileSearchQuery}
           searchRef={fileSearchRef}

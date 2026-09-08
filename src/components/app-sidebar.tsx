@@ -13,6 +13,7 @@ import {
   Pencil,
   Trash2,
   FileText,
+  FileCheck,
   ArrowUpRight,
   Loader2,
   Bot,
@@ -137,9 +138,10 @@ export const AppSidebar = React.memo(({
   const searchFilterOptions = [
     { value: 'all', label: 'Semua' },
     { value: 'workspace', label: 'Ruang Kerja' },
+    { value: 'notes', label: 'Catatan' },
+    { value: 'prd', label: 'PRD' },
     { value: 'erd', label: 'ERD' },
     ...(showDbClient ? [{ value: 'db-client', label: 'Koneksi DB' }] : []),
-    { value: 'notes', label: 'Catatan' },
     { value: 'flowchart', label: 'Flowchart' },
     { value: 'drawings', label: 'Gambar' },
   ];
@@ -184,6 +186,13 @@ export const AppSidebar = React.memo(({
       icon: FileText,
       isActive: activeFeatureView === 'notes',
       onClick: () => onViewChange('notes', true),
+    },
+    {
+      title: "PRD",
+      url: "#",
+      icon: FileCheck,
+      isActive: activeFeatureView === 'prd',
+      onClick: () => onViewChange('prd', true),
     },
     {
       title: "ERD",

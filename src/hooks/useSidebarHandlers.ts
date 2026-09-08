@@ -71,6 +71,16 @@ export function useSidebarHandlers(params: UseSidebarHandlersParams) {
     return n;
   }, [createNote, fetchProjects, handleNoteSelect]);
 
+  const handleSidebarPrdCreate = useCallback(async (t: string, pid?: number | string | null) => {
+    const finalTitle = t.startsWith('[PRD] ') ? t : `[PRD] ${t}`;
+    const n = await createNote(finalTitle, pid);
+    if (n) {
+      await fetchProjects();
+      await handleNoteSelect(n.uid);
+    }
+    return n;
+  }, [createNote, fetchProjects, handleNoteSelect]);
+
   const handleSidebarDrawingCreate = useCallback(async (t: string, pid?: number | string | null, options?: { silent?: boolean }) => {
     const d = await createDrawing(t, pid);
     if (d) {
@@ -212,6 +222,7 @@ export function useSidebarHandlers(params: UseSidebarHandlersParams) {
   return {
     handleSidebarDiagramCreate,
     handleSidebarNoteCreate,
+    handleSidebarPrdCreate,
     handleSidebarDrawingCreate,
     handleSidebarFlowchartCreate,
     handleSidebarProjectCreate,

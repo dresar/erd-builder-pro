@@ -2,6 +2,7 @@ import { useMemo, useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   FileText,
+  FileCheck,
   FolderKanban,
   Plus,
   Clock,
@@ -26,6 +27,17 @@ const typeConfig = [
     bg: 'bg-amber-500/10',
     route: '/table/notes',
     createFn: 'handleSidebarNoteCreate',
+    totalKey: 'notesTotal' as const,
+  },
+  {
+    key: 'prd',
+    label: 'PRD',
+    createLabel: 'PRD',
+    icon: FileCheck,
+    color: 'text-indigo-400',
+    bg: 'bg-indigo-500/10',
+    route: '/table/prd',
+    createFn: 'handleSidebarPrdCreate',
     totalKey: 'notesTotal' as const,
   },
   {
@@ -88,6 +100,8 @@ function getDocIcon(type: string) {
       return <Database className="h-4 w-4 text-blue-500" />;
     case 'notes':
       return <FileText className="h-4 w-4 text-amber-500" />;
+    case 'prd':
+      return <FileCheck className="h-4 w-4 text-indigo-400" />;
     case 'drawings':
       return <PenTool className="h-4 w-4 text-violet-500" />;
     case 'flowcharts':
@@ -111,6 +125,7 @@ function getDocLabel(doc: any): string {
   switch (doc._type) {
     case 'diagrams': return isDbClientFile(doc) ? 'Koneksi DB' : 'ERD';
     case 'notes': return 'Catatan';
+    case 'prd': return 'PRD';
     case 'drawings': return 'Gambar';
     case 'flowcharts': return 'Flowchart';
     case 'db-client': return 'Koneksi DB';
@@ -126,7 +141,9 @@ function getDocRoute(type: string, item: any) {
     case 'diagrams':
       return `/diagrams/${id}`;
     case 'notes':
-      return `/notes/${id}`;
+      return item.title?.startsWith('[PRD] ') ? `/prd/${id}` : `/notes/${id}`;
+    case 'prd':
+      return `/prd/${id}`;
     case 'drawings':
       return `/drawings/${id}`;
     case 'flowcharts':
@@ -195,7 +212,12 @@ export function DashboardRoute() {
         _group: isDbClientDiagram(d) ? 'db-client' : 'diagrams',
         _workspace: getWorkspace(d),
       })),
-      ...(ctx.notes || []).map((n: any) => ({ ...n, _type: 'notes' as const, _group: 'notes', _workspace: getWorkspace(n) })),
+      ...(ctx.notes || []).map((n: any) => ({
+        ...n,
+        _type: n.title?.startsWith('[PRD] ') ? ('prd' as const) : ('notes' as const),
+        _group: n.title?.startsWith('[PRD] ') ? 'prd' : 'notes',
+        _workspace: getWorkspace(n),
+      })),
       ...(ctx.drawings || []).map((d: any) => ({ ...d, _type: 'drawings' as const, _group: 'drawings', _workspace: getWorkspace(d) })),
       ...(ctx.flowcharts || []).map((f: any) => ({ ...f, _type: 'flowcharts' as const, _group: 'flowcharts', _workspace: getWorkspace(f) })),
     ]

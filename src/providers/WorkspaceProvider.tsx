@@ -518,7 +518,7 @@ export function WorkspaceProvider({
 
   // ── Sidebar handlers ──
   const {
-    handleSidebarDiagramCreate, handleSidebarNoteCreate,
+    handleSidebarDiagramCreate, handleSidebarNoteCreate, handleSidebarPrdCreate,
     handleSidebarDrawingCreate, handleSidebarFlowchartCreate,
     handleSidebarProjectCreate, handleSidebarProjectUpdate, handleSidebarProjectDelete,
   } = useSidebarHandlers({
@@ -854,6 +854,7 @@ export function WorkspaceProvider({
     if (!getSharePathInfo()) {
       let targetUrl: string | null = null;
       if (newView === 'notes' && activeNoteUid) targetUrl = '/notes/' + activeNoteUid;
+      else if (newView === 'prd' && activeNoteUid) targetUrl = '/prd/' + activeNoteUid;
       else if (newView === 'flowchart' && activeFlowchart) targetUrl = '/flowcharts/' + (activeFlowchart.uid || activeFlowchartId);
       else if (newView === 'erd' && activeDiagramId) targetUrl = '/diagrams/' + activeDiagramId;
       else if (newView === 'drawings' && activeDrawingId) targetUrl = '/drawings/' + activeDrawingId;
@@ -1034,7 +1035,7 @@ export function WorkspaceProvider({
     handleViewChange, handleNoteSelect, handleDiagramSelect, handleDrawingSelect, handleFlowchartSelect, refreshActiveDocument,
     handleNoteChange, handleDrawingChange, handleFlowchartChange, handleEntityUpdate,
 
-    handleSidebarDiagramCreate, handleSidebarNoteCreate, handleSidebarDrawingCreate,
+    handleSidebarDiagramCreate, handleSidebarNoteCreate, handleSidebarPrdCreate, handleSidebarDrawingCreate,
     handleSidebarFlowchartCreate, handleSidebarProjectCreate, handleSidebarProjectUpdate, handleSidebarProjectDelete,
 
     isMoveToTrashAlertOpen, setIsMoveToTrashAlertOpen,
@@ -1125,7 +1126,7 @@ export function WorkspaceProvider({
     handleViewChange, handleNoteSelect, handleDiagramSelect, handleDrawingSelect, handleFlowchartSelect, refreshActiveDocument,
     handleNoteChange, handleDrawingChange, handleFlowchartChange, handleEntityUpdate,
     // Sidebar handlers
-    handleSidebarDiagramCreate, handleSidebarNoteCreate, handleSidebarDrawingCreate,
+    handleSidebarDiagramCreate, handleSidebarNoteCreate, handleSidebarPrdCreate, handleSidebarDrawingCreate,
     handleSidebarFlowchartCreate, handleSidebarProjectCreate, handleSidebarProjectUpdate, handleSidebarProjectDelete,
     // Modal states — all booleans/strings
     isMoveToTrashAlertOpen, setIsMoveToTrashAlertOpen,

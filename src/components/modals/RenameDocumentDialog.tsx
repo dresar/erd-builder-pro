@@ -48,7 +48,7 @@ interface RenameDocumentDialogProps {
 }
 
 const viewLabel = (v: string) =>
-  v === 'erd' ? 'ERD' : v === 'notes' ? 'catatan' : v === 'drawings' ? 'gambar' : 'flowchart';
+  v === 'erd' ? 'ERD' : v === 'prd' ? 'PRD' : v === 'notes' ? 'catatan' : v === 'drawings' ? 'gambar' : 'flowchart';
 
 export const RenameDocumentDialog: React.FC<RenameDocumentDialogProps> = ({
   isOpen,
@@ -91,7 +91,7 @@ export const RenameDocumentDialog: React.FC<RenameDocumentDialogProps> = ({
     }
 
     // Edit mode — existing behavior
-    const id = view === 'notes' || view === 'flowchart' || view === 'drawings' ? activeDocument?.uid : activeDocument?.id;
+    const id = view === 'notes' || view === 'prd' || view === 'flowchart' || view === 'drawings' ? activeDocument?.uid : activeDocument?.id;
     if (id && newName.trim()) {
       const projectId = selectedProjectId === "none" ? null : selectedProjectId;
       const currentProjectId = activeDocument?.project_id || activeDocument?.projectId;
@@ -101,14 +101,17 @@ export const RenameDocumentDialog: React.FC<RenameDocumentDialogProps> = ({
       try {
         if (hasNameChanged) {
           if (view === 'erd') await updateDiagram?.(id, newName, { silent: true });
-          else if (view === 'notes') await updateNote?.(String(id), newName, { silent: true });
+          else if (view === 'notes' || view === 'prd') {
+            const finalTitle = view === 'prd' && !newName.startsWith('[PRD] ') ? `[PRD] ${newName}` : newName;
+            await updateNote?.(String(id), finalTitle, { silent: true });
+          }
           else if (view === 'drawings') await updateDrawing?.(id, newName, { silent: true });
           else if (view === 'flowchart') await updateFlowchart?.(id, newName, { silent: true });
         }
 
         if (hasProjectChanged) {
           if (view === 'erd') await onMoveDiagramToProject?.(id, projectId, { silent: true });
-          else if (view === 'notes') await onMoveNoteToProject?.(id, projectId, { silent: true });
+          else if (view === 'notes' || view === 'prd') await onMoveNoteToProject?.(id, projectId, { silent: true });
           else if (view === 'drawings') await onMoveDrawingToProject?.(id, projectId, { silent: true });
           else if (view === 'flowchart') await onMoveFlowchartToProject?.(id, projectId, { silent: true });
         }

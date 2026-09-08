@@ -78,7 +78,11 @@ export function useNoteNavigation(props: UseNoteNavigationProps): UseNoteNavigat
 
   // ── handleNoteSelect: the core orchestration ──
   const handleNoteSelect = useCallback(async (uid: string) => {
-    const targetPath = '/notes/' + uid;
+    const isPrd = pathnameRef.current.startsWith('/prd/') || Boolean(
+      notesRef.current.find(n => n.uid === uid && n.title?.startsWith('[PRD] '))
+      || (projectsRef.current as any[])?.flatMap((p: any) => p.notes || []).find((n: any) => n.uid === uid && n.title?.startsWith('[PRD] '))
+    );
+    const targetPath = (isPrd ? '/prd/' : '/notes/') + uid;
     const isRouteSelection = pathnameRef.current === targetPath;
     // Guard: prevent sequential duplicate within 1.5s (e.g. double-click, Effect 1 + sidebar)
     const now = Date.now();
@@ -93,8 +97,8 @@ export function useNoteNavigation(props: UseNoteNavigationProps): UseNoteNavigat
     const versionAtStart = getContentVersion();
     await flushPendingSavesStable();
     if (isRouteSelection && pathnameRef.current !== targetPath) return;
-    setView('notes');
-    setSidebarView('notes');
+    setView(isPrd ? 'prd' : 'notes');
+    setSidebarView(isPrd ? 'prd' : 'notes');
     // Set activeNoteUid early so breadcrumb can appear from list data (fetchProjects)
     // before selectNote's detail API call completes
     setActiveNoteUid(uid);
@@ -132,15 +136,15 @@ export function useNoteNavigation(props: UseNoteNavigationProps): UseNoteNavigat
     getContentVersion,
   ]);
 
-  // ── Effect 1: URL Routing for /notes/:uid ──
+  // ── Effect 1: URL Routing for /notes/:uid and /prd/:uid ──
   // Originally in App.tsx (lastProcessedNotesUrlRef + useEffect)
   useEffect(() => {
     if (!isAuthenticated || getSharePathInfo()) return;
     if (lastProcessedNotesUrlRef.current === location.pathname) return;
-    const m = location.pathname.match(/^\/notes\/([^/]+)/);
+    const m = location.pathname.match(/^\/(notes|prd)\/([^/]+)/);
     if (m) {
       lastProcessedNotesUrlRef.current = location.pathname;
-      handleNoteSelect(m[1]);
+      handleNoteSelect(m[2]);
     }
   }, [isAuthenticated, location.pathname, handleNoteSelect]);
 

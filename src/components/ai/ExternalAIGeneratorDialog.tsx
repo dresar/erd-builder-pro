@@ -214,12 +214,13 @@ export function ExternalAIGeneratorDialog({ isOpen, onClose }: ExternalAIGenerat
         projectId = selectedWorkspaceUid || null;
       }
 
-      // 1. Create PRD Note
+      // 1. Create PRD Document
       if (parsedData.prd?.content_markdown) {
-        toast.info('Membuat Catatan...');
+        toast.info('Membuat PRD...');
         localStorage.setItem('pending_note_content', parsedData.prd.content_markdown);
         localStorage.setItem('pending_note_strategy', 'replace');
-        const prdTitle = parsedData.prd.title || 'PRD Arsitektur';
+        const rawTitle = parsedData.prd.title || `Spesifikasi - ${effectiveName}`;
+        const prdTitle = rawTitle.startsWith('[PRD] ') ? rawTitle : `[PRD] ${rawTitle}`;
         await handleSidebarNoteCreate(prdTitle, projectId);
       }
 

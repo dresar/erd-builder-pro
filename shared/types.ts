@@ -1,6 +1,7 @@
 export enum DraftType {
   ERD = 'erd',
   NOTES = 'notes',
+  PRD = 'prd',
   FLOWCHART = 'flowchart',
   DRAWINGS = 'drawings',
 }
@@ -244,4 +245,4 @@ export interface AIChatMessage {
   created_at: string;
 }
 
-export type AppView = 'erd' | 'notes' | 'drawings' | 'trash' | 'flowchart' | 'changelog' | 'backups' | 'ai-settings';
+export type AppView = 'notes' | 'prd' | 'erd' | 'drawings' | 'trash' | 'flowchart' | 'changelog' | 'backups' | 'ai-settings';

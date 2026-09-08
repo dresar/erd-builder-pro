@@ -26,6 +26,7 @@ import { DashboardRoute } from './routes/DashboardRoute';
 import { OAuthConsent } from './components/OAuthConsent';
 
 const NoteEditorRoute = lazy(() => import('./routes/NoteEditorRoute').then(module => ({ default: module.NoteEditorRoute })));
+const PrdEditorRoute = lazy(() => import('./routes/PrdEditorRoute').then(module => ({ default: module.PrdEditorRoute })));
 const DiagramEditorRoute = lazy(() => import('./routes/DiagramEditorRoute').then(module => ({ default: module.DiagramEditorRoute })));
 const DbClientEditorRoute = lazy(() => import('./routes/DbClientEditorRoute').then(module => ({ default: module.DbClientEditorRoute })));
 const DrawingEditorRoute = lazy(() => import('./routes/DrawingEditorRoute').then(module => ({ default: module.DrawingEditorRoute })));
@@ -149,6 +150,7 @@ function AppContent() {
 
           {/* Document editors */}
           <Route path="notes/:id" element={lazyRoute(<NoteEditorRoute />)} />
+          <Route path="prd/:id" element={lazyRoute(<PrdEditorRoute />)} />
           <Route path="diagrams/:id" element={lazyRoute(<DiagramEditorRoute />)} />
           <Route path="db-client/:id" element={lazyRoute(<DbClientEditorRoute />)} />
           <Route path="drawings/:id" element={lazyRoute(<DrawingEditorRoute />)} />
