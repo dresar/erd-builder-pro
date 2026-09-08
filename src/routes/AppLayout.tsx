@@ -19,6 +19,7 @@ import { ImportSQLModal } from '@/components/modals/ImportSQLModal';
 import { RelationshipPropertiesModal } from '@/components/modals/RelationshipPropertiesModal';
 import { ImportNoteModal } from '@/components/modals/ImportNoteModal';
 import { ExportNoteModal } from '@/components/modals/ExportNoteModal';
+import { ExternalAIGeneratorDialog } from '@/components/ai/ExternalAIGeneratorDialog';
 import { NoteExporter } from '@/lib/exporters/note-exporter';
 import { getMarkdownFromHtml } from '@/lib/markdownUtils';
 import { buildEntityContextText } from '@/hooks/aiEntityContext';
@@ -121,6 +122,7 @@ function AppLayoutInner() {
   const [propertiesEntityId, setPropertiesEntityId] = useState<string | null>(null);
   const [searchParams] = useSearchParams();
   const [isFeedbackOpen, setIsFeedbackOpen] = useState(false);
+  const [isExternalAIOpen, setIsExternalAIOpen] = useState(false);
   const [isExportAllOpen, setIsExportAllOpen] = useState(false);
   const [activeDbClient, setActiveDbClient] = useState<any>(null);
   const [dbmlContent, setDbmlContent] = useState('');
@@ -760,6 +762,7 @@ function AppLayoutInner() {
           onInstall={installApp}
           isProjectsLoading={isProjectsLoading}
           onOpenFeedback={() => setIsFeedbackOpen(true)}
+          onOpenExternalAI={() => setIsExternalAIOpen(true)}
         />
       )}
 
@@ -832,6 +835,11 @@ function AppLayoutInner() {
         <FeedbackDialog
           open={isFeedbackOpen}
           onOpenChange={setIsFeedbackOpen}
+        />
+
+        <ExternalAIGeneratorDialog
+          isOpen={isExternalAIOpen}
+          onClose={() => setIsExternalAIOpen(false)}
         />
 
         <MoveToTrashAlert
@@ -1057,6 +1065,7 @@ function AppLayoutInner() {
                     flowcharts={flowcharts}
                     drawings={drawings}
                     activeNoteContent={entityContext?.entityType === 'note' ? activeNote?.content : undefined}
+                    onOpenExternalAI={() => setIsExternalAIOpen(true)}
                   />
                 </div>
                 {rightPanelMode === 'dbml' && showDBMLPanel && (

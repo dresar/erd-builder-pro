@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
-import { Sparkles, Plus, Loader2, Search, ChevronLeft, ChevronRight, ArrowLeft } from 'lucide-react';
+import { Sparkles, Plus, Loader2, Search, ChevronLeft, ChevronRight, ArrowLeft, Bot } from 'lucide-react';
 import { useAIChat, EntityContext } from '@/hooks/useAIChat';
 import { AIAction, getActionsForView, grillMeAction, ViewType } from '@/components/ai/AIActions';
 import { useAIAction } from '@/contexts/AIActionContext';
@@ -38,6 +38,7 @@ interface AIChatPanelProps {
   flowcharts?: any[];
   drawings?: any[];
   activeNoteContent?: string;
+  onOpenExternalAI?: () => void;
 }
 
 export const AIChatPanel = ({
@@ -56,6 +57,7 @@ export const AIChatPanel = ({
   flowcharts = [],
   drawings = [],
   activeNoteContent,
+  onOpenExternalAI,
 }: AIChatPanelProps) => {
   const entityContext: EntityContext | null =
     entityType && entityUid ? { entityType, entityUid } : null;
@@ -405,6 +407,11 @@ export const AIChatPanel = ({
                 <h3 className="text-sm font-semibold tracking-tight">AI Assistant</h3>
               </div>
               <div className="flex items-center gap-1">
+                {onOpenExternalAI && (
+                  <Button variant="ghost" size="icon" className="size-8" onClick={onOpenExternalAI} title="AI Eksternal (Claude/ChatGPT)">
+                    <Bot className="size-4" />
+                  </Button>
+                )}
                 <Button variant="ghost" size="icon" className="size-8" onClick={handleNewSession} title="New Chat">
                   <Plus className="size-4" />
                 </Button>
@@ -491,6 +498,13 @@ export const AIChatPanel = ({
                 </button>
                 <span className="text-sm font-medium truncate">{currentSession?.title || 'AI Assistant'}</span>
               </div>
+              {onOpenExternalAI && (
+                <div className="flex items-center gap-1 shrink-0">
+                  <Button variant="ghost" size="icon" className="size-7" onClick={onOpenExternalAI} title="AI Eksternal (Claude/ChatGPT)">
+                    <Bot className="size-3.5" />
+                  </Button>
+                </div>
+              )}
             </div>
 
             {/* ── Messages ────────────────────────────── */}

@@ -15,6 +15,7 @@ import {
   FileText,
   ArrowUpRight,
   Loader2,
+  Bot,
 } from "lucide-react"
 import { useNavigate } from "react-router-dom"
 
@@ -95,6 +96,7 @@ interface AppSidebarProps extends React.ComponentProps<typeof Sidebar> {
   user: any;
   isOnline: boolean;
   onOpenFeedback: () => void;
+  onOpenExternalAI?: () => void;
 }
 
 export const AppSidebar = React.memo(({
@@ -119,6 +121,7 @@ export const AppSidebar = React.memo(({
   user,
   isOnline,
   onOpenFeedback,
+  onOpenExternalAI,
   ...props
 }: AppSidebarProps) => {
   const { state } = useSidebar();
@@ -213,6 +216,13 @@ export const AppSidebar = React.memo(({
       icon: PenTool,
       isActive: activeFeatureView === 'drawings',
       onClick: () => onViewChange('drawings', true),
+    },
+    {
+      title: "AI Eksternal",
+      url: "#",
+      icon: Bot,
+      isActive: false,
+      onClick: () => onOpenExternalAI?.(),
     },
   ];
 
