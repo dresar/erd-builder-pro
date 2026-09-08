@@ -37,12 +37,21 @@ export function PRDView({
     if (activePrd) {
       const cleanTitle = activePrd.title?.replace(/^\[PRD\]\s*/, '') || 'Spesifikasi PRD';
       setTitle(cleanTitle);
-      const prdBody = activePrd.content || getDefaultPrdTemplate(cleanTitle);
+      const pending = localStorage.getItem('pending_prd_content') || localStorage.getItem('pending_note_content');
+      let prdBody = activePrd.content;
+      if (!prdBody && pending) {
+        prdBody = pending;
+        localStorage.removeItem('pending_prd_content');
+        localStorage.removeItem('pending_note_content');
+        if (handlePrdChange) handlePrdChange(prdBody);
+      } else if (!prdBody) {
+        prdBody = getDefaultPrdTemplate(cleanTitle);
+      }
       setContent(prdBody);
       const parsed = parsePrdMetadata(prdBody, cleanTitle);
       setStatus(parsed.status);
     }
-  }, [activePrd]);
+  }, [activePrd, handlePrdChange]);
 
   const handleStatusChange = (newStatus: PrdStatus) => {
     setStatus(newStatus);

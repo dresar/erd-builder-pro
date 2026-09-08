@@ -58,6 +58,7 @@ export function ExternalAIGeneratorDialog({ isOpen, onClose }: ExternalAIGenerat
     handleSidebarProjectCreate, 
     handleSidebarDiagramCreate, 
     handleSidebarNoteCreate, 
+    handleSidebarPrdCreate,
     handleSidebarFlowchartCreate,
     handleViewChange,
     selectedWorkspaceUid
@@ -129,33 +130,65 @@ export function ExternalAIGeneratorDialog({ isOpen, onClose }: ExternalAIGenerat
     if (!rawJson.trim()) return null;
     let cleaned = rawJson.trim();
     
-    // Strip markdown code fences if wrapped
     if (cleaned.startsWith('```')) {
       cleaned = cleaned.replace(/^```(?:json|dbml|markdown|md)?\s*/i, '').replace(/\s*```$/, '').trim();
     }
 
-    // 1. Try standard JSON parse
     try {
       const parsed = JSON.parse(cleaned);
       if (typeof parsed === 'object' && parsed !== null) {
-        if (parsed.prd || parsed.erd || parsed.flowchart || parsed.project) {
-          return parsed as ParsedExternalBundle;
+        let projName = typeof parsed.project === 'string' ? parsed.project : (parsed.project?.name || projectName || '');
+        const rawPrd = parsed.prd ?? parsed.notes ?? parsed.doc ?? parsed.markdown;
+        const rawErd = parsed.erd ?? parsed.schema ?? parsed.database ?? parsed.dbml;
+        const rawFc = parsed.flowchart ?? parsed.alur ?? (Array.isArray(parsed.nodes) ? parsed : null);
+
+        let prdObj: ParsedExternalBundle['prd'] | undefined;
+        if (typeof rawPrd === 'string' && rawPrd.trim()) {
+          const titleMatch = rawPrd.match(/^#\s+([^\n]+)$/m);
+          const projMatch = rawPrd.match(/(?:[>“"*\s]*Proyek\*{0,2}[:\s]+|Project(?:\s+Name)?[:\s]+["']?)([^"'\n|”]+)/i);
+          if (projMatch && !projName) projName = projMatch[1].trim();
+          prdObj = {
+            title: titleMatch ? titleMatch[1].trim() : `PRD - ${projName || 'Sistem'}`,
+            content_markdown: rawPrd.trim(),
+          };
+        } else if (rawPrd && typeof rawPrd === 'object') {
+          prdObj = {
+            title: rawPrd.title || `PRD - ${projName || 'Sistem'}`,
+            content_markdown: rawPrd.content_markdown || rawPrd.content || rawPrd.markdown || '',
+          };
         }
-        if (Array.isArray(parsed.nodes)) {
+
+        let erdObj: ParsedExternalBundle['erd'] | undefined;
+        if (typeof rawErd === 'string' && rawErd.trim()) {
+          erdObj = { title: `ERD - ${projName || 'Sistem'}`, dbml: rawErd.trim() };
+        } else if (rawErd && typeof rawErd === 'object') {
+          erdObj = {
+            title: rawErd.title || `ERD - ${projName || 'Sistem'}`,
+            dbml: rawErd.dbml || rawErd.schema || rawErd.content || '',
+          };
+        }
+
+        let fcObj: ParsedExternalBundle['flowchart'] | undefined;
+        if (rawFc && typeof rawFc === 'object') {
+          const nodes = Array.isArray(rawFc.nodes) ? rawFc.nodes : [];
+          const edges = Array.isArray(rawFc.edges) ? rawFc.edges : [];
+          if (nodes.length > 0) {
+            fcObj = { title: rawFc.title || `Alur - ${projName || 'Sistem'}`, nodes, edges };
+          }
+        }
+
+        if (prdObj || erdObj || fcObj) {
           return {
-            flowchart: {
-              title: `Alur - ${projectName || 'Sistem'}`,
-              nodes: parsed.nodes,
-              edges: parsed.edges || []
-            }
+            project: { name: projName || 'Proyek Enterprise' },
+            prd: prdObj,
+            erd: erdObj,
+            flowchart: fcObj,
           };
         }
       }
     } catch {
-      // Non-JSON fallback
     }
 
-    // 2. Direct DBML schema detection
     if (/Table\s+["']?[\w.]+["']?\s*\{/i.test(cleaned)) {
       return {
         erd: {
@@ -165,7 +198,6 @@ export function ExternalAIGeneratorDialog({ isOpen, onClose }: ExternalAIGenerat
       };
     }
 
-    // 3. Direct Markdown PRD detection
     if (cleaned.startsWith('#') || cleaned.includes('\n#')) {
       const titleMatch = cleaned.match(/^#\s+(.+)$/m);
       return {
@@ -179,21 +211,18 @@ export function ExternalAIGeneratorDialog({ isOpen, onClose }: ExternalAIGenerat
     return null;
   }, [rawJson, projectName]);
 
-  // Detected tables count from DBML
   const detectedTableCount = useMemo(() => {
     if (!parsedData?.erd?.dbml) return 0;
     const matches = parsedData.erd.dbml.match(/Table\s+["']?[\w.]+["']?\s*\{/gi);
     return matches ? matches.length : 0;
   }, [parsedData]);
 
-  // Toggle compliance item
   const toggleCompliance = (item: string) => {
     setComplianceItems(prev => 
       prev.includes(item) ? prev.filter(i => i !== item) : [...prev, item]
     );
   };
 
-  // Handle applying the imported bundle
   const handleApplyBundle = async () => {
     if (!parsedData) {
       toast.error('Format belum sesuai.');
@@ -214,17 +243,16 @@ export function ExternalAIGeneratorDialog({ isOpen, onClose }: ExternalAIGenerat
         projectId = selectedWorkspaceUid || null;
       }
 
-      // 1. Create PRD Document
       if (parsedData.prd?.content_markdown) {
         toast.info('Membuat PRD...');
         localStorage.setItem('pending_note_content', parsedData.prd.content_markdown);
+        localStorage.setItem('pending_prd_content', parsedData.prd.content_markdown);
         localStorage.setItem('pending_note_strategy', 'replace');
         const rawTitle = parsedData.prd.title || `Spesifikasi - ${effectiveName}`;
-        const prdTitle = rawTitle.startsWith('[PRD] ') ? rawTitle : `[PRD] ${rawTitle}`;
-        await handleSidebarNoteCreate(prdTitle, projectId);
+        const cleanPrdTitle = (rawTitle.includes('SPESIFIKASI PERSYARATAN') || rawTitle === 'Spesifikasi PRD') ? effectiveName : rawTitle;
+        await handleSidebarPrdCreate(cleanPrdTitle, projectId);
       }
 
-      // 2. Create Flowchart
       if (parsedData.flowchart?.nodes && parsedData.flowchart.nodes.length > 0) {
         toast.info('Membuat Flowchart...');
         localStorage.setItem('pending_create_flowchart_json', JSON.stringify(parsedData.flowchart));
@@ -232,7 +260,6 @@ export function ExternalAIGeneratorDialog({ isOpen, onClose }: ExternalAIGenerat
         await handleSidebarFlowchartCreate(fcTitle, projectId, { silent: Boolean(parsedData.erd?.dbml) });
       }
 
-      // 3. Create ERD Diagram
       if (parsedData.erd?.dbml) {
         toast.info('Membuat ERD...');
         localStorage.setItem('pending_create_erd_schema', parsedData.erd.dbml);
