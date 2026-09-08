@@ -2,7 +2,7 @@ import { useState, useEffect, useMemo, useCallback } from 'react';
 import { Loader2, Database, Plus, AlertTriangle } from 'lucide-react';
 import type { Node, Edge } from '@xyflow/react';
 import { parseSQLToERD } from '@/lib/sqlParser';
-import { dbmlToERD } from '@/lib/dbml-converter';
+import { autoFixDBMLEnumNames, dbmlToERD } from '@/lib/dbml-converter';
 import { apiFetch } from '@/lib/api';
 import { toast } from 'sonner';
 import { Entity } from '@/types';
@@ -17,6 +17,7 @@ import {
 } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
 import { extractDBML, extractSQL } from './chatUtils';
+import { ErdColumnComparisonView } from './ErdColumnComparisonView';
 
 export interface ErdFromSqlDialogProps {
   schema: string;
@@ -65,7 +66,7 @@ export function ErdFromSqlDialog({
   const erdParsed = useMemo(() => {
     if (!normalizedSchema) return null;
     try {
-      return schemaKind === 'dbml' ? dbmlToERD(normalizedSchema) : parseSQLToERD(normalizedSchema);
+      return schemaKind === 'dbml' ? dbmlToERD(autoFixDBMLEnumNames(normalizedSchema)) : parseSQLToERD(normalizedSchema);
     } catch {
       return null;
     }
@@ -169,20 +170,22 @@ export function ErdFromSqlDialog({
   }, [erdUpdateUid, erdMode]);
 
   const handleCreateErd = useCallback(async () => {
-    if (!createSilently) localStorage.setItem('pending_create_erd_schema', normalizedSchema);
+    const finalSchema = schemaKind === 'dbml' ? autoFixDBMLEnumNames(normalizedSchema) : normalizedSchema;
+    if (!createSilently) localStorage.setItem('pending_create_erd_schema', finalSchema);
     toast.info('Creating new ERD diagram...');
     const d = await handleSidebarDiagramCreate(`ERD - ${erdDefaultName}`, targetProjectId, { silent: createSilently });
     if (d?.uid) {
       if (!createSilently) localStorage.setItem('chat_erd_uid', d.uid);
       onClose();
-      await onCreated?.(d, normalizedSchema);
+      await onCreated?.(d, finalSchema);
       return;
     }
     onClose();
-  }, [normalizedSchema, handleSidebarDiagramCreate, targetProjectId, erdDefaultName, onClose]);
+  }, [normalizedSchema, schemaKind, handleSidebarDiagramCreate, targetProjectId, erdDefaultName, onClose, onCreated, createSilently]);
 
   const handleUpdateErd = useCallback(async (uid: string) => {
-    localStorage.setItem('pending_update_erd_schema', normalizedSchema);
+    const finalSchema = schemaKind === 'dbml' ? autoFixDBMLEnumNames(normalizedSchema) : normalizedSchema;
+    localStorage.setItem('pending_update_erd_schema', finalSchema);
     localStorage.setItem('chat_erd_uid', uid);
     toast.info('Review schema changes in the ERD diff panel...');
     if (window.location.pathname === `/diagrams/${uid}`) {
@@ -192,7 +195,7 @@ export function ErdFromSqlDialog({
     }
     await handleDiagramSelect(uid);
     onClose();
-  }, [normalizedSchema, handleDiagramSelect, triggerPendingErdDiff, onClose]);
+  }, [normalizedSchema, schemaKind, handleDiagramSelect, triggerPendingErdDiff, onClose]);
 
   const eligibleDiagrams = useMemo(() => diagrams.filter((d: any) => {
     if (targetProjectId == null || targetProjectId === 'none') {
@@ -310,57 +313,9 @@ export function ErdFromSqlDialog({
                     </div>
                   )}
 
-                  {erdUpdateUid && !erdFetchingExisting && erdDiff && (() => {
-                    const deletedTables = erdDiff.deletedTables;
-                    return (
-                      <div className="space-y-1.5">
-                        <label className="text-[11px] font-medium text-muted-foreground">
-                          Column Comparison
-                          {deletedTables.length > 0 && (
-                            <span className="ml-2 text-red-400/70 text-[10px]">
-                              ({deletedTables.length} table{deletedTables.length > 1 ? 's' : ''} removed)
-                            </span>
-                          )}
-                        </label>
-                        <div className="rounded-lg border border-border/40 overflow-hidden max-h-75 overflow-y-auto custom-scrollbar text-[10px] font-mono leading-relaxed bg-muted/30">
-                          <div className="divide-y divide-border/10">
-                            {erdDiff.diffLines.map((line: any, li: number) => {
-                              if (line.type === 'header') {
-                                return (
-                                  <div key={li} className="flex items-center gap-2 px-3 py-1.5 bg-muted border-b border-border/30">
-                                    {line.isNew && (
-                                      <span className="text-[8px] font-semibold px-1 py-0.5 rounded bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30 shrink-0">NEW</span>
-                                    )}
-                                    <span className="text-[11px] font-semibold text-foreground">{line.tableName}</span>
-                                  </div>
-                                );
-                              }
-                              const isAdd = line.type === 'add';
-                              const isRemove = line.type === 'remove';
-                              const bg = isAdd ? 'bg-emerald-500/5 dark:bg-emerald-900/20' : isRemove ? 'bg-red-500/5 dark:bg-red-900/20' : '';
-                              const prefixColor = isAdd ? 'text-emerald-600 dark:text-emerald-400' : isRemove ? 'text-red-600 dark:text-red-400' : 'text-muted-foreground/40';
-                              const colNameColor = isAdd ? 'text-emerald-700 dark:text-emerald-300' : isRemove ? 'text-red-700 dark:text-red-400' : 'text-foreground';
-                              const typeColor = isAdd ? 'text-emerald-600/60 dark:text-emerald-400/60' : isRemove ? 'text-red-600/60 dark:text-red-400/60' : 'text-muted-foreground';
-                              const pkColor = isAdd ? 'text-emerald-600 dark:text-emerald-400' : isRemove ? 'text-red-600/70 dark:text-red-400/70' : 'text-amber-600 dark:text-amber-400';
-                              const nulColor = isAdd ? 'text-emerald-600/50 dark:text-emerald-400/50' : isRemove ? 'text-red-600/50 dark:text-red-400/50' : 'text-muted-foreground/50';
-                              return (
-                                <div key={li} className={`flex items-center gap-1 px-3 py-0.5 ${bg}`}>
-                                  <span className={`w-4 shrink-0 select-none ${prefixColor}`}>{line.prefix}</span>
-                                  {line.col.is_pk && <span className={pkColor}>PK</span>}
-                                  <span className={colNameColor}>{line.col.name}</span>
-                                  <span className={typeColor}>{line.col.type}</span>
-                                  {line.col.is_nullable && <span className={nulColor}>?</span>}
-                                </div>
-                              );
-                            })}
-                          </div>
-                        </div>
-                        {deletedTables.length > 0 && (
-                          <p className="text-[9px] text-red-400/50 leading-relaxed">Tables not in the new schema will be kept as-is in the existing ERD.</p>
-                        )}
-                      </div>
-                    );
-                  })()}
+                  {erdUpdateUid && !erdFetchingExisting && erdDiff && (
+                    <ErdColumnComparisonView erdDiff={erdDiff} />
+                  )}
                 </div>
               ) : (
                 // ── Create New: show table cards ──

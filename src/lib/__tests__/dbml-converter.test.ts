@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { applyDBMLMetadata, dbmlToERD, erdToDBML, findMatchingCanvasEdge, normalizeDBMLIndexSyntax, removeEmptyDBMLIndexes } from '../dbml-converter';
+import { applyDBMLMetadata, autoFixDBMLEnumNames, dbmlToERD, erdToDBML, findMatchingCanvasEdge, normalizeDBMLIndexSyntax, removeEmptyDBMLIndexes } from '../dbml-converter';
 import { dedupeDBMLEnumBlocks, normalizeDBMLTypeName, parseDBMLColumn, parseDBMLRef } from '../dbml-utils';
 
 describe('dbmlToERD', () => {
@@ -399,4 +399,62 @@ Ref: employees.user_id > users.id`;
 
     expect(dedupeDBMLEnumBlocks(dbml).match(/Enum users_status/g)).toHaveLength(1);
   });
+
+  it('auto-fixes generic enum names to match table_column convention and enables successful parse', () => {
+    const rawDbml = `Table users {
+  id BIGINT [pk, not null]
+  status user_status_enum [not null, default: 'active']
+}
+
+Table students {
+  id UUID [pk]
+  gender gender_enum [not null]
+}
+
+Table psb_registrants {
+  id UUID [pk]
+  gender gender_enum [not null]
+}
+
+Enum user_status_enum {
+  active
+  inactive
+}
+
+Enum gender_enum {
+  male
+  female
+}`;
+
+    const healed = autoFixDBMLEnumNames(rawDbml);
+    expect(healed).toContain('users_status');
+    expect(healed).toContain('students_gender');
+    expect(healed).toContain('psb_registrants_gender');
+    expect(healed).not.toContain('user_status_enum');
+    expect(healed).not.toContain('Enum gender_enum');
+
+    const result = dbmlToERD(healed);
+    expect(result.nodes).toHaveLength(3);
+    const usersTable = result.nodes.find(n => n.data.name === 'users');
+    const statusCol = usersTable?.data.columns.find(c => c.name === 'status');
+    expect(statusCol?.type).toBe('ENUM');
+    expect(statusCol?.enum_values).toContain('active');
+    expect(statusCol?.enum_values).toContain('inactive');
+  });
+
+  it('heals all enum naming errors from external AI generated schema and produces valid ERD', async () => {
+    const fs = await import('fs');
+    const path = await import('path');
+    const hasilPath = path.resolve(process.cwd(), 'hasil.json');
+    if (!fs.existsSync(hasilPath)) return;
+
+    const data = JSON.parse(fs.readFileSync(hasilPath, 'utf8'));
+    const rawDbml = data.erd?.dbml;
+    if (!rawDbml) return;
+
+    const healed = autoFixDBMLEnumNames(rawDbml);
+    const parsed = dbmlToERD(healed);
+    expect(parsed.nodes.length).toBeGreaterThanOrEqual(40);
+  });
 });
+

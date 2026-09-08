@@ -166,7 +166,7 @@ DETAILED DBML SPECIFICATION RULES:
 1. Minimum ${minTables} Tables covering Tenancy, IAM, Audit, Domain Specific (${config.domain}), Workflows, Notifications, Storage, and System Settings.
 2. Column Types: Uppercase portable SQL types: BIGINT, UUID, VARCHAR(length), TEXT, BOOLEAN, DATE, TIMESTAMP, DECIMAL(p,s), JSONB. Every VARCHAR must have explicit length.
 3. Audit Columns on EVERY Table: created_at TIMESTAMP [not null], updated_at TIMESTAMP [not null], deleted_at TIMESTAMP.
-4. Enums: Every enum-typed column must reference dedicated Enum formatted as {table_name}_{column_name}.
+4. Enums (STRICT RULE): Every Enum MUST be named exactly {table_name}_{column_name} (e.g. users_status, students_gender). NEVER use generic names like "user_status_enum", "gender_enum", or "status_enum". NEVER share an enum between tables: if two tables have a gender column, define separate enums: Enum students_gender and Enum registrants_gender.
 5. Relationships: Explicit standalone Ref: child.parent_id > parent.id.
 6. Indexes: Include Indexes { ... } blocks inside tables.
 
@@ -284,7 +284,7 @@ CRITICAL RULES:
 3. Every table MUST have: created_at TIMESTAMP [not null], updated_at TIMESTAMP [not null], deleted_at TIMESTAMP.
 4. Standard portable uppercase types: BIGINT, UUID, VARCHAR(length), TEXT, BOOLEAN, DATE, TIMESTAMP, DECIMAL(p,s), JSONB. Every VARCHAR must have explicit length.
 5. All relationships must be standalone Ref: child_table.fk_id > parent_table.id.
-6. Enums must be named {table_name}_{column_name} with matching Enum blocks.
+6. Enums (STRICT): Every Enum MUST be named {table_name}_{column_name} (e.g. users_status, students_gender). Never use generic names like "user_status_enum" or "gender_enum". Never share enums between tables.
 7. Include Indexes { ... } for all foreign keys and search lookups.
 
 === DOKUMEN PRD / CATATAN SISTEM ===

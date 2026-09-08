@@ -5,15 +5,19 @@ import { COLUMN_TYPES } from '@/lib/utils';
 import { normalizeColumnDefault, parseTypeModifiers, supportsColumnLength, supportsNumericPrecision } from '@/lib/column-metadata';
 import { parseSQLToERD } from '@/lib/sqlParser';
 import {
+  autoFixDBMLEnumNames,
   buildDBMLTableDefinitions,
   findEnumNamingErrors,
   normalizeDBMLTypeName,
+  parseColumnLine,
   parseDBMLColumn,
   parseDBMLRef,
   parseDBMLTableName,
   readDBMLEnumNames,
   recommendedDBMLEnumName,
 } from '@/lib/dbml-utils';
+
+export { autoFixDBMLEnumNames };
 
 const VALID_TYPES = new Set(COLUMN_TYPES.map(t => t.toUpperCase()));
 
@@ -23,61 +27,21 @@ function parseInlineEnumValues(typeName: string): string[] | null {
 
   const values: string[] = [];
   const valueRegex = /'([^']+)'|"([^"]+)"|([^,\s][^,]*)/g;
-  for (const valueMatch of match[1].matchAll(valueRegex)) {
-    const value = (valueMatch[1] || valueMatch[2] || valueMatch[3] || '').trim();
-    if (value) values.push(value);
+  let matchVal;
+  while ((matchVal = valueRegex.exec(match[1])) !== null) {
+    const val = (matchVal[1] ?? matchVal[2] ?? matchVal[3]).trim();
+    if (val) values.push(val);
   }
-  return values.length ? values : null;
+  return values.length > 0 ? values : null;
 }
 
 function normalizeEnumValue(value: string): string {
-  const cleaned = value.trim().replace(/^['"]|['"]$/g, '');
-  return /^[A-Za-z_][A-Za-z0-9_]*$/.test(cleaned)
-    ? cleaned
-    : `"${cleaned.replace(/"/g, '\\"')}"`;
+  const cleaned = value.replace(/['"`]/g, '').trim();
+  return /^[A-Za-z_][\w]*$/.test(cleaned) ? cleaned : `'${cleaned}'`;
 }
 
 function normalizeGeneratedEnumName(tableName: string, columnName: string): string {
   return recommendedDBMLEnumName(tableName, columnName);
-}
-
-function parseColumnLine(line: string): { prefix: string; columnName: string; typeName: string; suffix: string } | null {
-  const match = line.match(/^(\s*(?:"([^"]+)"|(\w+))\s+)(.+)$/);
-  if (!match) return null;
-
-  const rest = match[4];
-  let depth = 0;
-  let quote: string | null = null;
-  let suffixStart = -1;
-
-  for (let i = 0; i < rest.length; i += 1) {
-    const char = rest[i];
-    if (quote) {
-      if (char === quote) quote = null;
-      continue;
-    }
-    if (char === "'" || char === '"') {
-      quote = char;
-      continue;
-    }
-    if (char === '(') depth += 1;
-    if (char === ')') depth = Math.max(0, depth - 1);
-    if (depth === 0 && /\s/.test(char) && rest.slice(i).trimStart().startsWith('[')) {
-      suffixStart = i;
-      break;
-    }
-  }
-
-  const rawType = suffixStart === -1 ? rest.trim() : rest.slice(0, suffixStart).trim();
-  const suffix = suffixStart === -1 ? '' : rest.slice(suffixStart);
-  if (!rawType) return null;
-
-  return {
-    prefix: match[1],
-    columnName: (match[2] || match[3] || '').trim(),
-    typeName: rawType,
-    suffix,
-  };
 }
 
 function normalizeInlineRef(line: string, currentTable: string): string | null {

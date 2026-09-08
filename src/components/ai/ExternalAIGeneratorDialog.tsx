@@ -1,26 +1,11 @@
 import React, { useState, useMemo } from 'react';
-import { 
-  Bot, 
-  Check, 
-  Loader2,
-} from 'lucide-react';
+import { Bot, Check, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-  DialogFooter,
-} from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { useWorkspace } from '@/providers/WorkspaceContext';
-import { 
-  generateExternalAIPrompt, 
-  DOMAIN_PRESETS, 
-  PromptConfig,
-  PromptStrategy
-} from './externalPromptTemplates';
+import { autoFixDBMLEnumNames } from '@/lib/dbml-utils';
+import { generateExternalAIPrompt, DOMAIN_PRESETS, PromptConfig, PromptStrategy } from './externalPromptTemplates';
 import { ExternalAIPromptTab } from './ExternalAIPromptTab';
 import { ExternalAIImportTab } from './ExternalAIImportTab';
 import { InfoTip } from './InfoTip';
@@ -262,7 +247,8 @@ export function ExternalAIGeneratorDialog({ isOpen, onClose }: ExternalAIGenerat
 
       if (parsedData.erd?.dbml) {
         toast.info('Membuat ERD...');
-        localStorage.setItem('pending_create_erd_schema', parsedData.erd.dbml);
+        const healedDbml = autoFixDBMLEnumNames(parsedData.erd.dbml);
+        localStorage.setItem('pending_create_erd_schema', healedDbml);
         const erdBundlename = parsedData.erd.title || `ERD - ${effectiveName}`;
         await handleSidebarDiagramCreate(erdBundlename, projectId, { silent: false });
       } else if (parsedData.flowchart?.nodes && parsedData.flowchart.nodes.length > 0) {

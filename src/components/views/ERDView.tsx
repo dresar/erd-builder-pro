@@ -35,8 +35,7 @@ import { buildErdIndexes, erdColumnKey, erdSourceColumnKey } from '@/lib/erd-ind
 import { databaseColumnToERD } from '@/lib/column-metadata';
 import { keepsDbRelation } from '@/lib/db-client-schema';
 import { ERD_HISTORY_PREVIEW_EVENT, type ErdHistoryPreview } from '@/lib/history-diagram';
-import { ERD_REPOSITORY_APPLIED_EVENT, ERD_REPOSITORY_PREVIEW_EVENT, type RepositoryPreview } from '@/lib/repository-preview';
-import { erdToDBML } from '@/lib/dbml-converter';
+import { autoFixDBMLEnumNames, erdToDBML } from '@/lib/dbml-converter';
 
 const nodeTypes = {
   entity: EntityNode,
@@ -574,53 +573,55 @@ const ERDViewComponent = ({
     if (pendingSchema) {
       localStorage.removeItem('pending_create_erd_schema');
       localStorage.removeItem('pending_create_erd_ddl');
-      const result = applyToErdContent(nodesRef.current, edgesRef.current, 'erd-generate-sql', pendingSchema);
-      if (result) {
-        if (nodesRef.current.length === 0) {
-          takeSnapshotRef.current?.([], []);
-          setNodes(result.nodes);
-          setEdges(result.edges);
-          if (saveDiagram) {
-            saveDiagram(result.nodes, result.edges, { x: 0, y: 0, zoom: 1 }).then(() => {
-              // Trigger cloud sync immediately — saveDiagram only saves to IndexedDB draft,
-              // and the auto-save effect has a 2-second guard that blocks newly created diagrams.
-              triggerDebouncedSync?.();
-            }).catch(err => {
-              console.error('Error saving generated diagram:', err);
-            });
+      try {
+        const healedSchema = autoFixDBMLEnumNames(pendingSchema);
+        const result = applyToErdContent(nodesRef.current, edgesRef.current, 'erd-generate-sql', healedSchema);
+        if (result) {
+          if (nodesRef.current.length === 0) {
+            takeSnapshotRef.current?.([], []);
+            setNodes(result.nodes);
+            setEdges(result.edges);
+            if (saveDiagram) {
+              saveDiagram(result.nodes, result.edges, { x: 0, y: 0, zoom: 1 }).then(() => {
+                triggerDebouncedSync?.();
+              }).catch(err => {
+                console.error('Error saving generated diagram:', err);
+              });
+            }
+            toast.success('Applied generated schema to new diagram');
+          } else {
+            startDiff(nodesRef.current, edgesRef.current, result.nodes, result.edges);
           }
-          toast.success('Applied generated schema to new diagram');
-        } else {
-          startDiff(nodesRef.current, edgesRef.current, result.nodes, result.edges);
         }
+      } catch (err: any) {
+        console.error('Error applying pending schema:', err);
+        toast.error(err?.message || 'Failed to apply schema');
       }
     }
   }, [setNodes, setEdges, startDiff, saveDiagram, triggerDebouncedSync]);
 
-  // ─── Handle pending UPDATE schema ──
-  // Unlike create, update waits for server data to load first (nodes.length > 0),
-  // then shows the diff/merge UI so the user can selectively merge changes.
-  // pendingErdDiffTrigger allows re-processing when already on the same page.
   React.useEffect(() => {
     const pendingUpdateSchema = localStorage.getItem('pending_update_erd_schema')
       || localStorage.getItem('pending_update_erd_ddl');
     if (!pendingUpdateSchema) return;
 
-    // Wait for server data to load — nodes will be empty during navigation,
-    // then populated once selectDiagram completes
     if (nodes.length === 0) return;
 
-    // Consume the pending schema
     localStorage.removeItem('pending_update_erd_schema');
     localStorage.removeItem('pending_update_erd_ddl');
 
-    const result = applyToErdContent(nodesRef.current, edgesRef.current, 'erd-generate-sql', pendingUpdateSchema);
-    if (result) {
-      // Use the visual diff/merge UI to compare existing data with proposed schema
-      startDiff(nodesRef.current, edgesRef.current, result.nodes, result.edges);
-      toast.info('Review the schema changes and merge when ready');
-    } else {
-      toast.error('Could not parse the schema for diff');
+    try {
+      const healedUpdateSchema = autoFixDBMLEnumNames(pendingUpdateSchema);
+      const result = applyToErdContent(nodesRef.current, edgesRef.current, 'erd-generate-sql', healedUpdateSchema);
+      if (result) {
+        startDiff(nodesRef.current, edgesRef.current, result.nodes, result.edges);
+        toast.info('Review the schema changes and merge when ready');
+      } else {
+        toast.error('Could not parse the schema for diff');
+      }
+    } catch (err: any) {
+      console.error('Error applying update schema:', err);
+      toast.error(err?.message || 'Failed to parse schema');
     }
   }, [nodes, startDiff, pendingErdDiffTrigger]);
 

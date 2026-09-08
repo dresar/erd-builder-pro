@@ -99,6 +99,158 @@ export function findEnumNamingErrors(text: string): { line: number; table: strin
   return errors;
 }
 
+export function parseColumnLine(line: string): { prefix: string; columnName: string; typeName: string; suffix: string } | null {
+  const match = line.match(/^(\s*(?:"([^"]+)"|(\w+))\s+)(.+)$/);
+  if (!match) return null;
+
+  const rest = match[4];
+  let depth = 0;
+  let quote: string | null = null;
+  let suffixStart = -1;
+
+  for (let i = 0; i < rest.length; i += 1) {
+    const char = rest[i];
+    if (quote) {
+      if (char === quote) quote = null;
+      continue;
+    }
+    if (char === "'" || char === '"') {
+      quote = char;
+      continue;
+    }
+    if (char === '(') depth += 1;
+    if (char === ')') depth = Math.max(0, depth - 1);
+    if (depth === 0 && /\s/.test(char) && rest.slice(i).trimStart().startsWith('[')) {
+      suffixStart = i;
+      break;
+    }
+  }
+
+  const rawType = suffixStart === -1 ? rest.trim() : rest.slice(0, suffixStart).trim();
+  const suffix = suffixStart === -1 ? '' : rest.slice(suffixStart);
+  if (!rawType) return null;
+
+  return {
+    prefix: match[1],
+    columnName: (match[2] || match[3] || '').trim(),
+    typeName: rawType,
+    suffix,
+  };
+}
+
+export function autoFixDBMLEnumNames(text: string): string {
+  const errors = findEnumNamingErrors(text);
+  if (errors.length === 0) return text;
+
+  const enumBodies = new Map<string, string>();
+  const lines = text.split(/\r?\n/);
+  let currentEnum = '';
+  let inEnum = false;
+  let currentBody: string[] = [];
+
+  for (let i = 0; i < lines.length; i += 1) {
+    const line = lines[i];
+    const trimmed = line.trim();
+    const match = line.match(ENUM_HEADER_RE);
+    if (match) {
+      currentEnum = cleanDBMLIdentifier(match[1] || match[2]).toLowerCase();
+      inEnum = true;
+      currentBody = [];
+      continue;
+    }
+
+    if (inEnum) {
+      if (trimmed === '}' || trimmed.startsWith('}')) {
+        enumBodies.set(currentEnum, currentBody.join('\n'));
+        inEnum = false;
+        currentEnum = '';
+      } else {
+        currentBody.push(line);
+      }
+    }
+  }
+
+  const lineReplacements = new Map<number, { actual: string; expected: string }>();
+  const neededEnums = new Map<string, string>();
+  const replacedActuals = new Set<string>();
+
+  for (const err of errors) {
+    lineReplacements.set(err.line - 1, { actual: err.actual, expected: err.expected });
+    const body = enumBodies.get(err.actual.toLowerCase()) || '';
+    neededEnums.set(err.expected, body);
+    replacedActuals.add(err.actual.toLowerCase());
+  }
+
+  const stillReferenced = new Set<string>();
+  let scanInTable = false;
+  for (let j = 0; j < lines.length; j += 1) {
+    const l = lines[j].trim();
+    if (parseDBMLTableName(lines[j])) {
+      scanInTable = true;
+      continue;
+    }
+    if (l === '}' || l.startsWith('}')) {
+      scanInTable = false;
+      continue;
+    }
+    if (!scanInTable || !l || l.startsWith('//') || lineReplacements.has(j)) continue;
+    const col = parseDBMLColumn(lines[j]);
+    if (col) stillReferenced.add(cleanDBMLIdentifier(col.type).toLowerCase());
+  }
+
+  const modifiedLines: string[] = [];
+  inEnum = false;
+  currentEnum = '';
+
+  for (let i = 0; i < lines.length; i += 1) {
+    const line = lines[i];
+    const trimmed = line.trim();
+
+    const match = line.match(ENUM_HEADER_RE);
+    if (match) {
+      const enumName = cleanDBMLIdentifier(match[1] || match[2]).toLowerCase();
+      if (replacedActuals.has(enumName) && !stillReferenced.has(enumName)) {
+        inEnum = true;
+        currentEnum = enumName;
+        continue;
+      }
+    }
+
+    if (inEnum) {
+      if (trimmed === '}' || trimmed.startsWith('}')) {
+        inEnum = false;
+        currentEnum = '';
+      }
+      continue;
+    }
+
+    if (lineReplacements.has(i)) {
+      const { actual, expected } = lineReplacements.get(i)!;
+      const col = parseColumnLine(line);
+      if (col && cleanDBMLIdentifier(col.typeName).toLowerCase() === actual.toLowerCase()) {
+        modifiedLines.push(`${col.prefix}${expected}${col.suffix}`);
+        continue;
+      }
+      const regex = new RegExp(`(?<=\\s)(?:"${actual}"|${actual})(?=\\s|\\[|$)`, 'i');
+      modifiedLines.push(line.replace(regex, expected));
+      continue;
+    }
+
+    modifiedLines.push(line);
+  }
+
+  for (const [name, body] of neededEnums.entries()) {
+    modifiedLines.push('');
+    modifiedLines.push(`Enum ${name} {`);
+    if (body) {
+      modifiedLines.push(body);
+    }
+    modifiedLines.push('}');
+  }
+
+  return dedupeDBMLEnumBlocks(modifiedLines.join('\n')).replace(/\n{3,}/g, '\n\n').trim();
+}
+
 export function dedupeDBMLEnumBlocks(text: string): string {
   const seen = new Set<string>();
   return text

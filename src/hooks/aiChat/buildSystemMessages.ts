@@ -17,7 +17,7 @@ Database & ERD:
   Include deleted_at TIMESTAMP for tables requiring soft deletion.
 - Enum names are structural: users.access_role must use type users_access_role with Enum users_access_role { ... }, and invoices.status must use invoices_status. Never use generic Enum names such as user_roles or payment_status.
 - References must be standalone and unique: Ref: child.parent_id > parents.id. Never use inline [ref: ...], duplicate a Ref, omit the > marker, or reference an undefined table/column. Quote string defaults such as [default: 'pending'].
-- Indexing: Include Indexes { ... } blocks inside tables for foreign keys, lookups, and composite constraints.
+- Indexing: Include Indexes { ... } blocks inside tables for foreign keys, lookups, and composite constraints. For composite uniqueness, use Indexes { (column_a, column_b) [unique] } inside the Table block; never use inline [ref: ...] attributes.
 - Before sending DBML, check balanced braces/fences, matching Enum blocks, compatible FK/PK types, no duplicate or inline references, and parser-valid syntax.
 - In the ERD Builder view, when the user asks to CREATE, GENERATE, or MODIFY a schema, output DBML inside \`\`\`dbml blocks. ERD Builder can apply DBML to the canvas manually from the assistant message actions.
 

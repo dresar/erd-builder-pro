@@ -1,7 +1,7 @@
 import { Node, Edge } from '@xyflow/react';
 import { Entity, Column } from '@/types';
 import { parseSQLToERD, parseSqlDdl } from '@/lib/sqlParser';
-import { dbmlToERD } from '@/lib/dbml-converter';
+import { autoFixDBMLEnumNames, dbmlToERD } from '@/lib/dbml-converter';
 import { COLUMN_TYPES } from '@/lib/utils';
 import { parseTypeModifiers, supportsColumnLength, supportsNumericPrecision } from '@/lib/column-metadata';
 import { extractDBML } from '../chatUtils';
@@ -477,7 +477,8 @@ export function applyToErdContent(
     case 'erd-generate-sql': {
       const dbml = extractDBML(aiResponse);
       if (dbml) {
-        const parsed = dbmlToERD(dbml);
+        const healedDbml = autoFixDBMLEnumNames(dbml);
+        const parsed = dbmlToERD(healedDbml);
         if (parsed.nodes.length === 0 && parsed.edges.length === 0) return null;
         const merged = mergeIntoDiagram(currentNodes, currentEdges, parsed.nodes, parsed.edges);
         return { nodes: merged.nodes, edges: merged.edges, action: 'erd-generate-sql' };
