@@ -1,6 +1,7 @@
-import React from 'react';
-import { FileText, Database, Network, FolderPlus } from 'lucide-react';
+import React, { useState, useRef } from 'react';
+import { FileText, Database, Network, FolderPlus, Upload, FileCode, X } from 'lucide-react';
 import { FieldLabel } from '@/components/ui/field';
+import { Button } from '@/components/ui/button';
 import { InfoTip } from './InfoTip';
 
 interface ParsedExternalBundle {
@@ -42,25 +43,135 @@ export function ExternalAIImportTab({
   setTargetMode,
   projectName,
 }: ExternalAIImportTabProps) {
+  const [isDragging, setIsDragging] = useState(false);
+  const [loadedFileName, setLoadedFileName] = useState<string | null>(null);
+  const [loadedFileSize, setLoadedFileSize] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleFileRead = async (file: File) => {
+    try {
+      const text = await file.text();
+      setRawJson(text);
+      setLoadedFileName(file.name);
+      const sizeInKb = (file.size / 1024).toFixed(1);
+      setLoadedFileSize(`${sizeInKb} KB`);
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      handleFileRead(file);
+    }
+    if (e.target) {
+      e.target.value = '';
+    }
+  };
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragging(false);
+    const file = e.dataTransfer.files?.[0];
+    if (file) {
+      handleFileRead(file);
+    }
+  };
+
+  const handleClear = () => {
+    setRawJson('');
+    setLoadedFileName(null);
+    setLoadedFileSize(null);
+  };
+
   return (
     <div className="space-y-4">
       <div>
-        <div className="flex items-center gap-1.5 mb-1.5">
-          <FieldLabel className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/70 px-1">
-            Hasil AI
-          </FieldLabel>
-          <InfoTip text="Mendukung bundel JSON lengkap, skema DBML, flowchart JSON, atau dokumen PRD Markdown." />
+        <div className="flex items-center justify-between mb-1.5">
+          <div className="flex items-center gap-1.5">
+            <FieldLabel className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/70 px-1">
+              Hasil AI
+            </FieldLabel>
+            <InfoTip text="Unggah berkas atau tempel JSON, DBML, atau Markdown hasil arsitektur AI." />
+          </div>
+          <div className="flex items-center gap-2">
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept=".json,.dbml,.sql,.txt,.md"
+              onChange={handleFileChange}
+              className="hidden"
+            />
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => fileInputRef.current?.click()}
+              className="h-7 px-2.5 text-xs font-medium gap-1.5 border-border/50 hover:bg-muted/40 cursor-pointer"
+            >
+              <Upload className="size-3 text-indigo-400" />
+              <span>Unggah Berkas</span>
+            </Button>
+          </div>
         </div>
-        <textarea 
-          placeholder="Tempel"
-          value={rawJson}
-          onChange={(e) => setRawJson(e.target.value)}
-          rows={8}
-          className="w-full p-2.5 font-mono text-xs rounded-lg bg-muted/20 border border-border/40 resize-y text-foreground outline-none focus:border-indigo-500/50 leading-relaxed"
-        />
+
+        {loadedFileName && (
+          <div className="mb-2 px-2.5 py-1.5 rounded-lg border border-indigo-500/20 bg-indigo-500/5 flex items-center justify-between">
+            <div className="flex items-center gap-2 min-w-0">
+              <FileCode className="size-3.5 text-indigo-400 shrink-0" />
+              <span className="text-xs font-mono font-medium text-foreground truncate">{loadedFileName}</span>
+              <span className="text-[10px] text-muted-foreground shrink-0">({loadedFileSize})</span>
+            </div>
+            <button
+              type="button"
+              onClick={handleClear}
+              className="text-muted-foreground hover:text-foreground p-0.5 rounded transition-colors cursor-pointer"
+              title="Hapus berkas"
+            >
+              <X className="size-3.5" />
+            </button>
+          </div>
+        )}
+
+        <div
+          onDragOver={(e) => {
+            e.preventDefault();
+            setIsDragging(true);
+          }}
+          onDragLeave={(e) => {
+            e.preventDefault();
+            setIsDragging(false);
+          }}
+          onDrop={handleDrop}
+          className="relative"
+        >
+          <textarea
+            placeholder="Tempel JSON atau seret berkas ke sini..."
+            value={rawJson}
+            onChange={(e) => {
+              setRawJson(e.target.value);
+              if (!e.target.value) {
+                setLoadedFileName(null);
+                setLoadedFileSize(null);
+              }
+            }}
+            rows={8}
+            className={`w-full p-2.5 font-mono text-xs rounded-lg bg-muted/20 border transition-all resize-y text-foreground outline-none leading-relaxed ${
+              isDragging
+                ? 'border-indigo-500 ring-2 ring-indigo-500/30 bg-indigo-500/10'
+                : 'border-border/40 focus:border-indigo-500/50'
+            }`}
+          />
+          {isDragging && (
+            <div className="absolute inset-0 rounded-lg bg-indigo-500/10 backdrop-blur-[1px] border-2 border-dashed border-indigo-500 flex flex-col items-center justify-center gap-2 pointer-events-none">
+              <Upload className="size-6 text-indigo-400 animate-bounce" />
+              <p className="text-xs font-semibold text-indigo-300">Lepaskan berkas di sini untuk memuat</p>
+            </div>
+          )}
+        </div>
       </div>
 
-      {/* Validation Status Cards */}
       {rawJson.trim() && (
         <div className="p-3 rounded-xl border border-border/40 bg-muted/10 space-y-2">
           <div className="flex items-center gap-1.5">
@@ -106,7 +217,6 @@ export function ExternalAIImportTab({
         </div>
       )}
 
-      {/* Target Project Selection */}
       <div className="p-3 rounded-xl border border-border/40 bg-muted/5 space-y-2">
         <div className="flex items-center gap-1.5">
           <FieldLabel className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/70">

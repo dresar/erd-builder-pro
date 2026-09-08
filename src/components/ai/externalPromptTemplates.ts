@@ -105,6 +105,11 @@ CRITICAL RULES — DO NOT VIOLATE:
 3. HOSTING & DEPLOYMENT: The application architecture must be optimized for ${resolvedDeployment}.
 4. FLOWCHART MUST BE DECISION-RICH: The flowchart must contain decision logic diamonds for validations, auth checks, status transitions, and error paths. Include at least 15–25 connected nodes.
 5. STRICT JSON OUTPUT CONTRACT: You must respond ONLY with a single valid JSON object enclosed within \`\`\`json ... \`\`\` code fence. No conversational filler before or after the JSON.
+6. DOWNLOADABLE FILE REQUIREMENT (MANDATORY):
+   - You MUST ensure the user can directly DOWNLOAD the resulting architecture specification as a file named "project_architecture.json".
+   - IF YOU ARE CLAUDE: Wrap the JSON inside a Claude Artifact with identifier="project_architecture" type="application/json" and title="project_architecture.json" so the user has an instant "Download" button on the UI.
+   - IF YOU ARE CHATGPT: If Python / Code Interpreter / Advanced Data Analysis is enabled, write the full JSON string to '/mnt/data/project_architecture.json' and provide a direct download link: [Download project_architecture.json](sandbox:/mnt/data/project_architecture.json) in addition to the standard \`\`\`json code fence.
+   - ZERO TRUNCATION / NO PLACEHOLDERS: NEVER use placeholders like "// ... rest of tables", "// TODO", or abbreviate. The JSON must be 100% complete, fully formed, and immediately importable.
 
 REQUIRED JSON STRUCTURE:
 \`\`\`json
@@ -286,6 +291,7 @@ CRITICAL RULES:
 5. All relationships must be standalone Ref: child_table.fk_id > parent_table.id.
 6. Enums (STRICT): Every Enum MUST be named {table_name}_{column_name} (e.g. users_status, students_gender). Never use generic names like "user_status_enum" or "gender_enum". Never share enums between tables.
 7. Include Indexes { ... } for all foreign keys and search lookups.
+8. DOWNLOADABLE FILE: If your platform supports artifacts or file downloads (Claude Artifact or ChatGPT Code Interpreter), save and offer this as a downloadable file named "schema.dbml".
 
 === DOKUMEN PRD / CATATAN SISTEM ===
 ${prdContent}`;
@@ -318,6 +324,7 @@ RULES:
 3. MANDATORY DECISION DIAMONDS ("shape": "diamond", "color": "#f59e0b") for auth check, validation, tenant check, stock/quota check, and error rollbacks.
 4. Every decision branch MUST have explicit edge labels ("Lolos", "Gagal", "Valid", "Ditolak", dll).
 5. Colors: Emerald (#10b981) for Start/Success, Amber (#f59e0b) for Decisions, Violet (#8b5cf6) for Process/API, Sky (#0ea5e9) for Database/Storage, Rose (#f43f5e) for Errors/Rejections.
+6. DOWNLOADABLE FILE: If your platform supports artifacts or file downloads (Claude Artifact or ChatGPT Code Interpreter), save and offer this as a downloadable file named "flowchart.json".
 
 === DOKUMEN PRD / CATATAN SISTEM ===
 ${prdContent}
