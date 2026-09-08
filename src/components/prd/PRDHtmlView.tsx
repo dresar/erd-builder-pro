@@ -30,11 +30,16 @@ export function PRDHtmlView({ content, metadata, showToc = true }: PRDHtmlViewPr
       bodyMarkdown = bodyMarkdown.replace(/^(?:---|\*\*\*|___)\s*\n*/, '').trim();
 
       const raw = marked.parse(bodyMarkdown, { gfm: true, breaks: true }) as string;
-      const htmlWithIds = raw.replace(/<h([1-3])>([^<]+)<\/h\1>/gi, (match, level, text) => {
-        const id = text.trim().toLowerCase().replace(/[^\w\s-]/g, '').replace(/\s+/g, '-');
-        return `<h${level} id="${id}">${text}</h${level}>`;
+      const htmlWithIds = raw.replace(/<h([1-3])([^>]*)>([\s\S]*?)<\/h\1>/gi, (match, level, attrs, innerText) => {
+        if (/id=["'][^"']+["']/i.test(attrs)) return match;
+        const textOnly = innerText.replace(/<[^>]+>/g, '').replace(/&amp;/g, '&').replace(/\s+/g, ' ').trim();
+        const id = textOnly.toLowerCase().replace(/[^\w\s-]/g, '').replace(/\s+/g, '-');
+        return `<h${level}${attrs} id="${id}">${innerText}</h${level}>`;
       });
-      return DOMPurify.sanitize(htmlWithIds);
+      return DOMPurify.sanitize(htmlWithIds, {
+        ADD_ATTR: ['id', 'class', 'style', 'target'],
+        ADD_TAGS: ['section', 'article', 'aside', 'header', 'nav', 'main', 'span', 'div'],
+      });
     } catch {
       return '<p class="text-destructive">Gagal memproses konten PRD.</p>';
     }

@@ -176,9 +176,15 @@ export const MainHeader = React.memo(({
                     {info && (
                       <>
                         <BreadcrumbItem className="shrink-0">
-                          <BreadcrumbPage className="font-medium text-muted-foreground">{info.label}</BreadcrumbPage>
+                          {activeProjectName || (activeFileName && activeFileName !== info.label) ? (
+                            <BreadcrumbPage className="font-medium text-muted-foreground">{info.label}</BreadcrumbPage>
+                          ) : (
+                            <BreadcrumbPage className="font-semibold text-foreground">{info.label}</BreadcrumbPage>
+                          )}
                         </BreadcrumbItem>
-                        {activeProjectName && <BreadcrumbSeparator className="shrink-0" />}
+                        {(activeProjectName || (activeFileName && activeFileName !== info.label)) && (
+                          <BreadcrumbSeparator className="shrink-0" />
+                        )}
                       </>
                     )}
                     {activeProjectName && (
@@ -186,10 +192,10 @@ export const MainHeader = React.memo(({
                         <BreadcrumbItem className="min-w-0 shrink">
                           <BreadcrumbPage className="max-w-20 sm:max-w-37.5 md:max-w-62.5 truncate text-muted-foreground">{activeProjectName}</BreadcrumbPage>
                         </BreadcrumbItem>
-                        {activeFileName && <BreadcrumbSeparator className="shrink-0" />}
+                        {activeFileName && activeFileName !== info?.label && <BreadcrumbSeparator className="shrink-0" />}
                       </>
                     )}
-                    {activeFileName && (
+                    {activeFileName && activeFileName !== info?.label && (
                       <BreadcrumbItem className="min-w-0 shrink flex items-center gap-2">
                         <BreadcrumbPage className="max-w-30 sm:max-w-50 md:max-w-75 truncate font-semibold text-foreground">{activeFileName}</BreadcrumbPage>
 

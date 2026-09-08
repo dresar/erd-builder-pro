@@ -127,16 +127,31 @@ Sistem dirancang untuk menyediakan fondasi *enterprise-grade* dengan ketersediaa
 
 export function extractHeadings(markdown: string): PrdHeading[] {
   const headings: PrdHeading[] = [];
-  const lines = markdown.split('\n');
 
+  const htmlRegex = /<h([1-3])[^>]*>([\s\S]*?)<\/h\1>/gi;
+  let htmlMatch;
+  const htmlFound: PrdHeading[] = [];
+  while ((htmlMatch = htmlRegex.exec(markdown)) !== null) {
+    const level = parseInt(htmlMatch[1], 10);
+    const rawInner = htmlMatch[2].replace(/<[^>]+>/g, '').replace(/&amp;/g, '&').replace(/\s+/g, ' ').trim();
+    if (rawInner) {
+      const id = rawInner.toLowerCase().replace(/[^\w\s-]/g, '').replace(/\s+/g, '-');
+      htmlFound.push({ id, title: rawInner, level });
+    }
+  }
+
+  if (htmlFound.length > 0) {
+    return htmlFound;
+  }
+
+  const lines = markdown.split('\n');
   let isFirstH1 = true;
   for (const line of lines) {
-    const match = line.match(/^(#{1,3})\s+(.+)$/);
-    if (match) {
-      const level = match[1].length;
-      const rawTitle = cleanVal(match[2]);
+    const matchMd = line.match(/^(#{1,3})\s+(.+)$/);
+    if (matchMd) {
+      const level = matchMd[1].length;
+      const rawTitle = cleanVal(matchMd[2]);
       const id = rawTitle.toLowerCase().replace(/[^\w\s-]/g, '').replace(/\s+/g, '-');
-      
       if (level === 1 && isFirstH1 && !/^\d+\./.test(rawTitle)) {
         isFirstH1 = false;
         continue;

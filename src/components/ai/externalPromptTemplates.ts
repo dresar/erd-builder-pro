@@ -20,13 +20,13 @@ export const STRATEGY_PRESETS = [
     id: 'all_in_one' as PromptStrategy,
     label: 'All-in-One',
     badge: 'Rekomendasi',
-    description: 'PRD komprehensif, 50+ tabel ERD DBML, dan Flowchart logika bisnis dalam 1 bundel JSON.',
+    description: 'PRD komprehensif HTML views, 50+ tabel ERD DBML, dan Flowchart logika bisnis dalam 1 bundel JSON.',
   },
   {
     id: 'prd_only' as PromptStrategy,
     label: 'Catatan PRD',
     badge: 'Tahap 1',
-    description: 'Dokumen PRD ribuan kata siap pakai untuk ditempel di modul Catatan (Notes).',
+    description: 'Dokumen PRD HTML views ribuan kata siap pakai untuk ditempel di modul PRD / Catatan.',
   },
   {
     id: 'notes_to_erd' as PromptStrategy,
@@ -76,9 +76,6 @@ function resolveInfrastructure(config: PromptConfig) {
   return { resolvedDeployment, resolvedArch, minTables, complianceList };
 }
 
-// ─────────────────────────────────────────────────────────────
-// 1. ALL-IN-ONE MASTER MEGA PROMPT
-// ─────────────────────────────────────────────────────────────
 export function generateAllInOnePrompt(config: PromptConfig): string {
   const { resolvedDeployment, resolvedArch, minTables, complianceList } = resolveInfrastructure(config);
   const proj = config.projectName?.trim() || 'Proyek';
@@ -100,7 +97,11 @@ Your task is to design a COMPLETE, PRODUCTION-GRADE, ENTERPRISE-LEVEL SYSTEM SPE
 
 CRITICAL RULES — DO NOT VIOLATE:
 1. NO TOY OR SIMPLIFIED SCHEMAS: You MUST produce an exhaustive, real-world enterprise database schema with AT LEAST ${minTables} TABLES in valid DBML. Do not group multiple tables into one generic table. Break down the system into realistic, normalized relational modules.
-2. EXHAUSTIVE PRD: The PRD in "content_markdown" must be written in formal Indonesian (Bahasa Indonesia baku kelas enterprise) with rich technical depth. Include functional domain modules, business rules, state transition matrices, API contracts, RBAC matrix, and disaster recovery strategies.
+2. PRD AS COMPREHENSIVE RICH HTML VIEWS: The PRD in "content_markdown" MUST NOT be a plain markdown README or generic text. It MUST be an exhaustive, enterprise-grade specification rendered as RICH, COLORFUL, THEME-AWARE HTML VIEWS using component-style <div> containers with Tailwind CSS classes.
+   - DO NOT START WITH <!DOCTYPE html>, <html>, <head>, or <body>! Start directly with root <div> elements (e.g. <div class="space-y-8">...</div>).
+   - Use theme-responsive Tailwind utility classes (bg-card, border-border, text-foreground, text-muted-foreground, bg-indigo-500/10, text-indigo-400, bg-emerald-500/10, text-emerald-400, bg-amber-500/10, text-amber-400, bg-rose-500/10, text-rose-400, border, rounded-xl, shadow-sm, p-4/p-6).
+   - Include rich visual components: metric/KPI cards in grid (grid grid-cols-1 md:grid-cols-3 gap-4), infrastructure topology cards, domain module cards with colored status pills and invariants, styled RBAC matrix table with colored badges, API contracts, and SLA cards.
+   - Target depth: 2,500–4,000 words in formal Indonesian (Bahasa Indonesia baku kelas enterprise).
 3. HOSTING & DEPLOYMENT: The application architecture must be optimized for ${resolvedDeployment}.
 4. FLOWCHART MUST BE DECISION-RICH: The flowchart must contain decision logic diamonds for validations, auth checks, status transitions, and error paths. Include at least 15–25 connected nodes.
 5. STRICT JSON OUTPUT CONTRACT: You must respond ONLY with a single valid JSON object enclosed within \`\`\`json ... \`\`\` code fence. No conversational filler before or after the JSON.
@@ -114,7 +115,7 @@ REQUIRED JSON STRUCTURE:
   },
   "prd": {
     "title": "Dokumen Spesifikasi Produk & Arsitektur (PRD)",
-    "content_markdown": "# DOKUMEN SPESIFIKASI PERSYARATAN PRODUK & ARSITEKTUR SISTEM\\n\\n## 1. Ringkasan Eksekutif & Latar Belakang Bisnis\\n[Penjelasan mendalam mengenai problem statement, value proposition, dan sasaran strategis bisnis]\\n\\n## 2. Arsitektur Solusi & Topologi Infrastruktur\\n- **Hosting & Runtime**: ${resolvedDeployment}\\n- **Database Layer**: Supabase PostgreSQL dengan Connection Pooler (Transaction Mode)\\n- **State & Caching**: Upstash Redis untuk distributed caching & rate-limiting\\n- **Storage Object**: Cloudflare R2 / AWS S3 untuk encrypted documents\\n- **Event Bus / Async Processing**: Inngest / QStash untuk antrean background\\n\\n## 3. Dekomposisi Modul Domain Bisnis (Domain-Driven Design)\\n### 3.1 Modul 1: Identity, Auth & Multi-Tenancy\\n- Komponen & Entitas Utama\\n- Business Rules & Invariant Constraints\\n- State Machine & Transisi Status\\n### 3.2 Modul 2: [Domain Utama]\\n...\\n[Lanjutkan hingga minimal 8 modul fungsional lengkap]\\n\\n## 4. Keamanan, Tata Kelola Data & Kepatuhan Regulasi\\n- **Role-Based Access Control (RBAC) Matrix**: Matriks peran vs izin.\\n- **Isolasi Data Multi-Tenant**: Row-Level Security (RLS) berbasis tenant_id.\\n- **Audit Trail & Immutability**: Mekanisme pencatatan audit log lengkap.\\n- **Perlindungan Data Sensitif**: Enkripsi field level untuk data identitas.\\n\\n## 5. Kontrak Data & Spesifikasi Integrasi API\\n- Standard Response Envelope (Success & Error Response Schema)\\n- Webhook & Idempotency Key Handling\\n- Header Konvensi (X-Tenant-ID, X-Correlation-ID, Authorization)\\n\\n## 6. Persyaratan Non-Fungsional (NFR) & SLA\\n- Target Latensi: P95 < 200ms\\n- Skalabilitas: Arsitektur Stateless untuk auto-scaling Vercel Functions\\n- Backup & Recovery: RPO < 5 menit, RTO < 30 menit"
+    "content_markdown": "> **Proyek**: ${proj}\\n> **Domain**: ${config.domain}\\n> **Target Deployment**: ${resolvedDeployment}\\n> **Status**: Produksi\\n> **Versi**: 1.0.0\\n\\n<div class=\\"space-y-8\\">\\n  <div class=\\"grid grid-cols-1 md:grid-cols-3 gap-4\\">\\n    <div class=\\"p-5 rounded-xl border border-indigo-500/30 bg-indigo-500/5\\"><span class=\\"text-xs font-bold text-indigo-400 uppercase\\">Target SLA</span><p class=\\"text-2xl font-extrabold text-foreground mt-1\\">99.99%</p><p class=\\"text-xs text-muted-foreground mt-1\\">High Availability</p></div>\\n    <div class=\\"p-5 rounded-xl border border-emerald-500/30 bg-emerald-500/5\\"><span class=\\"text-xs font-bold text-emerald-400 uppercase\\">Latensi P95</span><p class=\\"text-2xl font-extrabold text-foreground mt-1\\">&lt; 150ms</p><p class=\\"text-xs text-muted-foreground mt-1\\">Edge Serverless</p></div>\\n    <div class=\\"p-5 rounded-xl border border-amber-500/30 bg-amber-500/5\\"><span class=\\"text-xs font-bold text-amber-400 uppercase\\">Compliance</span><p class=\\"text-2xl font-extrabold text-foreground mt-1\\">Enterprise</p><p class=\\"text-xs text-muted-foreground mt-1\\">RBAC &amp; Audit Trail</p></div>\\n  </div>\\n\\n  <div class=\\"rounded-xl border border-border bg-card p-6 space-y-4\\">\\n    <h2 class=\\"text-xl font-bold text-foreground\\">1. Ringkasan Eksekutif &amp; Sasaran Strategis</h2>\\n    <p class=\\"text-sm text-muted-foreground leading-relaxed\\">[Uraikan problem statement mendalam, value proposition, dan sasaran strategis bisnis]</p>\\n  </div>\\n  <div class=\\"rounded-xl border border-border bg-card p-6 space-y-4\\">\\n    <h2 class=\\"text-xl font-bold text-foreground\\">2. Arsitektur Solusi &amp; Topologi Infrastruktur</h2>\\n    <div class=\\"grid grid-cols-1 md:grid-cols-2 gap-4 pt-2\\">\\n      <div class=\\"p-4 rounded-lg border border-border/60 bg-muted/10\\"><h3 class=\\"font-semibold text-foreground text-sm\\">Runtime &amp; Hosting</h3><p class=\\"text-xs text-muted-foreground mt-1\\">${resolvedDeployment}</p></div>\\n      <div class=\\"p-4 rounded-lg border border-border/60 bg-muted/10\\"><h3 class=\\"font-semibold text-foreground text-sm\\">Database Layer</h3><p class=\\"text-xs text-muted-foreground mt-1\\">PostgreSQL dengan Connection Pooling</p></div>\\n    </div>\\n  </div>\\n  <div class=\\"rounded-xl border border-border bg-card p-6 space-y-4\\">\\n    <h2 class=\\"text-xl font-bold text-foreground\\">3. Dekomposisi Modul Domain Bisnis (DDD)</h2>\\n    <p class=\\"text-xs text-muted-foreground\\">[Uraikan minimal 8 modul fungsional dalam card grid responsif]</p>\\n  </div>\\n  <div class=\\"rounded-xl border border-border bg-card p-6 space-y-4\\">\\n    <h2 class=\\"text-xl font-bold text-foreground\\">4. Matriks Akses &amp; Keamanan (RBAC)</h2>\\n    <p class=\\"text-xs text-muted-foreground\\">[Tabel peran vs izin bergaya modern dengan badge status]</p>\\n  </div>\\n  <div class=\\"rounded-xl border border-border bg-card p-6 space-y-4\\">\\n    <h2 class=\\"text-xl font-bold text-foreground\\">5. Kontrak Data &amp; Spesifikasi API</h2>\\n    <p class=\\"text-xs text-muted-foreground\\">[Envelope response, headers, idempotency]</p>\\n  </div>\\n  <div class=\\"rounded-xl border border-border bg-card p-6 space-y-4\\">\\n    <h2 class=\\"text-xl font-bold text-foreground\\">6. Persyaratan Non-Fungsional &amp; SLA</h2>\\n    <p class=\\"text-xs text-muted-foreground\\">[Latency, availability, RPO/RTO]</p>\\n  </div>\\n</div>"
   },
   "erd": {
     "title": "Skema Database Enterprise (${minTables}+ Tabel)",
@@ -172,9 +173,6 @@ DETAILED DBML SPECIFICATION RULES:
 Now generate the complete JSON package. Ensure the JSON is completely valid, parseable, and matches all constraints.`;
 }
 
-// ─────────────────────────────────────────────────────────────
-// 2. PRD-ONLY MASTER PROMPT (Untuk Tab Catatan / Notes)
-// ─────────────────────────────────────────────────────────────
 export function generatePrdOnlyPrompt(config: PromptConfig): string {
   const { resolvedDeployment, resolvedArch, complianceList } = resolveInfrastructure(config);
   const proj = config.projectName?.trim() || 'Proyek';
@@ -191,54 +189,82 @@ Bertindaklah sebagai Senior Principal Solutions & Enterprise Software Architect.
 Susun DOKUMEN PERSYARATAN PRODUK (PRD) & ARSITEKTUR SISTEM LENGKAP untuk proyek di atas.
 
 ATURAN PENULISAN:
-1. Format dokumen murni dalam GitHub Flavored Markdown yang siap ditempel ke editor Catatan (Notes).
-2. Tuliskan dalam Bahasa Indonesia formal, terstruktur, mendalam, dan komprehensif (target: 2.000–3.500 kata).
-3. Hindari placeholder singkat. Uraikan setiap sub-bab secara konkret dan actionable.
+1. JANGAN GUNAKAN FORMAT README MARKDOWN BIASA! Format dokumen WAJIB menggunakan RICH HTML VIEWS menggunakan elemen <div> berdesain modern, responsif, dan penuh warna dengan utilitas Tailwind CSS.
+2. DILARANG KERAS menggunakan awalan <!DOCTYPE html>, <html>, <head>, atau <body>! Awali langsung dengan kontainer <div> (contoh: <div class="space-y-8">...</div>).
+3. Gunakan kelas tema responsif (bg-card, border-border, text-foreground, text-muted-foreground, aksen warna emerald, indigo, amber, violet, rose, dan grid responsif).
+4. Tuliskan dalam Bahasa Indonesia formal kelas enterprise, terstruktur, mendalam, dan komprehensif (target: 2.500–4.000 kata) mencakup minimal 8–10 modul domain bisnis, matriks RBAC, kontrak API, dan SLA.
 
-STRUKTUR DOKUMEN YANG WAJIB DIIKUTI:
-# DOKUMEN SPESIFIKASI PERSYARATAN PRODUK & ARSITEKTUR TEKNIS (PRD)
+STRUKTUR DOKUMEN HTML VIEWS YANG WAJIB DIIKUTI:
+> **Proyek**: ${proj}
+> **Domain Bisnis**: ${config.domain}
+> **Target Deployment**: ${resolvedDeployment}
+> **Status**: Produksi
+> **Versi**: 1.0.0
 
-## 1. Executive Summary & Problem Framing
-- Latar belakang masalah bisnis dan target pengguna.
-- Sasaran strategis, nilai pembeda, dan metrik keberhasilan utama (KPI / OKR).
+<div class="space-y-8">
+  <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+    <div class="p-5 rounded-xl border border-indigo-500/30 bg-indigo-500/5">
+      <span class="text-xs font-bold text-indigo-400 uppercase">Target SLA</span>
+      <p class="text-2xl font-extrabold text-foreground mt-1">99.99%</p>
+      <p class="text-xs text-muted-foreground mt-1">High Availability</p>
+    </div>
+    <div class="p-5 rounded-xl border border-emerald-500/30 bg-emerald-500/5">
+      <span class="text-xs font-bold text-emerald-400 uppercase">Latensi P95</span>
+      <p class="text-2xl font-extrabold text-foreground mt-1">&lt; 150ms</p>
+      <p class="text-xs text-muted-foreground mt-1">Edge Serverless</p>
+    </div>
+    <div class="p-5 rounded-xl border border-amber-500/30 bg-amber-500/5">
+      <span class="text-xs font-bold text-amber-400 uppercase">Keamanan</span>
+      <p class="text-2xl font-extrabold text-foreground mt-1">Enterprise</p>
+      <p class="text-xs text-muted-foreground mt-1">RBAC, RLS &amp; Audit</p>
+    </div>
+  </div>
 
-## 2. Arsitektur Solusi & Topologi Infrastruktur
-- Pola arsitektur (${resolvedArch}) dan batas domain layanan.
-- Runtime Hosting: ${resolvedDeployment}.
-- Database Tier: Supabase PostgreSQL (Connection Pooling, Read Replicas).
-- State, Caching & Queue: Serverless Redis & Background Event Bus.
-- Media & Document Storage: Encrypted Object Storage.
+  <div class="rounded-xl border border-border bg-card p-6 space-y-4">
+    <h2 class="text-xl font-bold text-foreground">1. Ringkasan Eksekutif &amp; Sasaran Strategis</h2>
+    <p class="text-sm text-muted-foreground leading-relaxed">
+      Uraikan problem statement mendalam, arsitektur solusi, value proposition, dan sasaran strategis bisnis.
+    </p>
+  </div>
 
-## 3. Dekomposisi Modul Domain Bisnis (Domain-Driven Design)
-[Uraikan minimal 8–10 modul fungsional spesifik domain ${config.domain}]
-Untuk setiap modul, jelaskan:
-- Deskripsi & Tanggung Jawab Modul
-- Entitas Data Inti & Atribut Kunci
-- Aturan Bisnis & Batasan Invarian
-- State Machine & Alur Transisi Status
+  <div class="rounded-xl border border-border bg-card p-6 space-y-4">
+    <h2 class="text-xl font-bold text-foreground">2. Topologi Solusi &amp; Infrastruktur</h2>
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
+      <div class="p-4 rounded-lg border border-border/60 bg-muted/10">
+        <h3 class="font-semibold text-foreground text-sm">Runtime &amp; Hosting</h3>
+        <p class="text-xs text-muted-foreground mt-1">${resolvedDeployment}</p>
+      </div>
+      <div class="p-4 rounded-lg border border-border/60 bg-muted/10">
+        <h3 class="font-semibold text-foreground text-sm">Basis Data</h3>
+        <p class="text-xs text-muted-foreground mt-1">PostgreSQL dengan Connection Pooling</p>
+      </div>
+    </div>
+  </div>
 
-## 4. Keamanan, Tata Kelola & Kepatuhan Regulasi
-- Matriks Role-Based Access Control (RBAC): Tabel peran vs izin operasi.
-- Isolasi Multi-Tenant: Implementasi Row-Level Security (RLS) berbasis tenant_id.
-- Jejak Audit & Observabilitas: Skema pencatatan audit log immutable.
-- Proteksi Data Sensitif: Enkripsi field-level data PII.
+  <div class="rounded-xl border border-border bg-card p-6 space-y-6">
+    <h2 class="text-xl font-bold text-foreground">3. Dekomposisi Modul Domain Bisnis (DDD)</h2>
+    <p class="text-xs text-muted-foreground">Uraikan minimal 8-10 modul fungsional dalam card grid responsif.</p>
+  </div>
 
-## 5. Kontrak Data & Spesifikasi Integrasi API
-- Standar Envelope Response (Format sukses, pagination, error RFC 7807).
-- Konvensi Header: X-Tenant-ID, X-Correlation-ID, Idempotency-Key.
-- Spesifikasi Webhook & Alur Retry Eksponensial.
+  <div class="rounded-xl border border-border bg-card p-6 space-y-4">
+    <h2 class="text-xl font-bold text-foreground">4. Matriks Akses &amp; Keamanan (RBAC)</h2>
+    <p class="text-xs text-muted-foreground">Tabel peran vs izin bergaya modern dengan badge status warna.</p>
+  </div>
 
-## 6. Persyaratan Non-Fungsional (NFR) & SLA
-- Ketersediaan Layanan: SLA 99.99%.
-- Target Performa: P95 Latency < 200ms.
-- Pemulihan Bencana: RPO < 5 menit, RTO < 30 menit.
+  <div class="rounded-xl border border-border bg-card p-6 space-y-4">
+    <h2 class="text-xl font-bold text-foreground">5. Kontrak Data &amp; Spesifikasi Integrasi API</h2>
+    <p class="text-xs text-muted-foreground">Standar envelope response, konvensi header, dan idempotency.</p>
+  </div>
 
-Mulai susun dokumen PRD lengkap sekarang.`;
+  <div class="rounded-xl border border-border bg-card p-6 space-y-4">
+    <h2 class="text-xl font-bold text-foreground">6. Persyaratan Non-Fungsional &amp; SLA</h2>
+    <p class="text-xs text-muted-foreground">Target latensi, ketersediaan, pemulihan bencana RPO/RTO.</p>
+  </div>
+</div>
+
+Mulai susun dokumen PRD HTML views lengkap sekarang.`;
 }
 
-// ─────────────────────────────────────────────────────────────
-// 3. NOTES-TO-ERD PROMPT (Sintesis PRD → ERD 50+ Tabel DBML)
-// ─────────────────────────────────────────────────────────────
 export function generateNotesToErdPrompt(config: PromptConfig, notesText?: string): string {
   const { minTables } = resolveInfrastructure(config);
   const proj = config.projectName?.trim() || 'Proyek';
@@ -265,9 +291,6 @@ CRITICAL RULES:
 ${prdContent}`;
 }
 
-// ─────────────────────────────────────────────────────────────
-// 4. NOTES-TO-FLOWCHART PROMPT (Sintesis PRD & ERD → Flowchart)
-// ─────────────────────────────────────────────────────────────
 export function generateNotesToFlowchartPrompt(config: PromptConfig, notesText?: string, erdText?: string): string {
   const proj = config.projectName?.trim() || 'Proyek';
   const prdContent = notesText?.trim() || config.existingNotesContext?.trim() || '<<<TEMPELKAN_RINGKASAN_PRD_DI_SINI>>>';
@@ -303,9 +326,6 @@ ${prdContent}
 ${erdContent}`;
 }
 
-// ─────────────────────────────────────────────────────────────
-// ROUTER UTAMA
-// ─────────────────────────────────────────────────────────────
 export function generateExternalAIPrompt(config: PromptConfig): string {
   switch (config.strategy) {
     case 'prd_only':
