@@ -19,7 +19,10 @@ const FEATURES: { id: FeatureTab; label: string; icon: React.ElementType; route:
   { id: 'drawings', label: 'Gambar', icon: PenTool, route: '/drawings' },
 ]
 
-const getFileName = (file: any) => file.title || file.name || 'Untitled'
+const getFileName = (file: any) => {
+  const raw = file.title || file.name || 'Untitled'
+  return raw.replace(/^\[PRD\]\s*/, '')
+}
 const getFileUid = (file: any) => file.uid || file.id
 const getCreatedTime = (file: any) => new Date(file.created_at || file.createdAt || 0).getTime()
 const WORKSPACE_TABS_CACHE_MS = 30_000
@@ -31,8 +34,9 @@ const workspaceTabsRequests = new Map<string, Promise<{ files: WorkspaceFile[] }
 const toWorkspaceFile = (file: any, type: FeatureTab): WorkspaceFile | null => {
   const uid = file?.uid ?? file?.id
   if (uid == null) return null
+  const isPrd = type === 'prd' || (type === 'notes' && file.title?.startsWith('[PRD] '))
   return {
-    type,
+    type: isPrd ? 'prd' : type,
     uid: String(uid),
     title: getFileName(file),
     createdAt: file.created_at ?? file.createdAt,
@@ -64,8 +68,16 @@ export function collectProjectFiles(
 }
 
 export function mergeProjectFiles(...groups: WorkspaceFile[][]): WorkspaceFile[] {
-  return [...new Map(groups.flatMap(group => group.map(file => [`${file.type}-${file.uid}`, file] as const))).values()]
-    .sort((a, b) => getCreatedTime(a) - getCreatedTime(b))
+  const map = new Map<string, WorkspaceFile>()
+  for (const group of groups) {
+    for (const file of group) {
+      const existing = map.get(file.uid)
+      if (!existing || (existing.type === 'notes' && file.type === 'prd')) {
+        map.set(file.uid, file)
+      }
+    }
+  }
+  return [...map.values()].sort((a, b) => getCreatedTime(a) - getCreatedTime(b))
 }
 
 async function loadWorkspaceTabs(projectId: string | number, userId: string | number) {
@@ -80,7 +92,14 @@ async function loadWorkspaceTabs(projectId: string | number, userId: string | nu
   .then(async response => {
     if (!response.ok) throw new Error('Failed to load project files')
     const json = await response.json()
-    const data = { files: Array.isArray(json.data) ? json.data : [] }
+    const rawFiles = Array.isArray(json.data) ? json.data : []
+    const normalizedFiles = rawFiles.map((f: any) => {
+      if ((f.type === 'notes' || !f.type) && f.title?.startsWith('[PRD] ')) {
+        return { ...f, type: 'prd', title: f.title.replace(/^\[PRD\]\s*/, '') }
+      }
+      return f
+    })
+    const data = { files: normalizedFiles }
     workspaceTabsCache.set(cacheKey, { ...data, expiresAt: Date.now() + WORKSPACE_TABS_CACHE_MS })
     return data
   }).finally(() => workspaceTabsRequests.delete(cacheKey))

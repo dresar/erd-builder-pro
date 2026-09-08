@@ -23,7 +23,13 @@ export function PRDHtmlView({ content, metadata, showToc = true }: PRDHtmlViewPr
 
   const sanitizedHtml = useMemo(() => {
     try {
-      const raw = marked.parse(content, { gfm: true, breaks: true }) as string;
+      let bodyMarkdown = content.trim();
+      bodyMarkdown = bodyMarkdown.replace(/^#\s+[^\n]+\n*/, '').trim();
+      bodyMarkdown = bodyMarkdown.replace(/^(?:>\s*[^\n]*\n*)+/, '').trim();
+      bodyMarkdown = bodyMarkdown.replace(/^[*_]*[“"][^”"\n]*(?:[\r\n]+[^”"\n]*)*[”"][*_]*\s*\n*/, '').trim();
+      bodyMarkdown = bodyMarkdown.replace(/^(?:---|\*\*\*|___)\s*\n*/, '').trim();
+
+      const raw = marked.parse(bodyMarkdown, { gfm: true, breaks: true }) as string;
       const htmlWithIds = raw.replace(/<h([1-3])>([^<]+)<\/h\1>/gi, (match, level, text) => {
         const id = text.trim().toLowerCase().replace(/[^\w\s-]/g, '').replace(/\s+/g, '-');
         return `<h${level} id="${id}">${text}</h${level}>`;
@@ -43,9 +49,8 @@ export function PRDHtmlView({ content, metadata, showToc = true }: PRDHtmlViewPr
 
   return (
     <div className="flex-1 flex overflow-hidden bg-background text-foreground">
-      {/* Sticky Table of Contents Sidebar */}
       {showToc && headings.length > 0 && (
-        <aside className="w-56 border-r border-border/40 bg-muted/5 p-4 overflow-y-auto custom-scrollbar hidden md:block shrink-0">
+        <aside className="w-64 lg:w-72 border-r border-border/40 bg-muted/5 p-4 overflow-y-auto custom-scrollbar hidden md:block shrink-0">
           <div className="flex items-center gap-1.5 mb-3 text-muted-foreground">
             <Bookmark className="size-3.5 text-indigo-400" />
             <span className="text-[10px] font-bold uppercase tracking-wider">Daftar Isi</span>
@@ -57,11 +62,12 @@ export function PRDHtmlView({ content, metadata, showToc = true }: PRDHtmlViewPr
                 key={`${h.id}-${idx}`}
                 type="button"
                 onClick={() => scrollToSection(h.id)}
-                className={`block w-full text-left truncate rounded px-2 py-1 text-xs transition-colors hover:bg-muted/40 cursor-pointer ${
+                title={h.title}
+                className={`block w-full text-left truncate rounded px-2.5 py-1 text-xs transition-colors hover:bg-muted/40 cursor-pointer ${
                   h.level === 1 
                     ? 'font-bold text-foreground' 
                     : h.level === 2 
-                      ? 'pl-3.5 text-muted-foreground hover:text-foreground' 
+                      ? 'pl-4 text-muted-foreground hover:text-foreground font-medium' 
                       : 'pl-6 text-muted-foreground/70 text-[11px]'
                 }`}
               >
@@ -72,10 +78,8 @@ export function PRDHtmlView({ content, metadata, showToc = true }: PRDHtmlViewPr
         </aside>
       )}
 
-      {/* Main Document Body */}
       <main className="flex-1 overflow-y-auto custom-scrollbar p-6 sm:p-8 lg:p-10">
         <div className="max-w-4xl mx-auto space-y-6">
-          {/* Executive Cover Card */}
           <div className="rounded-xl border border-border/60 bg-gradient-to-b from-muted/20 to-muted/5 p-6 shadow-sm space-y-4">
             <div className="flex flex-wrap items-center justify-between gap-3">
               <div className="flex items-center gap-2">
@@ -85,27 +89,35 @@ export function PRDHtmlView({ content, metadata, showToc = true }: PRDHtmlViewPr
                 <span className="px-2 py-0.5 rounded-full text-[10px] font-mono bg-muted text-muted-foreground">
                   v{metadata.version}
                 </span>
-                <span className="px-2 py-0.5 rounded-full text-[10px] font-medium bg-muted/60 text-foreground">
-                  {metadata.domain}
-                </span>
+                {metadata.domain && (
+                  <span className="px-2 py-0.5 rounded-full text-[10px] font-medium bg-muted/60 text-foreground">
+                    {metadata.domain}
+                  </span>
+                )}
               </div>
-              <span className="text-xs text-muted-foreground font-mono">
-                {metadata.targetDeployment}
-              </span>
+              {metadata.targetDeployment && (
+                <span className="text-xs text-muted-foreground font-mono truncate max-w-xs sm:max-w-md">
+                  {metadata.targetDeployment}
+                </span>
+              )}
             </div>
 
-            <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-foreground">
-              {metadata.title}
-            </h1>
+            <div>
+              <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-foreground">
+                {metadata.projectName || metadata.title}
+              </h1>
+              <p className="text-xs text-muted-foreground mt-1 font-medium">
+                Spesifikasi Persyaratan Produk &amp; Arsitektur Sistem
+              </p>
+            </div>
 
-            {/* Metric Callout Cards */}
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 pt-2">
               <div className="p-2.5 rounded-lg border border-border/40 bg-background/60">
                 <div className="flex items-center gap-1.5 text-emerald-400 mb-1">
                   <Activity className="size-3.5" />
                   <span className="text-[10px] uppercase font-bold tracking-wider">Target SLA</span>
                 </div>
-                <p className="text-sm font-bold text-foreground">{metadata.sla}</p>
+                <p className="text-sm font-bold text-foreground truncate">{metadata.sla || '99.99%'}</p>
               </div>
 
               <div className="p-2.5 rounded-lg border border-border/40 bg-background/60">
@@ -113,7 +125,7 @@ export function PRDHtmlView({ content, metadata, showToc = true }: PRDHtmlViewPr
                   <Zap className="size-3.5" />
                   <span className="text-[10px] uppercase font-bold tracking-wider">Latensi P95</span>
                 </div>
-                <p className="text-sm font-bold text-foreground">{metadata.latency}</p>
+                <p className="text-sm font-bold text-foreground truncate">{metadata.latency || '< 200ms'}</p>
               </div>
 
               <div className="p-2.5 rounded-lg border border-border/40 bg-background/60">
@@ -121,7 +133,7 @@ export function PRDHtmlView({ content, metadata, showToc = true }: PRDHtmlViewPr
                   <ShieldCheck className="size-3.5" />
                   <span className="text-[10px] uppercase font-bold tracking-wider">Keamanan</span>
                 </div>
-                <p className="text-sm font-bold text-foreground">RBAC &amp; RLS</p>
+                <p className="text-sm font-bold text-foreground truncate">{metadata.security || 'RBAC & Audit'}</p>
               </div>
 
               <div className="p-2.5 rounded-lg border border-border/40 bg-background/60">
@@ -129,12 +141,11 @@ export function PRDHtmlView({ content, metadata, showToc = true }: PRDHtmlViewPr
                   <Layers className="size-3.5" />
                   <span className="text-[10px] uppercase font-bold tracking-wider">Arsitektur</span>
                 </div>
-                <p className="text-sm font-bold text-foreground">Serverless</p>
+                <p className="text-sm font-bold text-foreground truncate">{metadata.architecture || 'Clean Arch'}</p>
               </div>
             </div>
           </div>
 
-          {/* Rendered HTML Content */}
           <article 
             className="prose prose-sm dark:prose-invert max-w-none 
               prose-headings:font-bold prose-headings:tracking-tight 

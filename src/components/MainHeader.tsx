@@ -143,11 +143,12 @@ export const MainHeader = React.memo(({
               }
               if (path.startsWith('/table/')) {
                 const tableLabels: Record<string, string> = {
-                  notes: 'Notes',
-                  erd: 'ERD Builder',
-                  'db-client': 'DB Client',
-                  drawings: 'Drawings',
-                  flowchart: 'Flowcharts',
+                  notes: 'Catatan',
+                  prd: 'PRD',
+                  erd: 'ERD',
+                  'db-client': 'Koneksi DB',
+                  drawings: 'Gambar',
+                  flowchart: 'Flowchart',
                 };
                 const feature = path.match(/^\/table\/([^/]+)$/)?.[1];
                 const label = feature ? (tableLabels[feature] || feature) : 'Unknown';
@@ -157,13 +158,14 @@ export const MainHeader = React.memo(({
                   </BreadcrumbItem>
                 );
               }
-              if (path.startsWith('/notes/') || path.startsWith('/diagrams/') || path.startsWith('/db-client/') || path.startsWith('/drawings/') || path.startsWith('/flowcharts/')) {
+              if (path.startsWith('/notes/') || path.startsWith('/prd/') || path.startsWith('/diagrams/') || path.startsWith('/db-client/') || path.startsWith('/drawings/') || path.startsWith('/flowcharts/')) {
                 const editorInfo: Record<string, { label: string; href: string }> = {
-                    notes: { label: 'Notes', href: '/table/notes' },
-                    diagrams: { label: 'ERD Builder', href: '/table/erd' },
-                    'db-client': { label: 'DB Client', href: '/table/db-client' },
-                  drawings: { label: 'Drawings', href: '/table/drawings' },
-                  flowcharts: { label: 'Flowcharts', href: '/table/flowchart' },
+                  notes: { label: 'Catatan', href: '/table/notes' },
+                  prd: { label: 'PRD', href: '/table/prd' },
+                  diagrams: { label: 'ERD', href: '/table/erd' },
+                  'db-client': { label: 'Koneksi DB', href: '/table/db-client' },
+                  drawings: { label: 'Gambar', href: '/table/drawings' },
+                  flowcharts: { label: 'Flowchart', href: '/table/flowchart' },
                 };
                 const segment = path.split('/')[1];
                 const info = new URLSearchParams(location.search).get('feature') === 'db-client'
@@ -257,7 +259,7 @@ export const MainHeader = React.memo(({
       </div>
 
       <div className="px-2 sm:px-4 flex items-center gap-1 sm:gap-4">
-        {!!location.pathname.match(/^\/(notes|diagrams|drawings|flowcharts)\/[^/]+$/) && (
+        {!!location.pathname.match(/^\/(notes|prd|diagrams|drawings|flowcharts)\/[^/]+$/) && (
           <div className="flex items-center gap-1 sm:gap-4">
             {!isPublicView && (
               <div className="hidden sm:flex items-center gap-1.5 shrink-0">

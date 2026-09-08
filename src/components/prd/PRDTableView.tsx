@@ -14,6 +14,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { InfoTip } from '@/components/ai/InfoTip';
+import { parsePrdMetadata } from './prdTemplate';
 
 interface PRDTableViewProps {
   prds: any[];
@@ -64,7 +65,6 @@ export function PRDTableView({
 
   return (
     <div className="flex-1 flex flex-col h-full overflow-hidden bg-background">
-      {/* Header bar */}
       <div className="p-4 sm:p-6 border-b border-border/40 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shrink-0">
         <div>
           <div className="flex items-center gap-2">
@@ -100,7 +100,6 @@ export function PRDTableView({
         </div>
       </div>
 
-      {/* Table content */}
       <div className="flex-1 overflow-y-auto custom-scrollbar p-4 sm:p-6">
         {filteredPrds.length === 0 ? (
           <div className="h-64 flex flex-col items-center justify-center text-center p-6 rounded-xl border border-dashed border-border/60 bg-muted/5">
@@ -134,6 +133,15 @@ export function PRDTableView({
                   const cleanTitle = doc.title?.replace(/^\[PRD\]\s*/, '') || 'Spesifikasi PRD';
                   const projectName = doc.projects?.name || doc.project?.name || 'Tanpa Proyek';
                   const updatedStr = doc.updated_at || doc.updatedAt;
+                  const meta = parsePrdMetadata(doc.content || '', cleanTitle);
+                  const statusLabel = meta.status === 'production' ? 'Produksi' : meta.status === 'approved' ? 'Disetujui' : meta.status === 'in_review' ? 'Review' : 'Draft';
+                  const statusColor = meta.status === 'production' 
+                    ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30' 
+                    : meta.status === 'approved' 
+                      ? 'bg-indigo-500/10 text-indigo-400 border-indigo-500/30' 
+                      : meta.status === 'in_review' 
+                        ? 'bg-amber-500/10 text-amber-500 border-amber-500/30' 
+                        : 'bg-muted text-muted-foreground border-border/40';
 
                   return (
                     <tr
@@ -149,8 +157,8 @@ export function PRDTableView({
                       </td>
 
                       <td className="py-3 px-3 hidden sm:table-cell">
-                        <span className="px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-indigo-500/10 text-indigo-400 border border-indigo-500/20">
-                          Draft
+                        <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider border ${statusColor}`}>
+                          {statusLabel}
                         </span>
                       </td>
 

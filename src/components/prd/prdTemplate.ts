@@ -6,20 +6,42 @@ export interface PrdHeading {
 
 export interface PrdMetadata {
   title: string;
+  projectName: string;
   version: string;
   status: 'draft' | 'in_review' | 'approved' | 'production';
   domain: string;
   targetDeployment: string;
   sla: string;
   latency: string;
+  security: string;
+  architecture: string;
 }
 
-export function getDefaultPrdTemplate(projectName: string = 'Sistem Enterprise', domain: string = 'SaaS Multi-Tenant'): string {
+function cleanVal(str: string): string {
+  if (!str) return '';
+  return str
+    .replace(/^[*_`\s:>-]+/, '')
+    .replace(/[*_`\s]+$/, '')
+    .replace(/[*_`]/g, '')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+export function getDefaultPrdTemplate(
+  projectName: string = 'Sistem Enterprise',
+  domain: string = 'SaaS Multi-Tenant',
+  target: string = 'Serverless / Cloud Native',
+  architecture: string = 'Modular Monolith with Clean Architecture',
+  security: string = 'RBAC, Audit Trail & Data Isolation'
+): string {
+  const cleanName = projectName.replace(/^\[PRD\]\s*/, '') || 'Sistem Enterprise';
   return `# SPESIFIKASI PERSYARATAN PRODUK & ARSITEKTUR (PRD)
 
-> **Proyek**: ${projectName}  
+> **Proyek**: ${cleanName}  
 > **Versi**: 1.0.0 | **Status**: Draft | **Domain**: ${domain}  
-> **Target**: Serverless on Vercel + Supabase PostgreSQL + Edge Functions
+> **Target**: ${target}  
+> **Arsitektur**: ${architecture}  
+> **Keamanan**: ${security}
 
 ---
 
@@ -37,11 +59,12 @@ Sistem dirancang untuk menyediakan fondasi *enterprise-grade* dengan ketersediaa
 
 ## 2. Topologi Solusi & Infrastruktur
 
-- **Komputasi & Runtime**: Vercel Serverless Functions + Edge Middleware
-- **Basis Data**: Supabase PostgreSQL dengan Supavisor Connection Pooling
-- **Cache & Rate Limiting**: Upstash Redis terdistribusi
-- **Penyimpanan Aset**: Cloudflare R2 / AWS S3 terenkripsi
-- **Pemrosesan Asinkron**: Background Event Queue
+- **Komputasi & Runtime**: ${target}
+- **Pola Arsitektur**: ${architecture}
+- **Standar Keamanan**: ${security}
+- **Basis Data**: Database Relasional Terdistribusi dengan Connection Pooling
+- **Cache & Rate Limiting**: Redis Caching
+- **Penyimpanan Aset**: Cloud Object Storage Terenkripsi
 
 ---
 
@@ -54,7 +77,7 @@ Sistem dirancang untuk menyediakan fondasi *enterprise-grade* dengan ketersediaa
 
 ### 3.2 Modul Bisnis Inti & Transaksi
 - **Entitas Kunci**: Entitas spesifik domain ${domain}
-- **Aturan Bisnis**: Mutasi data keuangan dan operasional wajib dicatat dalam transaksi atomik PostgreSQL.
+- **Aturan Bisnis**: Mutasi data keuangan dan operasional wajib dicatat dalam transaksi atomik database.
 
 ---
 
@@ -76,8 +99,8 @@ Sistem dirancang untuk menyediakan fondasi *enterprise-grade* dengan ketersediaa
 {
   "success": true,
   "data": {
-    "id": "usr_9921",
-    "name": "Admin Utama",
+    "id": "res_9921",
+    "name": "Data Entitas",
     "status": "active"
   },
   "meta": {
@@ -106,12 +129,19 @@ export function extractHeadings(markdown: string): PrdHeading[] {
   const headings: PrdHeading[] = [];
   const lines = markdown.split('\n');
 
+  let isFirstH1 = true;
   for (const line of lines) {
     const match = line.match(/^(#{1,3})\s+(.+)$/);
     if (match) {
       const level = match[1].length;
-      const rawTitle = match[2].trim().replace(/[*_`]/g, '');
+      const rawTitle = cleanVal(match[2]);
       const id = rawTitle.toLowerCase().replace(/[^\w\s-]/g, '').replace(/\s+/g, '-');
+      
+      if (level === 1 && isFirstH1 && !/^\d+\./.test(rawTitle)) {
+        isFirstH1 = false;
+        continue;
+      }
+      isFirstH1 = false;
       headings.push({ id, title: rawTitle, level });
     }
   }
@@ -120,12 +150,45 @@ export function extractHeadings(markdown: string): PrdHeading[] {
 }
 
 export function parsePrdMetadata(markdown: string, defaultTitle: string = 'Spesifikasi PRD'): PrdMetadata {
-  const titleMatch = markdown.match(/^#\s+(.+)$/m);
-  const versionMatch = markdown.match(/Versi[:\s]+([\d.]+)/i);
-  const domainMatch = markdown.match(/Domain[:\s]+([^\n|]+)/i);
-  const targetMatch = markdown.match(/Target[:\s]+([^\n]+)/i);
-  const slaMatch = markdown.match(/SLA[^:]*[:\s]+([^\n]+)/i);
-  const latencyMatch = markdown.match(/Latensi[^:]*[:\s]+([^\n]+)/i);
+  const cleanTitle = defaultTitle.replace(/^\[PRD\]\s*/, '');
+  
+  const projMatch = markdown.match(/(?:[>“"*\s]*Proyek\*{0,2}[:\s]+|Project(?:\s+Name)?[:\s]+["']?)([^"'\n|”]+)/i);
+  const projectName = projMatch ? cleanVal(projMatch[1]) : cleanTitle;
+
+  const titleMatch = markdown.match(/^#\s+([^\n]+)$/m);
+  const title = titleMatch ? cleanVal(titleMatch[1]) : cleanTitle;
+
+  const versionMatch = markdown.match(/(?:Versi|Version)[^:\n|]*[:\s]+([vV]?[\d.]+[\w-]*)/i);
+  const version = versionMatch ? cleanVal(versionMatch[1]).replace(/^[vV]/, '') : '1.0.0';
+
+  const domainMatch = markdown.match(/(?:Domain(?:\s+Bisnis)?)[^:\n|]*[:\s]+([^\n|”"]+)/i);
+  const domain = domainMatch ? cleanVal(domainMatch[1]) : 'Enterprise SaaS';
+
+  const targetMatch = markdown.match(/(?:[>“"*\s]*Target(?:\s+Deployment)?\*{0,2}[:\s]+|Deployment Target[:\s]+|Topologi[:\s]+)([^\n|”"]+)/i);
+  const targetDeployment = targetMatch ? cleanVal(targetMatch[1]) : 'Serverless / Cloud';
+
+  const slaMatch = markdown.match(/(?:Target Ketersediaan|Ketersediaan \(SLA\)|SLA)[^:\n]*[:\s]+([^\n|”"]+)/i);
+  const sla = slaMatch ? cleanVal(slaMatch[1]) : '99.99%';
+
+  const latencyMatch = markdown.match(/(?:Latensi Respon|Latensi|Latency \(P95\)|P95)[^:\n]*[:\s]+([^\n|”"]+)/i);
+  const latency = latencyMatch ? cleanVal(latencyMatch[1]) : '< 200ms';
+
+  const secMatch = markdown.match(/(?:Security & Compliance|Keamanan & Kepatuhan|Keamanan|RBAC)[^:\n]*[:\s]+([^\n|”"]+)/i);
+  let security = secMatch ? cleanVal(secMatch[1]) : '';
+  if (!security) {
+    if (/RBAC/i.test(markdown)) security = 'RBAC & RLS';
+    else if (/Audit/i.test(markdown)) security = 'Audit Trail';
+    else security = 'Enterprise Grade';
+  }
+
+  const archMatch = markdown.match(/(?:Architecture Style|Arsitektur|Gaya Arsitektur)[^:\n]*[:\s]+([^\n]+)/i);
+  let architecture = archMatch ? cleanVal(archMatch[1]) : '';
+  if (!architecture) {
+    if (/Serverless/i.test(markdown)) architecture = 'Serverless Edge';
+    else if (/Microservices/i.test(markdown)) architecture = 'Microservices';
+    else if (/Monolith/i.test(markdown)) architecture = 'Modular Monolith';
+    else architecture = 'Cloud Native';
+  }
 
   let status: PrdMetadata['status'] = 'draft';
   if (/Status[:\s]+Produksi/i.test(markdown)) status = 'production';
@@ -133,13 +196,16 @@ export function parsePrdMetadata(markdown: string, defaultTitle: string = 'Spesi
   else if (/Status[:\s]+Review/i.test(markdown)) status = 'in_review';
 
   return {
-    title: titleMatch ? titleMatch[1].trim() : defaultTitle,
-    version: versionMatch ? versionMatch[1].trim() : '1.0.0',
+    title,
+    projectName,
+    version,
     status,
-    domain: domainMatch ? domainMatch[1].trim() : 'Enterprise SaaS',
-    targetDeployment: targetMatch ? targetMatch[1].trim() : 'Serverless on Vercel',
-    sla: slaMatch ? slaMatch[1].trim() : '99.99%',
-    latency: latencyMatch ? latencyMatch[1].trim() : '< 200ms',
+    domain,
+    targetDeployment,
+    sla,
+    latency,
+    security,
+    architecture,
   };
 }
 

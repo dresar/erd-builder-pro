@@ -48,7 +48,7 @@ export const useAppMetadata = ({
 
   const initialShareSettings = useMemo(() => {
     if (isPublicView) return publicData ? { is_public: !!publicData.is_public, share_token: publicData.share_token, expiry_date: publicData.expiry_date } : undefined;
-    const docArr = view === 'erd' ? diagrams : view === 'notes' ? notes : view === 'drawings' ? drawings : flowcharts;
+    const docArr = view === 'erd' ? diagrams : (view === 'notes' || view === 'prd') ? notes : view === 'drawings' ? drawings : flowcharts;
     const id = currentActiveId;
     const doc = docArr.find(d => String(d.id) === String(id) || (d.uid && String(d.uid) === String(id)));
     if (!doc) return undefined;
@@ -60,13 +60,13 @@ export const useAppMetadata = ({
   const activeFlowchart = isPublicView ? publicData : flowcharts.find(f => (f.uid && String(f.uid) === String(activeFlowchartId)) || String(f.id) === String(activeFlowchartId));
   const activeDiagram = isPublicView ? publicData : diagrams.find(f => String(f.id) === String(activeDiagramId) || (f.uid && f.uid === activeDiagramId));
 
-  const featureLabel = isPublicView ? `Public Shared ${view}` : (view === 'erd' ? 'ERD Builder' : view === 'notes' ? 'Notes' : view === 'drawings' ? 'Drawings' : view === 'flowchart' ? 'Flowcharts' : view === 'changelog' ? 'Changelog' : view === 'backups' ? 'Backups' : view === 'ai-settings' ? 'AI Management' : 'Trash Bin');
+  const featureLabel = isPublicView ? `Public Shared ${view}` : (view === 'prd' ? 'PRD' : view === 'erd' ? 'ERD' : view === 'notes' ? 'Catatan' : view === 'drawings' ? 'Gambar' : view === 'flowchart' ? 'Flowchart' : view === 'changelog' ? 'Changelog' : view === 'backups' ? 'Backups' : view === 'ai-settings' ? 'AI Management' : 'Tempat Sampah');
 
-  const activeFileName = isPublicView ? (publicData?.name || publicData?.title || 'Shared Document') : (view === 'erd' ? activeDiagram?.name : view === 'notes' ? activeNote?.title : view === 'drawings' ? activeDrawing?.title : view === 'flowchart' ? activeFlowchart?.title : null);
+  const activeFileName = isPublicView ? (publicData?.name || publicData?.title || 'Shared Document') : (view === 'erd' ? activeDiagram?.name : (view === 'notes' || view === 'prd') ? (activeNote?.title?.replace(/^\[PRD\]\s*/, '') || activeNote?.title) : view === 'drawings' ? activeDrawing?.title : view === 'flowchart' ? activeFlowchart?.title : null);
   const activeProjectName = isPublicView
     ? publicData?.projects?.name
     : (() => {
-        const doc = view === 'erd' ? activeDiagram : view === 'notes' ? activeNote : view === 'drawings' ? activeDrawing : view === 'flowchart' ? activeFlowchart : null;
+        const doc = view === 'erd' ? activeDiagram : (view === 'notes' || view === 'prd') ? activeNote : view === 'drawings' ? activeDrawing : view === 'flowchart' ? activeFlowchart : null;
         if (!doc) return null;
         if (doc.projects?.name) return doc.projects.name;
         if (doc.project_id) {
@@ -75,7 +75,7 @@ export const useAppMetadata = ({
         }
         return null;
       })();
-  const activeFileUid = isPublicView ? publicData?.uid : (view === 'erd' ? activeDiagram?.uid : view === 'notes' ? activeNote?.uid : view === 'drawings' ? activeDrawing?.uid : view === 'flowchart' ? activeFlowchart?.uid : undefined);
+  const activeFileUid = isPublicView ? publicData?.uid : (view === 'erd' ? activeDiagram?.uid : (view === 'notes' || view === 'prd') ? activeNote?.uid : view === 'drawings' ? activeDrawing?.uid : view === 'flowchart' ? activeFlowchart?.uid : undefined);
 
   return {
     currentActiveId,

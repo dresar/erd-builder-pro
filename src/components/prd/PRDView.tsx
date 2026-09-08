@@ -4,6 +4,7 @@ import { toast } from 'sonner';
 import { PRDToolbar, PrdViewMode, PrdStatus } from './PRDToolbar';
 import { PRDHtmlView } from './PRDHtmlView';
 import { parsePrdMetadata, generateStandaloneHtml, getDefaultPrdTemplate } from './prdTemplate';
+import { marked } from 'marked';
 import { useWorkspace } from '@/providers/WorkspaceContext';
 
 interface PRDViewProps {
@@ -34,10 +35,28 @@ export function PRDView({
 
   useEffect(() => {
     if (activePrd) {
-      setTitle(activePrd.title?.replace(/^\[PRD\]\s*/, '') || 'Spesifikasi PRD');
-      setContent(activePrd.content || getDefaultPrdTemplate(activePrd.title?.replace(/^\[PRD\]\s*/, '')));
+      const cleanTitle = activePrd.title?.replace(/^\[PRD\]\s*/, '') || 'Spesifikasi PRD';
+      setTitle(cleanTitle);
+      const prdBody = activePrd.content || getDefaultPrdTemplate(cleanTitle);
+      setContent(prdBody);
+      const parsed = parsePrdMetadata(prdBody, cleanTitle);
+      setStatus(parsed.status);
     }
   }, [activePrd]);
+
+  const handleStatusChange = (newStatus: PrdStatus) => {
+    setStatus(newStatus);
+    const statusLabels: Record<PrdStatus, string> = {
+      draft: 'Draft',
+      in_review: 'Review',
+      approved: 'Disetujui',
+      production: 'Produksi',
+    };
+    if (/Status[:\s]+[^\n|]+/i.test(content)) {
+      const updated = content.replace(/(Status[:\s]+)[^\n|]+/i, `$1${statusLabels[newStatus]} `);
+      handleContentUpdate(updated);
+    }
+  };
 
   const metadata = useMemo(() => {
     const meta = parsePrdMetadata(content, title);
@@ -54,7 +73,8 @@ export function PRDView({
 
   const handleExportHtml = () => {
     try {
-      const htmlString = generateStandaloneHtml(title, content, metadata);
+      const rendered = marked.parse(content, { gfm: true, breaks: true }) as string;
+      const htmlString = generateStandaloneHtml(title, rendered, metadata);
       const blob = new Blob([htmlString], { type: 'text/html;charset=utf-8' });
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
@@ -125,7 +145,7 @@ export function PRDView({
         title={title}
         onTitleChange={setTitle}
         status={status}
-        onStatusChange={setStatus}
+        onStatusChange={handleStatusChange}
         viewMode={viewMode}
         onViewModeChange={setViewMode}
         onSynthesizeErd={handleSynthesizeErd}
