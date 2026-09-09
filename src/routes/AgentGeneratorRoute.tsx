@@ -36,6 +36,7 @@ export function AgentGeneratorRoute() {
   const [generationProgress, setGenerationProgress] = useState<string>('');
   const [customPrdContent, setCustomPrdContent] = useState<string>('');
   const [projectSiblings, setProjectSiblings] = useState<{
+    project?: { id?: any; uid?: string; name?: string; description?: string; slug?: string } | null;
     notes?: any[];
     diagrams?: any[];
     flowcharts?: any[];
@@ -60,31 +61,36 @@ export function AgentGeneratorRoute() {
     })[0];
   }, [projects, projectSlug]);
 
+  const targetId = useMemo(() => {
+    if (currentProject) return String(currentProject.uid || currentProject.id);
+    return projectSlug ? String(projectSlug) : '';
+  }, [currentProject, projectSlug]);
+
   const projectName = useMemo(() => {
+    if (projectSiblings?.project?.name) return projectSiblings.project.name;
     if (currentProject?.name) return currentProject.name;
     if (projectSlug) {
       const decoded = decodeURIComponent(projectSlug).replace(/[-_]/g, ' ');
       return decoded.charAt(0).toUpperCase() + decoded.slice(1);
     }
     return 'Sistem Enterprise';
-  }, [currentProject, projectSlug]);
+  }, [projectSiblings, currentProject, projectSlug]);
 
   const domain = useMemo(() => {
-    return currentProject?.description || 'SaaS Multi-Tenant';
-  }, [currentProject]);
+    return projectSiblings?.project?.description || currentProject?.description || 'SaaS Multi-Tenant';
+  }, [projectSiblings, currentProject]);
 
   const techStack = useMemo(() => {
     return 'Next.js 15 + Neon PostgreSQL (Prisma) + Express + Tailwind CSS';
   }, []);
 
   useEffect(() => {
-    if (!currentProject) {
+    if (!targetId) {
       setProjectSiblings(null);
       return;
     }
-    const pId = String(currentProject.id || currentProject.uid);
     let isMounted = true;
-    apiFetch(`/api/projects/${pId}/siblings`)
+    apiFetch(`/api/projects/${encodeURIComponent(targetId)}/siblings`)
       .then((res) => (res.ok ? res.json() : null))
       .then((data) => {
         if (isMounted && data) {
@@ -95,7 +101,7 @@ export function AgentGeneratorRoute() {
     return () => {
       isMounted = false;
     };
-  }, [currentProject]);
+  }, [targetId]);
 
   const filteredDiagrams = useMemo(() => {
     if (projectSiblings?.diagrams && projectSiblings.diagrams.length > 0) {

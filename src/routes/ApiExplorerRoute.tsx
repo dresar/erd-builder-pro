@@ -9,6 +9,7 @@ import {
   Layers,
   ChevronRight,
   Code2,
+  Loader2,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
@@ -31,10 +32,12 @@ export function ApiExplorerRoute() {
   const [selectedEndpointId, setSelectedEndpointId] = useState<string>('');
   const [endpointSearchQuery, setEndpointSearchQuery] = useState('');
   const [projectSiblings, setProjectSiblings] = useState<{
+    project?: { id?: any; uid?: string; name?: string; description?: string; slug?: string } | null;
     notes?: any[];
     diagrams?: any[];
     flowcharts?: any[];
   } | null>(null);
+  const [isLoadingSiblings, setIsLoadingSiblings] = useState(false);
 
   const currentProject = useMemo(() => {
     if (!projectSlug) return null;
@@ -55,38 +58,48 @@ export function ApiExplorerRoute() {
     })[0];
   }, [projects, projectSlug]);
 
+  const targetId = useMemo(() => {
+    if (currentProject) return String(currentProject.uid || currentProject.id);
+    return projectSlug ? String(projectSlug) : '';
+  }, [currentProject, projectSlug]);
+
   const projectName = useMemo(() => {
+    if (projectSiblings?.project?.name) return projectSiblings.project.name;
     if (currentProject?.name) return currentProject.name;
     if (projectSlug) {
       const decoded = decodeURIComponent(projectSlug).replace(/[-_]/g, ' ');
       return decoded.charAt(0).toUpperCase() + decoded.slice(1);
     }
     return 'Sistem Enterprise';
-  }, [currentProject, projectSlug]);
+  }, [projectSiblings, currentProject, projectSlug]);
 
   const domain = useMemo(() => {
-    return currentProject?.description || 'SaaS Multi-Tenant';
-  }, [currentProject]);
+    return projectSiblings?.project?.description || currentProject?.description || 'SaaS Multi-Tenant';
+  }, [projectSiblings, currentProject]);
 
   useEffect(() => {
-    if (!currentProject) {
+    if (!targetId) {
       setProjectSiblings(null);
+      setIsLoadingSiblings(false);
       return;
     }
-    const pId = String(currentProject.id || currentProject.uid);
     let isMounted = true;
-    apiFetch(`/api/projects/${pId}/siblings`)
+    setIsLoadingSiblings(true);
+    apiFetch(`/api/projects/${encodeURIComponent(targetId)}/siblings`)
       .then(res => (res.ok ? res.json() : null))
       .then(data => {
         if (isMounted && data) {
           setProjectSiblings(data);
         }
       })
-      .catch(() => {});
+      .catch(() => {})
+      .finally(() => {
+        if (isMounted) setIsLoadingSiblings(false);
+      });
     return () => {
       isMounted = false;
     };
-  }, [currentProject]);
+  }, [targetId]);
 
   const filteredDiagrams = useMemo(() => {
     if (projectSiblings?.diagrams && projectSiblings.diagrams.length > 0) {
@@ -123,6 +136,7 @@ export function ApiExplorerRoute() {
   }, [filteredDiagrams]);
 
   const tables = useMemo(() => {
+    if (isLoadingSiblings && !projectSiblings) return [];
     if (dbmlSource) {
       const parsed = parseDbmlToTables(dbmlSource);
       if (parsed.length > 0) return parsed;
@@ -153,7 +167,7 @@ export function ApiExplorerRoute() {
         ],
       },
     ];
-  }, [dbmlSource, filteredDiagrams]);
+  }, [isLoadingSiblings, projectSiblings, dbmlSource, filteredDiagrams]);
 
   const endpoints = useMemo(() => {
     return buildEndpointsFromTables(tables);
@@ -340,29 +354,39 @@ export function ApiExplorerRoute() {
       </div>
 
       <div className="flex-1 flex flex-col md:flex-row rounded-xl border border-border/70 bg-card overflow-hidden min-h-0 shadow-xs">
-        <ApiSidebar
-          endpoints={endpoints}
-          selectedEndpointId={selectedEndpointId}
-          onSelectEndpoint={id => setSelectedEndpointId(id)}
-          activeMode={activeMode}
-          onChangeMode={mode => setActiveMode(mode)}
-          searchQuery={endpointSearchQuery}
-          onSearchChange={q => setEndpointSearchQuery(q)}
-        />
+        {isLoadingSiblings && !projectSiblings ? (
+          <div className="flex-1 flex flex-col items-center justify-center gap-2.5 text-xs text-muted-foreground p-8">
+            <Loader2 className="size-5 animate-spin text-primary" />
+            <span className="font-medium text-foreground">Menyiapkan API Explorer...</span>
+            <span className="text-[11px] text-muted-foreground">Mengambil skema tabel, diagram, dan alur kerja proyek</span>
+          </div>
+        ) : (
+          <>
+            <ApiSidebar
+              endpoints={endpoints}
+              selectedEndpointId={selectedEndpointId}
+              onSelectEndpoint={id => setSelectedEndpointId(id)}
+              activeMode={activeMode}
+              onChangeMode={mode => setActiveMode(mode)}
+              searchQuery={endpointSearchQuery}
+              onSearchChange={q => setEndpointSearchQuery(q)}
+            />
 
-        <div className="flex-1 flex flex-col min-h-0 overflow-hidden bg-background/50">
-          {activeMode === 'crud' ? (
-            selectedEndpoint ? (
-              <EndpointTester endpoint={selectedEndpoint} />
-            ) : (
-              <div className="flex-1 flex items-center justify-center text-xs text-muted-foreground">
-                Pilih endpoint.
-              </div>
-            )
-          ) : (
-            <WorkflowSimulator initialSteps={workflowSteps} />
-          )}
-        </div>
+            <div className="flex-1 flex flex-col min-h-0 overflow-hidden bg-background/50">
+              {activeMode === 'crud' ? (
+                selectedEndpoint ? (
+                  <EndpointTester endpoint={selectedEndpoint} />
+                ) : (
+                  <div className="flex-1 flex items-center justify-center text-xs text-muted-foreground">
+                    Pilih endpoint.
+                  </div>
+                )
+              ) : (
+                <WorkflowSimulator initialSteps={workflowSteps} />
+              )}
+            </div>
+          </>
+        )}
       </div>
     </div>
   );

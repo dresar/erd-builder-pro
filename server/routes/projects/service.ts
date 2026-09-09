@@ -7,8 +7,6 @@ import { getStorageClientForUser } from "../../lib/storage.js";
 import { isDesktopMode } from "../../lib/config.js";
 import { toProjectId } from "../../lib/utils.js";
 
-// ── List ──
-
 export async function listProjects(
   userId: string,
   params: { limit: number; offset: number; q?: string }
@@ -115,8 +113,6 @@ export async function listProjects(
   };
 }
 
-// ── Create ──
-
 export async function createProject(name: string, userId: string) {
   const project = await prisma?.project.create({
     data: { name, userId, uid: randomUUID() },
@@ -140,7 +136,7 @@ export async function resolveProject(rawId: string | number, userId: string) {
       userId,
       OR: orConditions,
     },
-    select: { id: true, uid: true },
+    select: { id: true, uid: true, name: true },
   });
   return project || null;
 }
@@ -230,19 +226,10 @@ export async function permanentDeleteProject(projectIdOrUid: number | string, us
   if (isDesktopMode() && (prisma as any)?.dbClient) {
     await (prisma as any).dbClient.deleteMany({ where: { projectId } });
   }
-  const diagrams = await prisma?.diagram.findMany({
-    where: { projectId },
-    select: { id: true },
-  });
-  const diagramIds = diagrams?.map(d => d.id) || [];
-
+  const diagramIds = (await prisma?.diagram.findMany({ where: { projectId }, select: { id: true } }))?.map(d => d.id) || [];
   if (diagramIds.length > 0) {
     await prisma?.relationship.deleteMany({ where: { diagramId: { in: diagramIds } } });
-    const entities = await prisma?.entity.findMany({
-      where: { diagramId: { in: diagramIds } },
-      select: { id: true },
-    });
-    const entityIds = entities?.map(e => e.id) || [];
+    const entityIds = (await prisma?.entity.findMany({ where: { diagramId: { in: diagramIds } }, select: { id: true } }))?.map(e => e.id) || [];
     if (entityIds.length > 0) {
       await prisma?.column.deleteMany({ where: { entityId: { in: entityIds } } });
     }
@@ -312,7 +299,7 @@ export async function permanentDeleteProject(projectIdOrUid: number | string, us
 export async function getProjectSiblings(projectIdOrUid: number | string, userId: string) {
   if (!prisma) throw new Error("Database connection not available");
   const project = await resolveProject(projectIdOrUid, userId);
-  if (!project) return { notes: [], diagrams: [], flowcharts: [] };
+  if (!project) return { project: null, notes: [], diagrams: [], flowcharts: [] };
   const projectId = project.id as any;
 
   const [notes, diagrams, flowcharts] = await Promise.all([
@@ -356,7 +343,7 @@ export async function getProjectSiblings(projectIdOrUid: number | string, userId
       })),
   }));
 
-  return { notes, diagrams: diagramsWithEntities, flowcharts };
+  return { project, notes, diagrams: diagramsWithEntities, flowcharts };
 }
 
 export async function getProjectSummary(projectIdOrUid: number | string, userId: string, includeDbClient = true) {
