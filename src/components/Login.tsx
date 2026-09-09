@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Eye, EyeOff } from 'lucide-react';
+import { Eye, EyeOff, Terminal, Sparkles, Zap } from 'lucide-react';
 import { cn } from "@/lib/utils";
 import { apiFetch, getInstallMode, isInstalledApp, setAuthToken } from "@/lib/api";
 import { Button } from "@/components/ui/button";
@@ -54,7 +54,18 @@ export function Login({ onLogin, onGuestLogin }: LoginProps) {
       toast.error(error);
       window.history.replaceState({}, document.title, window.location.pathname);
     }
+    if (params.get('dev') === '1') {
+      setEmail('eka.ckp16799@gmail.com');
+      setPassword('Eka16799@');
+      toast.info('Kredensial Dev dimuat');
+    }
   }, []);
+
+  const handleFillDevCredentials = () => {
+    setEmail('eka.ckp16799@gmail.com');
+    setPassword('Eka16799@');
+    toast.success('Kredensial Dev terisi! Silakan klik Masuk.');
+  };
 
   // Installed local apps use auto-login via /api/me — login form should never show.
   // If the login page mounts while the local server is still starting, silently poll.
@@ -178,13 +189,35 @@ export function Login({ onLogin, onGuestLogin }: LoginProps) {
   };
 
   return (
-    <div className="flex min-h-svh w-full items-center justify-center p-6 md:p-10">
-      <div className="w-full max-w-sm">
+    <div className="relative flex min-h-svh w-full items-center justify-center p-6 md:p-10 overflow-hidden bg-background">
+      {/* Animated Glowing Ambient Orbs */}
+      <div className="absolute top-1/4 -left-20 w-80 h-80 bg-indigo-500/15 rounded-full blur-3xl pointer-events-none animate-pulse" style={{ animationDuration: '6s' }} />
+      <div className="absolute bottom-1/4 -right-20 w-96 h-96 bg-purple-500/15 rounded-full blur-3xl pointer-events-none animate-pulse" style={{ animationDuration: '8s' }} />
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-72 h-72 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none" />
+
+      <div className="relative w-full max-w-sm z-10">
         <div className={cn("flex flex-col gap-6")}>
-          <Card>
-            <CardHeader>
-              <CardTitle>{setupMode ? 'Buat Akun Admin' : 'Masuk'}</CardTitle>
-              <CardDescription>
+          <Card className="border-border/60 shadow-xl bg-card/85 backdrop-blur-xl transition-all duration-300 hover:border-indigo-500/40">
+            <CardHeader className="space-y-2">
+              <div className="flex items-center justify-between">
+                <CardTitle className="text-xl font-bold tracking-tight bg-gradient-to-r from-foreground to-foreground/80 bg-clip-text">
+                  {setupMode ? 'Buat Akun Admin' : 'Masuk'}
+                </CardTitle>
+                {!setupMode && (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={handleFillDevCredentials}
+                    className="h-7 px-2 text-[11px] font-semibold gap-1.5 border-indigo-500/30 bg-indigo-500/10 text-indigo-400 hover:bg-indigo-500/20 hover:text-indigo-300 hover:border-indigo-500/50 cursor-pointer transition-all"
+                    title="Isi email dan password developer otomatis"
+                  >
+                    <Terminal className="size-3 text-indigo-400" />
+                    Login Dev
+                  </Button>
+                )}
+              </div>
+              <CardDescription className="text-xs text-muted-foreground">
                 {setupMode
                   ? 'Atur email dan kata sandi administrator pertama untuk instalasi ini.'
                   : 'Masukkan email dan kata sandi Anda untuk melanjutkan.'}
@@ -273,24 +306,37 @@ export function Login({ onLogin, onGuestLogin }: LoginProps) {
                       </div>
                     </Field>
                   )}
-                  <Field className="flex flex-col gap-3">
-                    <Button type="submit" disabled={loading} className="w-full">
+                  <Field className="flex flex-col gap-2.5">
+                    <Button type="submit" disabled={loading} className="w-full h-9 text-xs font-semibold bg-indigo-600 hover:bg-indigo-700 text-white shadow-md shadow-indigo-500/20 transition-all cursor-pointer">
                       {loading ? (setupMode ? "Membuat..." : "Masuk...") : (setupMode ? "Buat Admin" : "Masuk")}
                     </Button>
+
+                    {!setupMode && (
+                      <Button
+                        type="button"
+                        variant="outline"
+                        onClick={handleFillDevCredentials}
+                        className="w-full h-8.5 text-xs font-medium gap-1.5 border-indigo-500/30 bg-indigo-500/5 text-indigo-400 hover:bg-indigo-500/15 hover:text-indigo-300 hover:border-indigo-500/60 transition-all cursor-pointer"
+                      >
+                        <Terminal className="size-3.5" />
+                        Login Dev
+                      </Button>
+                    )}
+
                     {guestMode && (
                       <>
-                        <div className="relative my-2">
+                        <div className="relative my-1.5">
                           <div className="absolute inset-0 flex items-center">
-                            <span className="w-full border-t" />
+                            <span className="w-full border-t border-border/50" />
                           </div>
-                          <div className="relative flex justify-center text-xs uppercase">
-                            <span className="bg-background px-2 text-muted-foreground">Atau</span>
+                          <div className="relative flex justify-center text-[10px] uppercase tracking-wider">
+                            <span className="bg-card px-2 text-muted-foreground">Atau</span>
                           </div>
                         </div>
                         <Button 
                           type="button" 
-                          variant="outline" 
-                          className="w-full" 
+                          variant="ghost" 
+                          className="w-full h-8 text-xs text-muted-foreground hover:text-foreground cursor-pointer" 
                           onClick={() => {
                             onGuestLogin?.();
                             toast.success("Selamat datang! Anda dalam Mode Tamu.");
