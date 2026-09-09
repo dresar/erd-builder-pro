@@ -228,48 +228,25 @@ export function buildWorkflowStepsFromFlowchart(flowchart: any, tables: ParsedTa
 }
 
 function buildDefaultWorkflowSteps(tables: ParsedTable[]): WorkflowStep[] {
-  const t0 = tables[0]?.name || 'users';
-  const t1 = tables[1]?.name || 'profiles';
-  const t2 = tables[2]?.name || 'invoices';
+  if (!tables || tables.length === 0) return [];
 
-  return [
-    {
-      id: 'step_1',
-      order: 1,
-      title: 'Inisiasi Registrasi / Pembuatan Akun',
+  const selectedTables = tables.slice(0, 3);
+  return selectedTables.map((t, idx) => {
+    const formatted = t.name.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+    const payload = generateCreateMockPayload(t.columns, t.name);
+    return {
+      id: `step_${idx + 1}`,
+      order: idx + 1,
+      title: `Buat Data ${formatted}`,
       method: 'POST',
-      endpoint: `/api/v1/${t0}`,
-      tableName: t0,
-      description: `Mendaftarkan identitas entitas utama pada modul ${t0}`,
-      requestPayload: { email: 'santri.baru@pesantren.ac.id', username: 'santri2026', status: 'active' },
+      endpoint: `/api/v1/${t.name}`,
+      tableName: t.name,
+      description: `Menyimpan entitas baru pada tabel ${t.name}`,
+      requestPayload: payload,
       expectedStatus: 201,
       status: 'idle',
-    },
-    {
-      id: 'step_2',
-      order: 2,
-      title: 'Pengisian Data Profil & Verifikasi',
-      method: 'POST',
-      endpoint: `/api/v1/${t1}`,
-      tableName: t1,
-      description: `Menyimpan berkas profil dan biodata pelengkap pada ${t1}`,
-      requestPayload: { full_name: 'Ahmad Faris', phone: '081234567890', is_active: true },
-      expectedStatus: 201,
-      status: 'idle',
-    },
-    {
-      id: 'step_3',
-      order: 3,
-      title: 'Penerbitan Tagihan Transaksional (Virtual Account)',
-      method: 'POST',
-      endpoint: `/api/v1/${t2}`,
-      tableName: t2,
-      description: `Membuat invoice pembayaran sistem otomatis pada ${t2}`,
-      requestPayload: { total_amount: 1500000, due_date: '2026-09-30', status: 'unpaid' },
-      expectedStatus: 201,
-      status: 'idle',
-    },
-  ];
+    };
+  });
 }
 
 export function parseDbmlToApiEndpoints(dbmlSource: string): ApiEndpoint[] {

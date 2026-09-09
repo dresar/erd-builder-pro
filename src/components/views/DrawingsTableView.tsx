@@ -190,8 +190,8 @@ export const DrawingsTableView = React.memo(function DrawingsTableView({
               <TableRow>
                 <TableCell colSpan={cols.length} className="h-32 text-center text-muted-foreground">
                   {totalDrawings === 0
-                    ? 'Belum ada gambar. Buat gambar pertama Anda untuk memulai.'
-                    : 'Tidak ada gambar pada halaman ini.'}
+                    ? 'Belum ada gambar.'
+                    : 'Tidak ada gambar.'}
                 </TableCell>
               </TableRow>
             ) : (

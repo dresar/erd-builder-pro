@@ -14,7 +14,8 @@ export function CodeSnippetViewer({ endpoint, headers, body }: CodeSnippetViewer
   const [lang, setLang] = useState<'curl' | 'fetch' | 'python' | 'axios'>('curl');
   const [copied, setCopied] = useState(false);
 
-  const fullUrl = `https://api.pesantren.ac.id${endpoint.path}`;
+  const baseUrl = localStorage.getItem('prd_pro_api_base_url') || 'http://localhost:3000';
+  const fullUrl = `${baseUrl.replace(/\/+$/, '')}${endpoint.path}`;
 
   const snippet = React.useMemo(() => {
     if (lang === 'curl') {

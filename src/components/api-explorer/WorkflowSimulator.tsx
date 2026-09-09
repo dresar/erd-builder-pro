@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Play, RotateCcw, CheckCircle2, Circle, Loader2, ChevronDown, ChevronRight, Layers, ArrowRight } from 'lucide-react';
+import { Play, RotateCcw, CheckCircle2, Circle, Loader2, ChevronDown, ChevronRight, Layers } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { WorkflowStep, SimulationResult } from '@/lib/api-engine/types';
@@ -64,17 +64,17 @@ export function WorkflowSimulator({ initialSteps }: WorkflowSimulatorProps) {
   const successCount = steps.filter(s => s.status === 'success').length;
 
   return (
-    <div className="flex-1 flex flex-col gap-4 overflow-y-auto custom-scrollbar p-4 lg:p-6 min-h-0">
-      <div className="rounded-xl border border-border/70 bg-card p-4 space-y-3 shadow-xs">
+    <div className="flex-1 flex flex-col gap-4 overflow-y-auto custom-scrollbar p-3 sm:p-4 lg:p-6 min-h-0">
+      <div className="rounded-xl border border-border/70 bg-card p-3 sm:p-4 space-y-3 shadow-xs">
         <div className="flex flex-wrap items-center justify-between gap-3">
-          <div className="flex items-center gap-2.5">
-            <div className="size-8 rounded-lg bg-indigo-500/10 border border-indigo-500/30 flex items-center justify-center text-indigo-400">
+          <div className="flex items-center gap-2.5 min-w-0">
+            <div className="size-8 rounded-lg bg-indigo-500/10 border border-indigo-500/30 flex items-center justify-center text-indigo-400 shrink-0">
               <Layers className="size-4" />
             </div>
-            <div>
-              <h2 className="text-sm font-bold text-foreground">Simulasi Alur Kerja Sistem (Workflow Engine)</h2>
-              <p className="text-xs text-muted-foreground">
-                Menguji eksekusi transaksi multi-tahap secara berurutan sesuai alur bisnis flowchart
+            <div className="min-w-0">
+              <h2 className="text-xs sm:text-sm font-bold text-foreground truncate">Alur Kerja API</h2>
+              <p className="text-[11px] sm:text-xs text-muted-foreground truncate">
+                Uji eksekusi transaksi berantai multi-tahap.
               </p>
             </div>
           </div>
@@ -85,7 +85,7 @@ export function WorkflowSimulator({ initialSteps }: WorkflowSimulatorProps) {
               disabled={isRunningAll}
               size="sm"
               variant="outline"
-              className="h-8 text-xs gap-1.5 px-3 cursor-pointer border-border/70"
+              className="h-7.5 text-xs gap-1.5 px-2.5 sm:px-3 cursor-pointer border-border/70"
             >
               <RotateCcw className="size-3.5" />
               <span>Reset</span>
@@ -95,18 +95,18 @@ export function WorkflowSimulator({ initialSteps }: WorkflowSimulatorProps) {
               onClick={handleRunAll}
               disabled={isRunningAll || steps.length === 0}
               size="sm"
-              className="h-8 text-xs gap-1.5 px-3.5 bg-indigo-600 hover:bg-indigo-700 text-white cursor-pointer font-medium"
+              className="h-7.5 text-xs gap-1.5 px-3 bg-indigo-600 hover:bg-indigo-700 text-white cursor-pointer font-medium"
             >
               {isRunningAll ? <Loader2 className="size-3.5 animate-spin" /> : <Play className="size-3.5 fill-current" />}
-              <span>{isRunningAll ? 'Simulasi Berjalan...' : 'Jalankan Semua'}</span>
+              <span>{isRunningAll ? 'Memproses...' : 'Jalankan'}</span>
             </Button>
           </div>
         </div>
 
         <div className="flex items-center gap-3 text-xs text-muted-foreground border-t border-border/60 pt-3">
-          <div className="flex items-center gap-1.5">
+          <div className="flex items-center gap-1.5 shrink-0 text-[11px] sm:text-xs">
             <span className="font-semibold text-foreground">{successCount}</span> dari{' '}
-            <span className="font-semibold text-foreground">{steps.length}</span> langkah selesai
+            <span className="font-semibold text-foreground">{steps.length}</span> selesai
           </div>
           <div className="flex-1 h-1.5 bg-muted rounded-full overflow-hidden">
             <div
@@ -124,13 +124,13 @@ export function WorkflowSimulator({ initialSteps }: WorkflowSimulatorProps) {
           return (
             <div
               key={step.id}
-              className="rounded-xl border border-border/70 bg-card overflow-hidden shadow-xs transition-all"
+              className="rounded-xl border border-border/70 bg-card overflow-hidden shadow-xs transition-all min-w-0"
             >
               <div
                 onClick={() => setExpandedStepId(isExpanded ? '' : step.id)}
-                className="p-3.5 flex items-center justify-between gap-3 cursor-pointer hover:bg-muted/20 transition-colors"
+                className="p-3 sm:p-3.5 flex items-center justify-between gap-2.5 cursor-pointer hover:bg-muted/20 transition-colors"
               >
-                <div className="flex items-center gap-3 min-w-0">
+                <div className="flex items-center gap-2.5 min-w-0">
                   <div className="shrink-0">
                     {step.status === 'idle' && <Circle className="size-4 text-muted-foreground" />}
                     {step.status === 'running' && <Loader2 className="size-4 text-indigo-400 animate-spin" />}
@@ -139,8 +139,8 @@ export function WorkflowSimulator({ initialSteps }: WorkflowSimulatorProps) {
                   </div>
 
                   <div className="flex items-center gap-2 flex-wrap min-w-0">
-                    <span className="text-xs font-bold text-muted-foreground">Langkah {step.order}:</span>
-                    <span className="text-xs font-semibold text-foreground truncate">{step.title}</span>
+                    <span className="text-[11px] sm:text-xs font-bold text-muted-foreground">Langkah {step.order}:</span>
+                    <span className="text-xs sm:text-xs font-semibold text-foreground truncate">{step.title}</span>
                     <Badge variant="outline" className="text-[10px] font-mono px-1.5 py-0 h-4 border-border/70">
                       {step.method} {step.endpoint}
                     </Badge>
@@ -149,8 +149,8 @@ export function WorkflowSimulator({ initialSteps }: WorkflowSimulatorProps) {
 
                 <div className="flex items-center gap-2 shrink-0">
                   {step.result && (
-                    <span className="text-[11px] font-mono text-emerald-400 font-semibold">
-                      {step.result.status} OK ({step.result.latencyMs}ms)
+                    <span className="text-[11px] font-mono text-emerald-400 font-semibold hidden sm:inline">
+                      {step.result.status} ({step.result.latencyMs}ms)
                     </span>
                   )}
 
@@ -162,7 +162,7 @@ export function WorkflowSimulator({ initialSteps }: WorkflowSimulatorProps) {
                       e.stopPropagation();
                       handleRunSingleStep(step.id);
                     }}
-                    className="h-7 text-[11px] px-2.5 cursor-pointer border-border/70"
+                    className="h-6.5 text-[11px] px-2.5 cursor-pointer border-border/70"
                   >
                     Uji
                   </Button>
@@ -172,22 +172,22 @@ export function WorkflowSimulator({ initialSteps }: WorkflowSimulatorProps) {
               </div>
 
               {isExpanded && (
-                <div className="p-3.5 border-t border-border/60 bg-background/50 space-y-3">
+                <div className="p-3 sm:p-3.5 border-t border-border/60 bg-background/50 space-y-3">
                   <p className="text-xs text-muted-foreground leading-relaxed">{step.description}</p>
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                    <div className="space-y-1">
+                    <div className="space-y-1 min-w-0">
                       <span className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider block">
-                        Payload Masuk
+                        Payload
                       </span>
                       <pre className="p-2.5 rounded-lg border border-border/60 bg-card font-mono text-[11px] leading-relaxed overflow-x-auto custom-scrollbar select-text max-h-48">
                         {JSON.stringify(step.requestPayload, null, 2)}
                       </pre>
                     </div>
 
-                    <div className="space-y-1">
+                    <div className="space-y-1 min-w-0">
                       <span className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider block">
-                        Respon Simulasi
+                        Respon
                       </span>
                       {step.result ? (
                         <pre className="p-2.5 rounded-lg border border-border/60 bg-card font-mono text-[11px] leading-relaxed overflow-x-auto custom-scrollbar select-text max-h-48 text-emerald-300">
@@ -195,7 +195,7 @@ export function WorkflowSimulator({ initialSteps }: WorkflowSimulatorProps) {
                         </pre>
                       ) : (
                         <div className="p-4 rounded-lg border border-border/60 bg-card/40 text-center text-xs text-muted-foreground">
-                          Belum dieksekusi. Klik "Uji" untuk mensimulasikan langkah ini.
+                          Belum dieksekusi.
                         </div>
                       )}
                     </div>

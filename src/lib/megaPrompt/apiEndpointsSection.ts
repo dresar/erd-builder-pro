@@ -9,9 +9,10 @@ export function getApiEndpointsSection(projectName: string, dbmlSource: string):
   }
 
   const endpointList = tableNames.length > 0 ? tableNames : [
-    'users', 'profiles', 'campuses', 'students', 'guardians', 'psb_registrants',
-    'academic_classes', 'dormitories', 'rooms', 'fee_types', 'invoices', 'payments', 'audit_logs'
+    'users', 'organizations', 'members', 'projects', 'items', 'invoices', 'payments', 'audit_logs'
   ];
+
+  const primaryEntity = endpointList.find(t => !['users', 'audit_logs', 'organizations'].includes(t)) || 'items';
 
   const crudDoc = endpointList.map((t, idx) => {
     const title = t.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
@@ -61,18 +62,18 @@ Sistem "${projectName}" WAJIB menyediakan implementasi RESTful API terstandarisa
 
 2. ATURAN HEADERS WAJIB:
 - Authorization: Bearer <jwt_access_token> (Wajib pada seluruh private route)
-- X-Tenant-Id / X-Campus-Id: <uuid> (Wajib untuk isolasi multi-tenant)
+- X-Tenant-Id: <uuid> (Wajib untuk isolasi multi-tenant)
 - Content-Type: application/json
-- Idempotency-Key: <uuid> (Wajib pada transaksi finansial / pembayaran)
+- Idempotency-Key: <uuid> (Wajib pada transaksi finansial / mutasi data)
 
 3. INVENTARIS ENDPOINTS CRUD LENGKAP TIAP TABEL:
 ${crudDoc}
 
 4. ENDPOINTS ALUR TRANSAKSI & WORKFLOW ENGINE (SIMULASI SISTEM):
-- POST /api/v1/auth/login -> Autentikasi sesi & penerbitan refresh token.
-- POST /api/v1/psb/registrants/submit -> Validasi berkas & pendaftaran calon santri baru.
-- POST /api/v1/payments/generate-va -> Pembuatan Virtual Account payment gateway otomatis.
-- POST /api/v1/webhooks/payment-gateway -> Callback settlement pembayaran same-day.
-- PUT /api/v1/students/enroll -> Aktivasi status santri aktif & alokasi asrama/kelas.
+- POST /api/v1/auth/login -> Autentikasi sesi & penerbitan token akses.
+- POST /api/v1/${primaryEntity}/submit -> Validasi dan pembuatan data entitas utama.
+- POST /api/v1/payments/generate-va -> Pembuatan transaksi payment gateway otomatis.
+- POST /api/v1/webhooks/payment-gateway -> Callback settlement pembayaran.
+- PUT /api/v1/${primaryEntity}/activate -> Aktivasi status aktif entitas.
 `;
 }

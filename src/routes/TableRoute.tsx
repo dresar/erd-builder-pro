@@ -65,27 +65,62 @@ export function TableRoute() {
 
   const prdNotes = React.useMemo(() => {
     if (!hasActiveProjects) return [];
-    return (notes || []).filter((n: any) => n.title?.startsWith('[PRD] ') && n.project_id && activeIds.has(String(n.project_id)));
+    const seen = new Set<string>();
+    return (notes || []).filter((n: any) => {
+      if (!n || !n.title?.startsWith('[PRD] ') || !n.project_id || !activeIds.has(String(n.project_id))) return false;
+      const key = String(n.uid ?? n.id);
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    });
   }, [notes, hasActiveProjects, activeIds]);
 
   const regularNotes = React.useMemo(() => {
     if (!hasActiveProjects) return [];
-    return (notes || []).filter((n: any) => !n.title?.startsWith('[PRD] ') && n.project_id && activeIds.has(String(n.project_id)));
+    const seen = new Set<string>();
+    return (notes || []).filter((n: any) => {
+      if (!n || n.title?.startsWith('[PRD] ') || !n.project_id || !activeIds.has(String(n.project_id))) return false;
+      const key = String(n.uid ?? n.id);
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    });
   }, [notes, hasActiveProjects, activeIds]);
 
   const validDiagrams = React.useMemo(() => {
     if (!hasActiveProjects) return [];
-    return (diagrams || []).filter((d: any) => d.project_id && activeIds.has(String(d.project_id)));
+    const seen = new Set<string>();
+    return (diagrams || []).filter((d: any) => {
+      if (!d || !d.project_id || !activeIds.has(String(d.project_id))) return false;
+      const key = String(d.uid ?? d.id);
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    });
   }, [diagrams, hasActiveProjects, activeIds]);
 
   const validDrawings = React.useMemo(() => {
     if (!hasActiveProjects) return [];
-    return (drawings || []).filter((d: any) => d.project_id && activeIds.has(String(d.project_id)));
+    const seen = new Set<string>();
+    return (drawings || []).filter((d: any) => {
+      if (!d || !d.project_id || !activeIds.has(String(d.project_id))) return false;
+      const key = String(d.uid ?? d.id);
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    });
   }, [drawings, hasActiveProjects, activeIds]);
 
   const validFlowcharts = React.useMemo(() => {
     if (!hasActiveProjects) return [];
-    return (flowcharts || []).filter((f: any) => f.project_id && activeIds.has(String(f.project_id)));
+    const seen = new Set<string>();
+    return (flowcharts || []).filter((f: any) => {
+      if (!f || !f.project_id || !activeIds.has(String(f.project_id))) return false;
+      const key = String(f.uid ?? f.id);
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    });
   }, [flowcharts, hasActiveProjects, activeIds]);
 
   switch (feature) {

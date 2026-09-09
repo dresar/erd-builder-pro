@@ -190,8 +190,8 @@ export const FlowchartTableView = React.memo(function FlowchartTableView({
               <TableRow>
                 <TableCell colSpan={cols.length} className="h-32 text-center text-muted-foreground">
                   {totalFlowcharts === 0
-                    ? 'Belum ada flowchart. Buat flowchart pertama Anda untuk memulai.'
-                    : 'Tidak ada flowchart pada halaman ini.'}
+                    ? 'Belum ada alur.'
+                    : 'Tidak ada alur.'}
                 </TableCell>
               </TableRow>
             ) : (

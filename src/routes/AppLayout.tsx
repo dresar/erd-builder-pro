@@ -431,26 +431,27 @@ function AppLayoutInner() {
   useEffect(() => {
     const pageTitle = (() => {
       // If there's an active file open, always use its name
-      if (activeFileName) return `${activeFileName} | ERD Builder Pro`;
+      if (activeFileName) return `${activeFileName} | PRD PRO`;
 
-      // Derive title from route
       const path = location.pathname;
-      if (path === '/') return `Dashboard | ERD Builder Pro`;
-      if (path === '/trash') return `Trash | ERD Builder Pro`;
-      if (path === '/table/db-client') return `DB Client | ERD Builder Pro`;
+      if (path === '/') return `Dashboard | PRD PRO`;
+      if (path === '/trash') return `Trash | PRD PRO`;
+      if (path === '/table/db-client') return `DB Client | PRD PRO`;
       if (path.startsWith('/table/')) {
         const label = breadcrumbLabel || featureLabel || 'Tables';
-        return `${label} | ERD Builder Pro`;
+        return `${label} | PRD PRO`;
       }
-      // Editor routes without a loaded file yet — show type label
-      if (path.startsWith('/notes/')) return `Notes | ERD Builder Pro`;
-      if (path.startsWith('/diagrams/')) return `${searchParams.get('feature') === 'db-client' ? 'DB Client' : 'Diagram'} | ERD Builder Pro`;
-      if (path.startsWith('/db-client/')) return `${breadcrumbLabel || 'DB Client'} | ERD Builder Pro`;
-      if (path.startsWith('/flowcharts/')) return `Flowchart | ERD Builder Pro`;
-      if (path.startsWith('/drawings/')) return `Drawing | ERD Builder Pro`;
+      if (path.startsWith('/api-explorer') || path.startsWith('/api')) return `API | PRD PRO`;
+      if (path.startsWith('/agent-generator')) return `Agent | PRD PRO`;
+      if (path.startsWith('/ai-generator')) return `AI | PRD PRO`;
+      if (path.startsWith('/notes/')) return `Notes | PRD PRO`;
+      if (path.startsWith('/prd/')) return `PRD | PRD PRO`;
+      if (path.startsWith('/diagrams/')) return `${searchParams.get('feature') === 'db-client' ? 'DB Client' : 'Diagram'} | PRD PRO`;
+      if (path.startsWith('/db-client/')) return `${breadcrumbLabel || 'DB Client'} | PRD PRO`;
+      if (path.startsWith('/flowcharts/')) return `Flowchart | PRD PRO`;
+      if (path.startsWith('/drawings/')) return `Drawing | PRD PRO`;
 
-      // 404 / unknown routes
-      return `ERD Builder Pro`;
+      return `PRD PRO`;
     })();
     document.title = pageTitle;
   }, [activeFileName, featureLabel, breadcrumbLabel, location.pathname, searchParams]);

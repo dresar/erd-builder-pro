@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { Play, RotateCcw, Check, Sparkles, Clock, Globe, ArrowRight } from 'lucide-react';
+import { Play, RotateCcw, Sparkles, Clock, Globe, Plus, Trash2, Server } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { ApiEndpoint, HttpMethod, SimulationResult } from '@/lib/api-engine/types';
-import { simulateApiCall } from '@/lib/api-engine/apiSimulator';
+import { simulateApiCall, executeRealApiCall } from '@/lib/api-engine/apiSimulator';
 import { CodeSnippetViewer } from './CodeSnippetViewer';
 
 interface EndpointTesterProps {
@@ -21,11 +21,16 @@ const METHOD_BADGES: Record<HttpMethod, string> = {
 export function EndpointTester({ endpoint }: EndpointTesterProps) {
   const [activeReqTab, setActiveReqTab] = useState<'params' | 'headers' | 'body'>('body');
   const [activeResTab, setActiveResTab] = useState<'body' | 'headers'>('body');
-  const [headers, setHeaders] = useState<Record<string, string>>({
-    'Content-Type': 'application/json',
-    'Authorization': 'Bearer pes_live_9824f19b02a8',
-    'X-Campus-Id': '550e8400-e29b-41d4-a716-446655440000',
+  const [serverMode, setServerMode] = useState<'live' | 'sandbox'>('live');
+  const [baseUrl, setBaseUrl] = useState<string>(() => {
+    return localStorage.getItem('prd_pro_api_base_url') || 'http://localhost:3000';
   });
+
+  const [headerList, setHeaderList] = useState<Array<{ key: string; value: string }>>([
+    { key: 'Content-Type', value: 'application/json' },
+    { key: 'Authorization', value: 'Bearer {{token}}' },
+  ]);
+
   const [queryParams, setQueryParams] = useState<Record<string, string>>({
     page: '1',
     limit: '10',
@@ -33,7 +38,7 @@ export function EndpointTester({ endpoint }: EndpointTesterProps) {
     order: 'desc',
     q: '',
   });
-  const [pathParam, setPathParam] = useState<string>('550e8400-e29b-41d4-a716-446655440000');
+  const [pathParam, setPathParam] = useState<string>('1');
   const [requestBodyText, setRequestBodyText] = useState<string>('');
   const [isExecuting, setIsExecuting] = useState<boolean>(false);
   const [result, setResult] = useState<SimulationResult | null>(null);
@@ -52,6 +57,11 @@ export function EndpointTester({ endpoint }: EndpointTesterProps) {
     }
   }, [endpoint]);
 
+  const handleBaseUrlChange = (val: string) => {
+    setBaseUrl(val);
+    localStorage.setItem('prd_pro_api_base_url', val);
+  };
+
   const handleExecute = async () => {
     setIsExecuting(true);
     let parsedBody: any = undefined;
@@ -63,14 +73,29 @@ export function EndpointTester({ endpoint }: EndpointTesterProps) {
       }
     }
 
+    const headersMap: Record<string, string> = {};
+    for (const h of headerList) {
+      if (h.key.trim()) headersMap[h.key.trim()] = h.value;
+    }
+
     try {
-      const res = await simulateApiCall(endpoint, {
-        headers,
-        queryParams,
-        body: parsedBody,
-        pathParam,
-      });
-      setResult(res);
+      if (serverMode === 'live') {
+        const res = await executeRealApiCall(baseUrl, endpoint, {
+          headers: headersMap,
+          queryParams,
+          body: parsedBody,
+          pathParam,
+        });
+        setResult(res);
+      } else {
+        const res = await simulateApiCall(endpoint, {
+          headers: headersMap,
+          queryParams,
+          body: parsedBody,
+          pathParam,
+        });
+        setResult(res);
+      }
     } finally {
       setIsExecuting(false);
     }
@@ -82,26 +107,86 @@ export function EndpointTester({ endpoint }: EndpointTesterProps) {
     }
   };
 
+  const handleAddHeader = () => {
+    setHeaderList(prev => [...prev, { key: '', value: '' }]);
+  };
+
+  const handleUpdateHeader = (index: number, key: string, value: string) => {
+    setHeaderList(prev => {
+      const next = [...prev];
+      next[index] = { key, value };
+      return next;
+    });
+  };
+
+  const handleRemoveHeader = (index: number) => {
+    setHeaderList(prev => prev.filter((_, i) => i !== index));
+  };
+
   const methodColor = METHOD_BADGES[endpoint.method] || 'bg-muted text-foreground';
 
+  const headersObject = headerList.reduce<Record<string, string>>((acc, cur) => {
+    if (cur.key.trim()) acc[cur.key.trim()] = cur.value;
+    return acc;
+  }, {});
+
   return (
-    <div className="flex-1 flex flex-col gap-4 overflow-y-auto custom-scrollbar p-4 lg:p-6 min-h-0">
-      <div className="rounded-xl border border-border/70 bg-card p-4 space-y-2 shadow-xs">
-        <div className="flex items-center gap-2.5 flex-wrap">
-          <span className={`text-xs font-bold px-2 py-0.5 rounded-md border uppercase tracking-wider ${methodColor}`}>
-            {endpoint.method}
-          </span>
-          <span className="font-mono text-sm font-semibold text-foreground">{endpoint.path}</span>
-          <Badge variant="outline" className="text-[10px] px-2 py-0 h-5 border-border/70 text-muted-foreground">
-            {endpoint.tableTitle}
-          </Badge>
+    <div className="flex-1 flex flex-col gap-4 overflow-y-auto custom-scrollbar p-3 sm:p-4 lg:p-6 min-h-0">
+      <div className="rounded-xl border border-border/70 bg-card p-3 sm:p-4 space-y-3 shadow-xs">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
+          <div className="flex items-center gap-2 flex-wrap min-w-0">
+            <span className={`text-xs font-bold px-2 py-0.5 rounded-md border uppercase tracking-wider ${methodColor}`}>
+              {endpoint.method}
+            </span>
+            <span className="font-mono text-xs sm:text-sm font-semibold text-foreground break-all">{endpoint.path}</span>
+            <Badge variant="outline" className="text-[10px] px-2 py-0 h-5 border-border/70 text-muted-foreground">
+              {endpoint.tableTitle}
+            </Badge>
+          </div>
+
+          <div className="flex items-center gap-1.5 p-1 bg-muted/30 rounded-lg border border-border/60 self-start sm:self-auto shrink-0">
+            <button
+              type="button"
+              onClick={() => setServerMode('live')}
+              className={`flex items-center gap-1 px-2.5 py-1 text-xs rounded-md font-medium transition-all cursor-pointer ${
+                serverMode === 'live' ? 'bg-background text-foreground shadow-xs font-semibold' : 'text-muted-foreground hover:text-foreground'
+              }`}
+            >
+              <Server className="size-3 text-emerald-400" />
+              <span>Live HTTP</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => setServerMode('sandbox')}
+              className={`flex items-center gap-1 px-2.5 py-1 text-xs rounded-md font-medium transition-all cursor-pointer ${
+                serverMode === 'sandbox' ? 'bg-background text-foreground shadow-xs font-semibold' : 'text-muted-foreground hover:text-foreground'
+              }`}
+            >
+              <Globe className="size-3 text-indigo-400" />
+              <span>Sandbox</span>
+            </button>
+          </div>
         </div>
+
+        {serverMode === 'live' && (
+          <div className="flex items-center gap-2 pt-1 border-t border-border/50 flex-wrap sm:flex-nowrap">
+            <span className="text-[11px] font-medium text-muted-foreground shrink-0">Target URL:</span>
+            <input
+              type="text"
+              value={baseUrl}
+              onChange={e => handleBaseUrlChange(e.target.value)}
+              placeholder="http://localhost:3000"
+              className="flex-1 min-w-[200px] text-xs h-7.5 px-2.5 font-mono rounded-md border border-border/70 bg-background text-foreground focus:outline-none focus:ring-1 focus:ring-indigo-500"
+            />
+          </div>
+        )}
+
         <p className="text-xs text-muted-foreground leading-relaxed">{endpoint.description}</p>
       </div>
 
       <div className="grid grid-cols-1 xl:grid-cols-2 gap-4 items-start">
-        <div className="rounded-xl border border-border/70 bg-card overflow-hidden shadow-xs space-y-0">
-          <div className="flex items-center justify-between px-3.5 py-2 border-b border-border/60 bg-muted/20">
+        <div className="rounded-xl border border-border/70 bg-card overflow-hidden shadow-xs space-y-0 min-w-0">
+          <div className="flex items-center justify-between px-3 py-2 border-b border-border/60 bg-muted/20 flex-wrap gap-2">
             <div className="flex items-center gap-1">
               {['POST', 'PUT', 'PATCH'].includes(endpoint.method) && (
                 <button
@@ -111,7 +196,7 @@ export function EndpointTester({ endpoint }: EndpointTesterProps) {
                     activeReqTab === 'body' ? 'bg-background text-foreground shadow-xs font-semibold' : 'text-muted-foreground hover:text-foreground'
                   }`}
                 >
-                  Body JSON
+                  Body
                 </button>
               )}
               <button
@@ -141,7 +226,6 @@ export function EndpointTester({ endpoint }: EndpointTesterProps) {
                   size="sm"
                   variant="outline"
                   className="h-7 text-[11px] gap-1 px-2 cursor-pointer border-border/70"
-                  title="Reset ke mock data awal"
                 >
                   <RotateCcw className="size-3" />
                   <span>Reset</span>
@@ -176,12 +260,13 @@ export function EndpointTester({ endpoint }: EndpointTesterProps) {
                 {endpoint.path.includes(':') && (
                   <div>
                     <label className="text-[11px] font-medium text-muted-foreground block mb-1">
-                      Path Parameter (ID / UUID)
+                      ID
                     </label>
                     <input
                       type="text"
                       value={pathParam}
                       onChange={e => setPathParam(e.target.value)}
+                      placeholder="1"
                       className="w-full text-xs h-8 px-2.5 font-mono rounded-md border border-border/70 bg-card text-foreground focus:outline-none focus:ring-1 focus:ring-indigo-500"
                     />
                   </div>
@@ -189,11 +274,11 @@ export function EndpointTester({ endpoint }: EndpointTesterProps) {
 
                 <div className="space-y-2">
                   <span className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider block">
-                    Query Parameters
+                    Query
                   </span>
                   {endpoint.params.filter(p => p.in === 'query').map(p => (
                     <div key={p.name} className="flex items-center gap-2">
-                      <span className="w-24 text-xs font-mono text-foreground shrink-0">{p.name}</span>
+                      <span className="w-24 text-xs font-mono text-foreground shrink-0 truncate">{p.name}</span>
                       <input
                         type="text"
                         value={queryParams[p.name] ?? ''}
@@ -209,15 +294,43 @@ export function EndpointTester({ endpoint }: EndpointTesterProps) {
 
             {activeReqTab === 'headers' && (
               <div className="space-y-2">
-                {Object.entries(headers).map(([k, v]) => (
-                  <div key={k} className="flex items-center gap-2">
-                    <span className="w-36 text-xs font-mono text-muted-foreground shrink-0 truncate">{k}</span>
+                <div className="flex items-center justify-between pb-1">
+                  <span className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider">
+                    Header
+                  </span>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={handleAddHeader}
+                    className="h-6 text-[10px] gap-1 px-2 border-border/70 cursor-pointer"
+                  >
+                    <Plus className="size-2.5" />
+                    <span>Tambah</span>
+                  </Button>
+                </div>
+                {headerList.map((h, i) => (
+                  <div key={i} className="flex items-center gap-1.5">
                     <input
                       type="text"
-                      value={v}
-                      onChange={e => setHeaders({ ...headers, [k]: e.target.value })}
-                      className="flex-1 text-xs h-7.5 px-2 font-mono rounded border border-border/70 bg-card text-foreground focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                      value={h.key}
+                      onChange={e => handleUpdateHeader(i, e.target.value, h.value)}
+                      placeholder="Header"
+                      className="w-1/3 min-w-[90px] text-xs h-7 px-2 font-mono rounded border border-border/70 bg-card text-foreground focus:outline-none focus:ring-1 focus:ring-indigo-500"
                     />
+                    <input
+                      type="text"
+                      value={h.value}
+                      onChange={e => handleUpdateHeader(i, h.key, e.target.value)}
+                      placeholder="Nilai"
+                      className="flex-1 min-w-[100px] text-xs h-7 px-2 font-mono rounded border border-border/70 bg-card text-foreground focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => handleRemoveHeader(i)}
+                      className="p-1 text-muted-foreground hover:text-rose-400 transition-colors cursor-pointer"
+                    >
+                      <Trash2 className="size-3.5" />
+                    </button>
                   </div>
                 ))}
               </div>
@@ -225,10 +338,10 @@ export function EndpointTester({ endpoint }: EndpointTesterProps) {
           </div>
         </div>
 
-        <div className="rounded-xl border border-border/70 bg-card overflow-hidden shadow-xs space-y-0">
-          <div className="flex items-center justify-between px-3.5 py-2 border-b border-border/60 bg-muted/20">
+        <div className="rounded-xl border border-border/70 bg-card overflow-hidden shadow-xs space-y-0 min-w-0">
+          <div className="flex items-center justify-between px-3 py-2 border-b border-border/60 bg-muted/20">
             <div className="flex items-center gap-2">
-              <span className="text-xs font-semibold text-foreground">Respon Simulasi</span>
+              <span className="text-xs font-semibold text-foreground">Respon</span>
               {result && (
                 <Badge
                   variant="outline"
@@ -244,16 +357,14 @@ export function EndpointTester({ endpoint }: EndpointTesterProps) {
             </div>
 
             {result && (
-              <div className="flex items-center gap-2 text-[11px] text-muted-foreground">
-                <span className="flex items-center gap-1">
-                  <Clock className="size-3 text-indigo-400" />
-                  {result.latencyMs}ms
-                </span>
+              <div className="flex items-center gap-1 text-[11px] text-muted-foreground">
+                <Clock className="size-3 text-indigo-400" />
+                <span>{result.latencyMs}ms</span>
               </div>
             )}
           </div>
 
-          <div className="p-3 bg-background/40 min-h-[280px]">
+          <div className="p-3 bg-background/40 min-h-[260px]">
             {result ? (
               <div className="space-y-2">
                 <div className="flex rounded-md border border-border/60 p-0.5 w-fit bg-card">
@@ -264,7 +375,7 @@ export function EndpointTester({ endpoint }: EndpointTesterProps) {
                       activeResTab === 'body' ? 'bg-background font-semibold text-foreground shadow-xs' : 'text-muted-foreground'
                     }`}
                   >
-                    Payload JSON
+                    Payload
                   </button>
                   <button
                     type="button"
@@ -273,32 +384,29 @@ export function EndpointTester({ endpoint }: EndpointTesterProps) {
                       activeResTab === 'headers' ? 'bg-background font-semibold text-foreground shadow-xs' : 'text-muted-foreground'
                     }`}
                   >
-                    Headers
+                    Header
                   </button>
                 </div>
 
                 {activeResTab === 'body' ? (
                   <pre className="p-3 rounded-lg border border-border/60 bg-card font-mono text-xs leading-relaxed overflow-x-auto custom-scrollbar select-text max-h-80">
-                    {JSON.stringify(result.data, null, 2)}
+                    {typeof result.data === 'string' ? result.data : JSON.stringify(result.data, null, 2)}
                   </pre>
                 ) : (
-                  <div className="p-3 rounded-lg border border-border/60 bg-card font-mono text-xs space-y-1.5">
+                  <div className="p-3 rounded-lg border border-border/60 bg-card font-mono text-xs space-y-1.5 max-h-80 overflow-y-auto custom-scrollbar">
                     {Object.entries(result.headers).map(([k, v]) => (
                       <div key={k} className="flex gap-2">
-                        <span className="text-muted-foreground font-semibold">{k}:</span>
-                        <span className="text-foreground">{v}</span>
+                        <span className="text-muted-foreground font-semibold shrink-0">{k}:</span>
+                        <span className="text-foreground break-all">{v}</span>
                       </div>
                     ))}
                   </div>
                 )}
               </div>
             ) : (
-              <div className="flex flex-col items-center justify-center h-64 text-center text-muted-foreground p-4 space-y-2">
-                <Globe className="size-8 text-muted-foreground/40 stroke-1" />
-                <p className="text-xs">Klik tombol "Kirim" untuk menjalankan simulasi panggilan API.</p>
-                <p className="text-[11px] text-muted-foreground/70">
-                  Data yang dikirim akan tersimpan pada state simulasi sesi ini.
-                </p>
+              <div className="flex flex-col items-center justify-center h-56 text-center text-muted-foreground p-4 space-y-1.5">
+                <Globe className="size-7 text-muted-foreground/30 stroke-1" />
+                <p className="text-xs text-muted-foreground">Belum ada respon.</p>
               </div>
             )}
           </div>
@@ -308,9 +416,9 @@ export function EndpointTester({ endpoint }: EndpointTesterProps) {
       <div className="space-y-2 pt-2">
         <h3 className="text-xs font-bold text-foreground uppercase tracking-wider flex items-center gap-1.5">
           <Sparkles className="size-3.5 text-indigo-400" />
-          <span>Contoh Kode Klien</span>
+          <span>Klien API</span>
         </h3>
-        <CodeSnippetViewer endpoint={endpoint} headers={headers} body={requestBodyText} />
+        <CodeSnippetViewer endpoint={endpoint} headers={headersObject} body={requestBodyText} />
       </div>
     </div>
   );

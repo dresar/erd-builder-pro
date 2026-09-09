@@ -72,8 +72,15 @@ export function mergeProjectFiles(...groups: WorkspaceFile[][]): WorkspaceFile[]
   for (const group of groups) {
     for (const file of group) {
       const existing = map.get(file.uid)
-      if (!existing || (existing.type === 'notes' && file.type === 'prd')) {
+      if (!existing) {
         map.set(file.uid, file)
+      } else {
+        map.set(file.uid, {
+          ...existing,
+          ...file,
+          title: file.title || existing.title,
+          type: (existing.type === 'notes' && file.type === 'prd') ? 'prd' : (file.type || existing.type),
+        })
       }
     }
   }

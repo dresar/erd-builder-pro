@@ -190,9 +190,17 @@ export function ApiExplorerRoute() {
   };
 
   if (!projectSlug) {
-    const filteredProjects = !searchProjectQuery.trim()
+    const rawList = !searchProjectQuery.trim()
       ? projects
       : projects.filter(p => (p.name || '').toLowerCase().includes(searchProjectQuery.toLowerCase()));
+
+    const seenIds = new Set<string>();
+    const filteredProjects = rawList.filter(p => {
+      const key = String(p.uid || p.id);
+      if (seenIds.has(key)) return false;
+      seenIds.add(key);
+      return true;
+    });
 
     return (
       <div className="flex-1 flex flex-col gap-4 p-4 sm:p-6 overflow-y-auto custom-scrollbar max-w-6xl mx-auto w-full">
@@ -202,8 +210,8 @@ export function ApiExplorerRoute() {
               <Code2 className="size-5" />
             </div>
             <div>
-              <h1 className="text-base font-semibold text-foreground">API Explorer &amp; Simulator</h1>
-              <p className="text-xs text-muted-foreground">Pilih proyek untuk menguji CRUD dan mensimulasikan alur kerja API</p>
+              <h1 className="text-base font-semibold text-foreground">API Explorer</h1>
+              <p className="text-xs text-muted-foreground">Pilih proyek untuk menguji CRUD dan alur kerja API</p>
             </div>
           </div>
 
@@ -264,7 +272,7 @@ export function ApiExplorerRoute() {
                   variant="outline"
                   className="w-full h-7.5 text-xs font-medium cursor-pointer group-hover:bg-indigo-600 group-hover:text-white group-hover:border-indigo-600 transition-all"
                 >
-                  Buka API
+                  Buka
                 </Button>
               </div>
             );
@@ -328,7 +336,7 @@ export function ApiExplorerRoute() {
             className="h-8 gap-1.5 px-3 text-xs bg-indigo-600 hover:bg-indigo-700 text-white cursor-pointer"
           >
             <Users className="size-3.5" />
-            <span>Generator Agen</span>
+            <span>Agen</span>
           </Button>
         </div>
       </div>
@@ -350,7 +358,7 @@ export function ApiExplorerRoute() {
               <EndpointTester endpoint={selectedEndpoint} />
             ) : (
               <div className="flex-1 flex items-center justify-center text-xs text-muted-foreground">
-                Pilih endpoint dari bilah sisi untuk mulai menguji.
+                Pilih endpoint.
               </div>
             )
           ) : (

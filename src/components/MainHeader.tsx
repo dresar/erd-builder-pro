@@ -1,7 +1,7 @@
 import React from 'react';
 import { useLocation } from 'react-router-dom';
 import { SidebarTrigger } from "@/components/ui/sidebar";
-import { CloudOff, Cloud, Save, Check, Loader2 } from 'lucide-react';
+import { CloudOff, Cloud, Save, Check, Loader2, Search } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { ShareModal } from "./modals/ShareModal";
@@ -105,9 +105,23 @@ export const MainHeader = React.memo(({
         )}
       </div>
 
-      <div className="flex-1 flex items-center justify-center px-2">
+      <div className="flex-1 flex items-center justify-center max-w-sm px-2">
+        <button
+          type="button"
+          onClick={() => window.dispatchEvent(new CustomEvent('open-global-search'))}
+          className="flex h-7.5 items-center gap-2 rounded-lg border border-border/60 bg-muted/30 hover:bg-muted/60 px-2.5 text-xs text-muted-foreground transition-all cursor-pointer w-full justify-between shadow-2xs"
+          title="Cari (Ctrl+K)"
+        >
+          <div className="flex items-center gap-1.5 min-w-0 truncate">
+            <Search className="size-3.5 shrink-0" />
+            <span className="truncate">Cari</span>
+          </div>
+          <kbd className="hidden sm:inline-block rounded border border-border/60 bg-background/80 px-1.5 py-0.5 text-[10px] font-medium text-muted-foreground shrink-0">
+            {isMac ? '⌘K' : 'Ctrl K'}
+          </kbd>
+        </button>
         {!isOnline && !isPublicView ? (
-          <div className="hidden md:flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-destructive/10 border border-destructive/20 text-destructive text-[10px] font-semibold">
+          <div className="hidden lg:flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-destructive/10 border border-destructive/20 text-destructive text-[10px] font-semibold shrink-0 ml-2">
             <div className="size-1.5 rounded-full bg-destructive animate-pulse" />
             <span>Offline</span>
           </div>

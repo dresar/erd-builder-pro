@@ -171,25 +171,23 @@ export function AboutDialog({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-sm bg-background border-border/40 shadow-2xl">
-        <DialogTitle className="sr-only">About ERD Builder Pro</DialogTitle>
+        <DialogTitle className="sr-only">About PRD PRO</DialogTitle>
         <DialogDescription className="sr-only">
           Application information and credits.
         </DialogDescription>
 
         <div className="flex flex-col items-center py-6 gap-4">
-          {/* App Icon */}
           <div className="flex items-center justify-center">
             <img
               src="/favicon.png"
-              alt="ERD Builder Pro"
+              alt="PRD PRO"
               className="size-14"
             />
           </div>
 
-          {/* App Name + Version */}
           <div className="text-center">
             <h3 className="text-lg font-semibold text-foreground">
-              ERD Builder Pro
+              PRD PRO
             </h3>
             <p className="text-xs text-muted-foreground mt-0.5">
               Version {appVersion}

@@ -262,8 +262,8 @@ export const ErdTableView = React.memo(function ErdTableView({
               <TableRow>
                 <TableCell colSpan={visibleCols.length} className="h-32 text-center text-muted-foreground">
                   {totalDiagrams === 0
-                    ? (isDbClient ? 'Belum ada koneksi database. Hubungkan database untuk memulai.' : 'Belum ada diagram. Buat diagram ERD pertama Anda untuk memulai.')
-                    : (isDbClient ? 'Tidak ada koneksi pada halaman ini.' : 'Tidak ada diagram pada halaman ini.')}
+                    ? (isDbClient ? 'Belum ada koneksi.' : 'Belum ada diagram.')
+                    : (isDbClient ? 'Tidak ada koneksi.' : 'Tidak ada diagram.')}
                 </TableCell>
               </TableRow>
             ) : (

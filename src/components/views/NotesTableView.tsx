@@ -192,8 +192,8 @@ export const NotesTableView = React.memo(function NotesTableView({
               <TableRow>
                 <TableCell colSpan={cols.length} className="h-32 text-center text-muted-foreground">
                   {totalNotes === 0
-                    ? 'Belum ada catatan. Buat catatan pertama Anda untuk memulai.'
-                    : 'Tidak ada catatan pada halaman ini.'}
+                    ? 'Belum ada catatan.'
+                    : 'Tidak ada catatan.'}
                 </TableCell>
               </TableRow>
             ) : (

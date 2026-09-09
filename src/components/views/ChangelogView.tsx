@@ -127,12 +127,9 @@ export function ChangelogView() {
     <div className="flex-1 flex flex-col h-full overflow-hidden bg-background">
       <div className="flex items-center justify-between p-6 border-b bg-muted/20">
         <div className="space-y-1">
-          <h2 className="text-2xl font-bold tracking-tight flex items-center gap-2">
-            <History className="w-6 h-6 text-primary" />
-            What's New
-          </h2>
-          <p className="text-sm text-muted-foreground">
-            Lacak pembaruan dan perubahan terbaru pada ERD Builder Pro.
+          <h2 className="text-xl font-bold tracking-tight">Catatan Rilis</h2>
+          <p className="text-sm text-muted-foreground mt-1">
+            Lacak pembaruan dan perubahan terbaru pada PRD PRO.
           </p>
         </div>
         <Button variant="outline" size="sm" render={<a href={`https://github.com/${GITHUB_REPO}/releases`} target="_blank" rel="noreferrer" />}>

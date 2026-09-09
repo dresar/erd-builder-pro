@@ -65,8 +65,8 @@ export function FeedbackDialog({
           <form onSubmit={handleSubmit} className="flex flex-col max-h-[inherit]">
             <DialogHeader>
               <DialogTitle className="text-xl font-bold">Kirim Masukan</DialogTitle>
-              <DialogDescription className="text-sm text-muted-foreground">
-                Bantu kami membuat ERD Builder Pro jadi lebih baik. Saran Anda sangat berharga!
+              <DialogDescription className="text-xs text-muted-foreground">
+                Bantu kami membuat PRD PRO jadi lebih baik.
               </DialogDescription>
             </DialogHeader>
             <DialogBody className="space-y-5">

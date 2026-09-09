@@ -68,7 +68,7 @@ export function ApiSidebar({
             }`}
           >
             <Database className="size-3" />
-            <span>Katalog CRUD</span>
+            <span>CRUD</span>
           </button>
           <button
             type="button"
@@ -78,7 +78,7 @@ export function ApiSidebar({
             }`}
           >
             <Layers className="size-3" />
-            <span>Simulasi Alur</span>
+            <span>Alur</span>
           </button>
         </div>
 
@@ -97,7 +97,7 @@ export function ApiSidebar({
       <div className="flex-1 overflow-y-auto custom-scrollbar p-2 space-y-3">
         {Object.keys(filteredGroups).length === 0 ? (
           <div className="p-4 text-center text-xs text-muted-foreground">
-            Tidak ada endpoint yang cocok.
+            Tidak ada endpoint.
           </div>
         ) : (
           Object.entries(filteredGroups).map(([tableTitle, list]) => (

@@ -365,10 +365,9 @@ export function DashboardRoute() {
           <div className="size-16 rounded-2xl bg-primary/10 border border-primary/20 flex items-center justify-center mb-5">
             <Sparkles className="size-7 text-primary" />
           </div>
-          <h2 className="text-lg font-semibold text-foreground">Mulai Sekarang</h2>
-          <p className="text-sm text-muted-foreground mt-1.5 max-w-md">
-            Buat dokumen pertama Anda — catatan, ERD, flowchart, atau gambar —
-            dan mulai bangun ruang kerja Anda.
+          <h2 className="text-lg font-semibold text-foreground">Mulai</h2>
+          <p className="text-xs text-muted-foreground mt-1 max-w-md">
+            Pilih dokumen untuk memulai.
           </p>
           <div className="flex flex-wrap justify-center gap-2 mt-5">
             {typeConfig.map((cfg) => (
@@ -378,7 +377,7 @@ export function DashboardRoute() {
                 className={`inline-flex items-center gap-2 rounded-lg border px-4 py-2.5 text-sm font-medium transition-all hover:shadow-sm ${cfg.key === 'diagrams' ? 'border-cyan-400/50' : 'border-border/60'} ${cfg.bg} hover:scale-[1.02]`}
               >
                 <cfg.icon className={`h-4 w-4 ${cfg.color}`} />
-                {cfg.createLabel} Baru
+                {cfg.createLabel}
               </button>
             ))}
           </div>
@@ -391,7 +390,7 @@ export function DashboardRoute() {
             <section className="relative overflow-hidden rounded-xl border border-primary/25 bg-linear-to-br from-primary/10 via-card to-card p-4">
               <div className="relative z-10 flex h-full min-h-32 flex-col justify-between gap-4">
                 <div>
-                  <p className="text-xs font-semibold uppercase tracking-wider text-primary">Lanjutkan Pekerjaan</p>
+                  <p className="text-xs font-semibold uppercase tracking-wider text-primary">Lanjutkan</p>
                   {lastDocument ? (
                     <div className="mt-3 flex items-start gap-2.5">
                       <div className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-background/80 shadow-sm">
@@ -405,14 +404,14 @@ export function DashboardRoute() {
                       </div>
                     </div>
                   ) : (
-                    <h2 className="mt-4 text-xl font-semibold">Buat dokumen pertama Anda</h2>
+                    <h2 className="mt-4 text-base font-semibold text-muted-foreground">Belum ada dokumen</h2>
                   )}
                 </div>
                 <button
                   onClick={() => lastDocument ? navigate(getDocRoute(lastDocument._type, lastDocument)) : createDocument(typeConfig[1])}
                   className="inline-flex h-8 w-fit items-center gap-1.5 rounded-md bg-primary px-3 text-xs font-semibold text-primary-foreground transition-colors hover:bg-primary/90"
                 >
-                  {lastDocument ? 'Buka Dokumen' : 'Buat ERD'}
+                  {lastDocument ? 'Buka' : 'Buat'}
                   <ArrowUpRight className="size-3.5" />
                 </button>
               </div>

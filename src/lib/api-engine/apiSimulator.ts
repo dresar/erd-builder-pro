@@ -236,3 +236,92 @@ export async function executeWorkflowStep(
     timestamp: now,
   };
 }
+
+export async function executeRealApiCall(
+  baseUrl: string,
+  endpoint: ApiEndpoint,
+  requestData: {
+    headers?: Record<string, string>;
+    queryParams?: Record<string, string>;
+    body?: any;
+    pathParam?: string;
+  }
+): Promise<SimulationResult> {
+  const start = performance.now();
+  const cleanBase = baseUrl.replace(/\/+$/, '');
+  let resolvedPath = endpoint.path;
+  if (endpoint.path.includes(':')) {
+    const id = requestData.pathParam || '1';
+    resolvedPath = endpoint.path.replace(/:[a-zA-Z0-9_]+/, encodeURIComponent(id));
+  }
+
+  let finalUrl = `${cleanBase}${resolvedPath}`;
+  if (requestData.queryParams && Object.keys(requestData.queryParams).length > 0) {
+    const qs = new URLSearchParams();
+    for (const [k, v] of Object.entries(requestData.queryParams)) {
+      if (v !== undefined && v !== '') qs.append(k, v);
+    }
+    const queryString = qs.toString();
+    if (queryString) finalUrl += `?${queryString}`;
+  }
+
+  const reqHeaders: Record<string, string> = {
+    'Content-Type': 'application/json',
+    ...(requestData.headers || {}),
+  };
+
+  const options: RequestInit = {
+    method: endpoint.method,
+    headers: reqHeaders,
+  };
+
+  if (['POST', 'PUT', 'PATCH'].includes(endpoint.method) && requestData.body) {
+    options.body = typeof requestData.body === 'string' ? requestData.body : JSON.stringify(requestData.body);
+  }
+
+  try {
+    const res = await fetch(finalUrl, options);
+    const latencyMs = Math.round(performance.now() - start);
+    const resHeaders: Record<string, string> = {};
+    res.headers.forEach((val, key) => {
+      resHeaders[key] = val;
+    });
+
+    let resData: any;
+    const contentType = res.headers.get('content-type') || '';
+    if (contentType.includes('application/json')) {
+      resData = await res.json();
+    } else {
+      resData = await res.text();
+    }
+
+    return {
+      status: res.status,
+      statusText: res.statusText || (res.ok ? 'OK' : 'Error'),
+      latencyMs,
+      headers: resHeaders,
+      data: resData,
+      timestamp: new Date().toISOString(),
+    };
+  } catch (err: any) {
+    const latencyMs = Math.round(performance.now() - start);
+    return {
+      status: 0,
+      statusText: 'Network Error',
+      latencyMs,
+      headers: {
+        'x-error-type': 'FetchException',
+        'x-target-url': finalUrl,
+      },
+      data: {
+        success: false,
+        error: {
+          message: err?.message || 'Gagal menghubungi server target.',
+          targetUrl: finalUrl,
+          hint: 'Pastikan server backend berjalan (misal: http://localhost:3000) dan mengizinkan CORS.',
+        },
+      },
+      timestamp: new Date().toISOString(),
+    };
+  }
+}

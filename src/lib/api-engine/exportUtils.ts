@@ -55,7 +55,7 @@ export function generateOpenApiSpec(projectName: string, domain: string, endpoin
       version: '1.0.0',
     },
     servers: [
-      { url: 'https://api.pesantren.ac.id/api/v1', description: 'Production API Gateway' },
+      { url: 'https://api.example.com/api/v1', description: 'Production Gateway' },
       { url: 'http://localhost:3000/api/v1', description: 'Development Server' },
     ],
     paths,

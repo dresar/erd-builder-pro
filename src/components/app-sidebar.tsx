@@ -162,8 +162,17 @@ export const AppSidebar = React.memo(({
         searchInputRef.current?.select();
       }
     };
+    const handleOpenSearch = () => {
+      setIsSearchOpen(true);
+      searchInputRef.current?.focus();
+      searchInputRef.current?.select();
+    };
     window.addEventListener('keydown', handleShortcut);
-    return () => window.removeEventListener('keydown', handleShortcut);
+    window.addEventListener('open-global-search', handleOpenSearch);
+    return () => {
+      window.removeEventListener('keydown', handleShortcut);
+      window.removeEventListener('open-global-search', handleOpenSearch);
+    };
   }, []);
 
   useEffect(() => {
@@ -275,30 +284,12 @@ export const AppSidebar = React.memo(({
         <TeamSwitcher 
           teams={[
             {
-              name: "ERD Builder Pro",
+              name: "PRD PRO",
               logo: Database,
               plan: "Workspace",
             }
           ]} 
         />
-        <SidebarGroup className="py-0 group-data-[collapsible=icon]:hidden">
-          <SidebarGroupContent className="relative">
-            <button
-              type="button"
-              onClick={() => setIsSearchOpen(true)}
-              disabled={!isOnline}
-              className="flex h-9 w-full items-center gap-2 rounded-lg border border-border/60 bg-background px-2.5 text-left text-sm text-muted-foreground transition-colors hover:border-border hover:bg-accent/40 disabled:pointer-events-none disabled:opacity-50"
-            >
-              <Search className="size-4 shrink-0" />
-              <span className="flex-1">Cari</span>
-              <span className="flex items-center gap-0.5">
-                {searchShortcutKeys.map((key) => (
-                  <kbd key={key} className="rounded border border-border/60 bg-muted/60 px-1.5 py-0.5 text-[10px] font-medium text-muted-foreground">{key}</kbd>
-                ))}
-              </span>
-            </button>
-          </SidebarGroupContent>
-        </SidebarGroup>
         <SidebarGroup className="group-data-[collapsible=icon]:p-0">
           <SidebarGroupLabel className="flex items-center justify-between">
             Fitur
