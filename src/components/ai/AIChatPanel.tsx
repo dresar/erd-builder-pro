@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { Sparkles, Plus, Loader2, Search, ChevronLeft, ChevronRight, ArrowLeft, Bot, History, PanelLeftClose } from 'lucide-react';
 import { useAIChat, EntityContext } from '@/hooks/useAIChat';
-import { AIAction, getActionsForView, grillMeAction, ViewType } from '@/components/ai/AIActions';
+import { AIAction, getActionsForView, grillMeAction, allAIActions, ViewType } from '@/components/ai/AIActions';
 import { useAIAction } from '@/contexts/AIActionContext';
 import { Button } from '@/components/ui/button';
 import ConfirmModal from '@/components/ConfirmModal';
@@ -155,8 +155,15 @@ export const AIChatPanel = ({
     }
   }, [sessions, currentSession, isSessionsLoading, selectSession]);
 
-  // Actions sesuai file fitur yang sedang dibuka (entityType), bukan dari sesi entity_type
-  const actions = [grillMeAction, ...(currentViewType ? getActionsForView(currentViewType) : [])];
+  // Actions: prioritize currentViewType if active, and always include all other tools so user has complete toolset everywhere
+  const actions = useMemo(() => {
+    if (!currentViewType) {
+      return allAIActions;
+    }
+    const viewActions = getActionsForView(currentViewType);
+    const otherActions = allAIActions.filter(a => !viewActions.some(va => va.id === a.id) && a.id !== grillMeAction.id);
+    return [grillMeAction, ...viewActions, ...otherActions];
+  }, [currentViewType]);
   const activeAction = actions.find(action => action.id === activeActionId);
   const planPhase = useMemo(
     () => messages.some(message => message.role === 'assistant' && extractPlanQuestion(message.content)) ? 'follow-up' : 'initial',
@@ -175,11 +182,9 @@ export const AIChatPanel = ({
   }, [pendingPrompt, onPromptUsed]);
 
   const handleSelectAction = useCallback((action: AIAction) => {
-    if (action.requiresEntityContext !== false && (!entityType || !effectiveEntityContextText || !entityTitle)) return;
-
     const context = {
-      content: effectiveEntityContextText,
-      title: entityTitle,
+      content: effectiveEntityContextText || '',
+      title: entityTitle || 'Workspace',
       ...(actionContextData || {}),
     };
     const newPrompt = action.buildPrompt(context);
@@ -196,7 +201,7 @@ export const AIChatPanel = ({
     setActiveActionPrompt(newPrompt);
     setLastActionId(action.id);
     inputRef.current?.focus();
-  }, [entityType, effectiveEntityContextText, entityTitle, actionContextData, activeActionId]);
+  }, [effectiveEntityContextText, entityTitle, actionContextData, activeActionId]);
 
   const handleClearAction = useCallback(() => {
     setActiveActionId(null);
@@ -225,21 +230,20 @@ export const AIChatPanel = ({
         pid = d?.project_id;
       }
     }
-    if (!pid) return [];
     const files: MentionFile[] = [];
 
     for (const n of notes) {
-      if (String(n.project_id) === String(pid) && !n.is_deleted) {
+      if ((!pid || String(n.project_id) === String(pid)) && !n.is_deleted) {
         files.push({ name: n.title || 'Untitled', type: 'note', uid: n.uid ?? String(n.id) });
       }
     }
     for (const d of diagrams) {
-      if (String(d.project_id) === String(pid) && !d.is_deleted) {
+      if ((!pid || String(d.project_id) === String(pid)) && !d.is_deleted) {
         files.push({ name: d.name || 'Untitled', type: 'diagram', uid: d.uid ?? String(d.id) });
       }
     }
     for (const f of flowcharts) {
-      if (String(f.project_id) === String(pid) && !f.is_deleted) {
+      if ((!pid || String(f.project_id) === String(pid)) && !f.is_deleted) {
         files.push({ name: f.title || 'Untitled', type: 'flowchart', uid: f.uid ?? String(f.id) });
       }
     }

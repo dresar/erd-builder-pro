@@ -1,5 +1,29 @@
 import { memo, useState, useRef, useEffect, useCallback, useMemo } from 'react';
-import { Sparkles, Send, StopCircle, SquareTerminal, CircleHelp, Database, Lightbulb, StickyNote, LayoutPanelLeft, Wand2, FileText, Code, GitBranch, FileDown, File, AtSign, ChevronDown, SlidersHorizontal } from 'lucide-react';
+import {
+  Sparkles,
+  Send,
+  StopCircle,
+  SquareTerminal,
+  CircleHelp,
+  Database,
+  Lightbulb,
+  StickyNote,
+  LayoutPanelLeft,
+  Wand2,
+  FileText,
+  Code,
+  GitBranch,
+  FileDown,
+  File,
+  AtSign,
+  ChevronDown,
+  SlidersHorizontal,
+  Zap,
+  FileSearch,
+  AlertTriangle,
+  Check,
+  X,
+} from 'lucide-react';
 import { AIAction, ViewType } from '@/components/ai/AIActions';
 import { Button } from '@/components/ui/button';
 
@@ -12,53 +36,68 @@ interface MentionFile {
 function getActionIcon(actionId: string) {
   switch (actionId) {
     case 'notes-summarize':
-      return <StickyNote className="size-3" />;
+      return <StickyNote className="size-3.5 text-blue-500" />;
     case 'notes-improve-grammar':
-      return <Lightbulb className="size-3" />;
+      return <Lightbulb className="size-3.5 text-amber-500" />;
     case 'notes-generate-docs':
-      return <LayoutPanelLeft className="size-3" />;
+      return <LayoutPanelLeft className="size-3.5 text-indigo-500" />;
     case 'erd-generate-sql':
-      return <Database className="size-3" />;
+      return <Database className="size-3.5 text-emerald-500" />;
     case 'erd-edit-column':
-      return <SquareTerminal className="size-3" />;
+      return <SquareTerminal className="size-3.5 text-emerald-600" />;
     case 'erd-explain-table':
-      return <CircleHelp className="size-3" />;
+      return <CircleHelp className="size-3.5 text-cyan-500" />;
     case 'erd-suggest-indexes':
-      return <SquareTerminal className="size-3" />;
+      return <Zap className="size-3.5 text-yellow-500" />;
     case 'flowchart-generate':
-      return <Wand2 className="size-3" />;
+      return <Wand2 className="size-3.5 text-violet-500" />;
     case 'flowchart-explain':
-      return <FileText className="size-3" />;
+      return <FileText className="size-3.5 text-purple-500" />;
     case 'flowchart-pseudocode':
-      return <Code className="size-3" />;
+      return <Code className="size-3.5 text-fuchsia-500" />;
     case 'flowchart-insert':
-      return <GitBranch className="size-3" />;
+      return <GitBranch className="size-3.5 text-pink-500" />;
     case 'flowchart-import':
-      return <FileDown className="size-3" />;
+      return <FileDown className="size-3.5 text-violet-600" />;
+    case 'db-client-explain-table':
+      return <CircleHelp className="size-3.5 text-sky-500" />;
+    case 'db-client-analyze-query':
+      return <FileSearch className="size-3.5 text-orange-500" />;
+    case 'db-client-generate-query':
+      return <Code className="size-3.5 text-teal-500" />;
+    case 'db-client-suggest-indexes':
+      return <Zap className="size-3.5 text-amber-500" />;
+    case 'db-client-schema-issues':
+      return <AlertTriangle className="size-3.5 text-rose-500" />;
     case 'grill-me':
-      return <CircleHelp className="size-3" />;
+      return <Sparkles className="size-3.5 text-amber-500" />;
     default:
-      return <Sparkles className="size-3" />;
+      return <Sparkles className="size-3.5 text-primary" />;
   }
 }
 
-function getPlaceholder(actionId: string | null | undefined, _hasProject: boolean): string {
+function getPlaceholder(actionId: string | null | undefined, hasProject: boolean): string {
   switch (actionId) {
-    case 'notes-summarize':       return 'Ringkas';
-    case 'notes-improve-grammar': return 'Perbaiki';
-    case 'notes-generate-docs':   return 'Dokumentasi';
-    case 'erd-generate-sql':      return 'Skema';
-    case 'erd-edit-column':       return 'Kolom';
-    case 'erd-explain-table':     return 'Tabel';
-    case 'erd-suggest-indexes':   return 'Indeks';
-    case 'erd-seed-data':         return 'Data';
-    case 'flowchart-generate':    return 'Alur';
-    case 'flowchart-explain':     return 'Alur';
-    case 'flowchart-pseudocode':  return 'Pseudocode';
-    case 'flowchart-insert':      return 'Simbol';
-    case 'flowchart-import':      return 'Proses';
-    case 'grill-me':               return 'Rencana';
-    default:                      return 'Tanya';
+    case 'notes-summarize':       return 'Ringkas catatan...';
+    case 'notes-improve-grammar': return 'Perbaiki tata bahasa...';
+    case 'notes-generate-docs':   return 'Buat format dokumentasi teknis...';
+    case 'erd-generate-sql':      return 'Deskripsikan tabel/skema ERD yang ingin dibuat...';
+    case 'erd-edit-column':       return 'Tentukan kolom yang ingin ditambah atau diubah...';
+    case 'erd-explain-table':     return 'Tanyakan penjelasan tabel atau relasi...';
+    case 'erd-suggest-indexes':   return 'Minta rekomendasi index tabel...';
+    case 'erd-seed-data':         return 'Minta contoh data dummy...';
+    case 'flowchart-generate':    return 'Deskripsikan alur flowchart yang ingin dibuat...';
+    case 'flowchart-explain':     return 'Minta penjelasan langkah-langkah alur flowchart...';
+    case 'flowchart-pseudocode':  return 'Minta pseudocode dari flowchart ini...';
+    case 'flowchart-insert':      return 'Tentukan simbol baru yang ingin disisipkan...';
+    case 'flowchart-import':      return 'Masukkan proses alur untuk diubah ke diagram...';
+    case 'db-client-explain-table': return 'Jelaskan struktur tabel live ini...';
+    case 'db-client-analyze-query': return 'Analisis performa & validitas kueri SQL ini...';
+    case 'db-client-generate-query': return 'Deskripsikan kueri SQL yang ingin dibuat...';
+    case 'db-client-suggest-indexes': return 'Minta rekomendasi index untuk kueri SQL ini...';
+    case 'db-client-schema-issues': return 'Analisis risiko dan inkonsistensi skema DB...';
+    case 'grill-me':               return 'Jelaskan apa yang ingin Anda rencanakan...';
+    default:                      return hasProject ? 'Tanya apa saja... Ketik @ untuk menyebut file' : 'Tanya apa saja ke AI...';
   }
 }
 
@@ -224,22 +263,50 @@ export const ChatInput = memo(function ChatInput({
     return () => document.removeEventListener('mousedown', handleClick);
   }, [toolsOpen]);
 
-  const actionGroup = viewType === 'db-client'
-    ? { primaryId: 'db-client-explain-table', primaryLabel: 'Explain Table', toolsLabel: 'DB Client tools', heading: 'Focused DB Client actions' }
-    : entityType === 'diagram'
-    ? { primaryId: 'erd-generate-sql', primaryLabel: 'Build DBML', toolsLabel: 'ERD tools', heading: 'Focused ERD actions' }
-    : entityType === 'flowchart'
-      ? { primaryId: 'flowchart-generate', primaryLabel: 'Build Flowchart', toolsLabel: 'Flowchart tools', heading: 'Focused Flowchart actions' }
-      : null;
-  const primaryAction = actionGroup ? actions.find(action => action.id === actionGroup.primaryId) : undefined;
   const planAction = actions.find(action => action.id === 'grill-me');
-  const featureActions = actions.filter(action => action.id !== 'grill-me');
-  const toolActions = actionGroup && primaryAction
-    ? [primaryAction, ...featureActions.filter(action => action.id !== actionGroup.primaryId)]
-    : featureActions;
-  const showActions = !isStreaming && toolActions.length > 0;
+  const erdAction = actions.find(action => action.id === 'erd-generate-sql');
+  const flowchartAction = actions.find(action => action.id === 'flowchart-generate');
+  const notesAction = actions.find(action => action.id === 'notes-summarize');
+
+  // Categorize all tools for the comprehensive dropdown
+  const categories = useMemo(() => {
+    const list = [
+      {
+        id: 'plan',
+        title: 'Perencanaan',
+        icon: Sparkles,
+        actions: actions.filter(a => a.id === 'grill-me'),
+      },
+      {
+        id: 'erd',
+        title: 'ERD & Database',
+        icon: Database,
+        actions: actions.filter(a => a.id.startsWith('erd-')),
+      },
+      {
+        id: 'flowchart',
+        title: 'Flowchart & Alur',
+        icon: Wand2,
+        actions: actions.filter(a => a.id.startsWith('flowchart-')),
+      },
+      {
+        id: 'notes',
+        title: 'Catatan & Dokumen',
+        icon: StickyNote,
+        actions: actions.filter(a => a.id.startsWith('notes-')),
+      },
+      {
+        id: 'db-client',
+        title: 'Database Client',
+        icon: SquareTerminal,
+        actions: actions.filter(a => a.id.startsWith('db-client-')),
+      },
+    ];
+    return list.filter(cat => cat.actions.length > 0);
+  }, [actions]);
+
   const activeAction = actions.find(action => action.id === activeActionId);
-  const activeToolAction = toolActions.find(action => action.id === activeActionId);
+  const showActions = !isStreaming && actions.length > 0;
 
   return (
     <div className="shrink-0 border-t bg-background p-3">
@@ -288,24 +355,88 @@ export const ChatInput = memo(function ChatInput({
           </div>
         )}
 
-        <div className="mt-1 flex items-center gap-1">
+        <div className="mt-1 flex items-center gap-1.5 flex-wrap">
           {mentionFiles.length > 0 && (
-            <Button ref={mentionTriggerRef} variant="outline" size="icon-xs" onClick={openMentionPicker} title="Sebut file">
+            <Button
+              ref={mentionTriggerRef}
+              variant="outline"
+              size="icon-xs"
+              className="h-7.5 w-7.5 rounded-md border-border/70 text-muted-foreground hover:text-foreground"
+              onClick={openMentionPicker}
+              title="Sebut file (@)"
+            >
               <AtSign className="size-3.5" />
             </Button>
           )}
+
           {planAction && (
             <Button
               variant={activeActionId === planAction.id ? 'default' : 'outline'}
               size="sm"
-              className="h-7 rounded-full px-2.5 text-xs"
+              className={`h-7.5 rounded-md px-2.5 text-xs font-medium transition-all ${
+                activeActionId === planAction.id
+                  ? 'bg-primary text-primary-foreground shadow-sm'
+                  : 'border-border/70 bg-background/50 hover:bg-muted text-foreground'
+              }`}
               onClick={() => onSelectAction(planAction)}
-              title="Mode rencana"
+              title="Mode rencana & wawancara"
             >
-              <Sparkles data-icon="inline-start" />
+              <Sparkles className="size-3.5 mr-1 text-amber-500" />
               Rencana
             </Button>
           )}
+
+          {erdAction && (
+            <Button
+              variant={activeActionId === erdAction.id ? 'default' : 'outline'}
+              size="sm"
+              className={`h-7.5 rounded-md px-2.5 text-xs font-medium transition-all ${
+                activeActionId === erdAction.id
+                  ? 'bg-primary text-primary-foreground shadow-sm'
+                  : 'border-border/70 bg-background/50 hover:bg-muted text-foreground'
+              }`}
+              onClick={() => onSelectAction(erdAction)}
+              title="Buat skema ERD / DBML"
+            >
+              <Database className="size-3.5 mr-1 text-emerald-500" />
+              ERD
+            </Button>
+          )}
+
+          {flowchartAction && (
+            <Button
+              variant={activeActionId === flowchartAction.id ? 'default' : 'outline'}
+              size="sm"
+              className={`h-7.5 rounded-md px-2.5 text-xs font-medium transition-all ${
+                activeActionId === flowchartAction.id
+                  ? 'bg-primary text-primary-foreground shadow-sm'
+                  : 'border-border/70 bg-background/50 hover:bg-muted text-foreground'
+              }`}
+              onClick={() => onSelectAction(flowchartAction)}
+              title="Buat alur flowchart"
+            >
+              <Wand2 className="size-3.5 mr-1 text-violet-500" />
+              Flowchart
+            </Button>
+          )}
+
+          {notesAction && (
+            <Button
+              variant={activeActionId === notesAction.id ? 'default' : 'outline'}
+              size="sm"
+              className={`h-7.5 rounded-md px-2.5 text-xs font-medium transition-all ${
+                activeActionId === notesAction.id
+                  ? 'bg-primary text-primary-foreground shadow-sm'
+                  : 'border-border/70 bg-background/50 hover:bg-muted text-foreground'
+              }`}
+              onClick={() => onSelectAction(notesAction)}
+              title="Ringkas catatan"
+            >
+              <StickyNote className="size-3.5 mr-1 text-blue-500" />
+              Catatan
+            </Button>
+          )}
+
           {showActions && (
             <details
               ref={toolsRef}
@@ -313,52 +444,126 @@ export const ChatInput = memo(function ChatInput({
               onToggle={(event) => setToolsOpen(event.currentTarget.open)}
               className="group relative"
             >
-              <summary className={`inline-flex list-none items-center gap-1.5 h-7 rounded-full border px-2.5 text-xs font-medium cursor-pointer [&::-webkit-details-marker]:hidden ${
-                activeAction ? 'border-primary/30 bg-primary/10 text-primary' : 'border-border bg-background text-muted-foreground hover:bg-muted'
-              }`}>
-                <SlidersHorizontal className="size-3.5" />
-                <span className="max-w-28 truncate">{activeToolAction?.label || actionGroup?.toolsLabel || 'Alat'}</span>
-                <ChevronDown className="size-3 transition-transform group-open:rotate-180" />
+              <summary
+                className={`inline-flex list-none items-center gap-1.5 h-7.5 rounded-md border px-2.5 text-xs font-medium cursor-pointer transition-all [&::-webkit-details-marker]:hidden ${
+                  activeAction && activeAction.id !== 'grill-me' && activeAction.id !== 'erd-generate-sql' && activeAction.id !== 'flowchart-generate' && activeAction.id !== 'notes-summarize'
+                    ? 'border-primary/50 bg-primary/10 text-primary font-semibold'
+                    : 'border-border/70 bg-background/50 text-muted-foreground hover:text-foreground hover:bg-muted'
+                }`}
+              >
+                <SlidersHorizontal className="size-3.5 text-muted-foreground" />
+                <span className="max-w-32 truncate">
+                  {activeAction && activeAction.id !== 'grill-me' && activeAction.id !== 'erd-generate-sql' && activeAction.id !== 'flowchart-generate' && activeAction.id !== 'notes-summarize'
+                    ? activeAction.label
+                    : `Semua Alat (${actions.length})`}
+                </span>
+                <ChevronDown className="size-3 text-muted-foreground transition-transform group-open:rotate-180" />
               </summary>
-              <div className="absolute bottom-8 left-0 z-50 w-64 rounded-xl border bg-popover p-1.5 shadow-lg">
-                <p className="px-2 py-1 text-[10px] font-medium text-muted-foreground">{actionGroup?.heading || 'Aksi AI'}</p>
+
+              <div className="absolute bottom-9 left-0 z-50 w-72 sm:w-80 max-h-96 overflow-y-auto rounded-xl border border-border bg-popover p-2 shadow-2xl space-y-2">
+                <div className="flex items-center justify-between px-2 py-1 border-b border-border/50">
+                  <div className="flex items-center gap-1.5">
+                    <SlidersHorizontal className="size-3.5 text-primary" />
+                    <span className="text-xs font-semibold text-foreground">Koleksi Alat AI ({actions.length})</span>
+                  </div>
+                  {activeAction && (
+                    <button
+                      onClick={() => {
+                        onClearAction();
+                        setToolsOpen(false);
+                      }}
+                      className="text-[10px] font-medium text-destructive hover:underline flex items-center gap-1"
+                    >
+                      <X className="size-3" />
+                      Reset
+                    </button>
+                  )}
+                </div>
+
+                {/* Option to clear active tool */}
                 <button
                   onClick={() => {
                     onClearAction();
                     setToolsOpen(false);
                   }}
-                  className={`flex w-full items-start gap-2 rounded-lg px-2 py-2 text-left cursor-pointer hover:bg-accent ${!activeAction ? 'bg-accent' : ''}`}
+                  className={`flex w-full items-start gap-2 rounded-lg px-2.5 py-1.5 text-left cursor-pointer transition-colors hover:bg-accent ${
+                    !activeAction ? 'bg-accent/80 font-medium' : ''
+                  }`}
                 >
-                  <SlidersHorizontal className="mt-0.5 size-3 text-muted-foreground" />
-                  <span>
-                    <span className="block text-xs font-medium">Tanpa alat</span>
-                    <span className="block text-[10px] leading-relaxed text-muted-foreground">Percakapan umum tanpa mode khusus.</span>
+                  <SlidersHorizontal className="mt-0.5 size-3.5 text-muted-foreground" />
+                  <span className="min-w-0 flex-1">
+                    <span className="block text-xs font-medium text-foreground">Percakapan Bebas (Tanpa Alat)</span>
+                    <span className="block text-[10px] text-muted-foreground">Tanya jawab umum dengan konteks penuh</span>
                   </span>
+                  {!activeAction && <Check className="size-3.5 text-primary shrink-0 mt-0.5" />}
                 </button>
-                {toolActions.map(action => (
-                  <button
-                    key={action.id}
-                    onClick={() => {
-                      onSelectAction(action);
-                      setToolsOpen(false);
-                    }}
-                    className={`flex w-full items-start gap-2 rounded-lg px-2 py-2 text-left cursor-pointer hover:bg-accent ${activeActionId === action.id ? 'bg-accent' : ''}`}
-                  >
-                    <span className="mt-0.5 text-muted-foreground">{getActionIcon(action.id)}</span>
-                    <span className="min-w-0">
-                      <span className="block text-xs font-medium">{action.label}</span>
-                      <span className="block text-[10px] leading-relaxed text-muted-foreground">{action.description}</span>
-                    </span>
-                  </button>
-                ))}
+
+                {/* Categorized Tool Sections */}
+                {categories.map((category) => {
+                  const CatIcon = category.icon;
+                  return (
+                    <div key={category.id} className="pt-1">
+                      <div className="flex items-center gap-1.5 px-2 py-1 text-[10px] font-bold uppercase tracking-wider text-muted-foreground/70 bg-muted/40 rounded-md mb-1">
+                        <CatIcon className="size-3 text-muted-foreground" />
+                        <span>{category.title}</span>
+                      </div>
+                      <div className="space-y-0.5">
+                        {category.actions.map((action) => {
+                          const isSelected = activeActionId === action.id;
+                          return (
+                            <button
+                              key={action.id}
+                              onClick={() => {
+                                onSelectAction(action);
+                                setToolsOpen(false);
+                              }}
+                              className={`flex w-full items-start gap-2.5 rounded-lg px-2.5 py-1.5 text-left cursor-pointer transition-colors hover:bg-accent ${
+                                isSelected ? 'bg-primary/10 text-primary border border-primary/20' : ''
+                              }`}
+                            >
+                              <span className="mt-0.5 shrink-0">{getActionIcon(action.id)}</span>
+                              <span className="min-w-0 flex-1">
+                                <span className={`block text-xs font-medium ${isSelected ? 'text-primary font-semibold' : 'text-foreground'}`}>
+                                  {action.label}
+                                </span>
+                                <span className="block text-[10px] leading-relaxed text-muted-foreground line-clamp-1">
+                                  {action.description}
+                                </span>
+                              </span>
+                              {isSelected && <Check className="size-3.5 text-primary shrink-0 mt-0.5" />}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
             </details>
           )}
-          <span className="ml-1 text-[10px] text-muted-foreground/50">{isStreaming ? 'Menulis...' : 'Enter untuk kirim'}</span>
+
+          {/* Active Tool Badge if a tool outside quick pills is active */}
+          {activeAction && activeAction.id !== 'grill-me' && activeAction.id !== 'erd-generate-sql' && activeAction.id !== 'flowchart-generate' && activeAction.id !== 'notes-summarize' && (
+            <div className="inline-flex items-center gap-1 h-7.5 rounded-md border border-primary/30 bg-primary/10 px-2 text-xs font-medium text-primary">
+              <span>{getActionIcon(activeAction.id)}</span>
+              <span className="max-w-28 truncate">{activeAction.label}</span>
+              <button
+                onClick={onClearAction}
+                className="ml-0.5 rounded hover:bg-primary/20 p-0.5 cursor-pointer"
+                title="Hapus mode alat"
+              >
+                <X className="size-3" />
+              </button>
+            </div>
+          )}
+
+          <span className="ml-auto text-[10px] text-muted-foreground/60 hidden sm:inline">
+            {isStreaming ? 'Menulis...' : 'Enter untuk kirim'}
+          </span>
           <Button
             variant={isStreaming ? 'outline' : 'default'}
             size="icon"
-            className="ml-auto size-8 rounded-full"
+            className="size-7.5 rounded-md shrink-0 ml-auto sm:ml-0"
             onClick={isStreaming ? onAbort : onSend}
             title={isStreaming ? 'Hentikan' : 'Kirim'}
           >

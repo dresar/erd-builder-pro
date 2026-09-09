@@ -24,3 +24,45 @@ export type ViewType = keyof typeof actionsRegistry;
 export function getActionsForView(view: ViewType): AIAction[] {
   return actionsRegistry[view] || [];
 }
+
+export const allAIActions: AIAction[] = [
+  grillMeAction,
+  ...erdActions,
+  ...flowchartActions,
+  ...notesActions,
+  ...dbClientActions,
+];
+
+export interface ActionCategory {
+  id: string;
+  name: string;
+  actions: AIAction[];
+}
+
+export const actionCategories: ActionCategory[] = [
+  {
+    id: 'plan',
+    name: 'Perencanaan',
+    actions: [grillMeAction],
+  },
+  {
+    id: 'erd',
+    name: 'ERD & Database',
+    actions: erdActions,
+  },
+  {
+    id: 'flowchart',
+    name: 'Flowchart & Alur',
+    actions: flowchartActions,
+  },
+  {
+    id: 'notes',
+    name: 'Catatan & Dokumen',
+    actions: notesActions,
+  },
+  {
+    id: 'db-client',
+    name: 'Database Client',
+    actions: dbClientActions,
+  },
+];
