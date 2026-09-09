@@ -37,6 +37,13 @@ import oauthConsentRouter from "./routes/oauth-consent.js";
 import { createPublicMcpRouter } from "./mcp/public-router.js";
 import { getPublicMcpClientConfig } from "./mcp/public-auth.js";
 import syncRouter from "./routes/sync.js";
+import playgroundRouter from "./routes/playground/index.js";
+import evalRouter from "./routes/eval/index.js";
+import promptTestsRouter from "./routes/prompt-tests/index.js";
+import knowledgeRouter from "./routes/knowledge/index.js";
+import promptVersionsRouter from "./routes/prompt-versions/index.js";
+import promptSecurityRouter from "./routes/prompt-security/index.js";
+import projectHealthRouter from "./routes/project-health/index.js";
 
 const app = express();
 
@@ -379,6 +386,13 @@ app.use("/api", connectionsRouter);
 app.use("/api/storage", storageRouter);
 app.use("/api/entity-changes", entityChangesRouter);
 app.use("/api", syncRouter);
+app.use("/api/playground", playgroundRouter);
+app.use("/api/eval", evalRouter);
+app.use("/api/prompt-tests", promptTestsRouter);
+app.use("/api/knowledge", knowledgeRouter);
+app.use("/api/prompt-versions", promptVersionsRouter);
+app.use("/api/prompt-security", promptSecurityRouter);
+app.use("/api/project-health", projectHealthRouter);
 
 // ── Auto-backup scheduler (desktop mode) ──
 initAutoBackupScheduler().catch((err) => {

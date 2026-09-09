@@ -36,6 +36,11 @@ const ExternalAIRoute = lazy(() => import('./routes/ExternalAIRoute').then(modul
 const AgentGeneratorRoute = lazy(() => import('./routes/AgentGeneratorRoute').then(module => ({ default: module.AgentGeneratorRoute })));
 const AIChatRoute = lazy(() => import('./routes/AIChatRoute').then(module => ({ default: module.AIChatRoute })));
 const ApiExplorerRoute = lazy(() => import('./routes/ApiExplorerRoute').then(module => ({ default: module.ApiExplorerRoute })));
+const PromptPlaygroundRoute = lazy(() => import('./routes/PromptPlaygroundRoute').then(module => ({ default: module.PromptPlaygroundRoute })));
+const PromptEvalRoute = lazy(() => import('./routes/PromptEvalRoute').then(module => ({ default: module.PromptEvalRoute })));
+const ModularPromptBuilderRoute = lazy(() => import('./routes/ModularPromptBuilderRoute').then(module => ({ default: module.ModularPromptBuilderRoute })));
+const KnowledgeBaseRoute = lazy(() => import('./routes/KnowledgeBaseRoute').then(module => ({ default: module.KnowledgeBaseRoute })));
+const ProjectHealthRoute = lazy(() => import('./routes/ProjectHealthRoute').then(module => ({ default: module.ProjectHealthRoute })));
 
 function lazyRoute(element: ReactNode) {
   return <Suspense fallback={<div className="flex flex-1 items-center justify-center text-xs text-muted-foreground">Opening file…</div>}>{element}</Suspense>;
@@ -189,6 +194,15 @@ function AppContent() {
           <Route path="api/:projectSlug" element={lazyRoute(<ApiExplorerRoute />)} />
           <Route path="api-explorer" element={lazyRoute(<ApiExplorerRoute />)} />
           <Route path="api-explorer/:projectSlug" element={lazyRoute(<ApiExplorerRoute />)} />
+
+          {/* AI Platform Routes */}
+          <Route path="playground" element={lazyRoute(<PromptPlaygroundRoute />)} />
+          <Route path="eval" element={lazyRoute(<PromptEvalRoute />)} />
+          <Route path="prompt-builder" element={lazyRoute(<ModularPromptBuilderRoute />)} />
+          <Route path="knowledge" element={lazyRoute(<KnowledgeBaseRoute />)} />
+          <Route path="knowledge/:projectSlug" element={lazyRoute(<KnowledgeBaseRoute />)} />
+          <Route path="project-health" element={lazyRoute(<ProjectHealthRoute />)} />
+          <Route path="project-health/:projectSlug" element={lazyRoute(<ProjectHealthRoute />)} />
 
           {/* Default: Dashboard */}
           <Route index element={<DashboardRoute />} />

@@ -526,4 +526,189 @@ export async function applySchemaMigrations(): Promise<void> {
 
   // v3.1.4+ — normalize old random column ids and keep relationships wired.
   if (isDesktopMode()) await normalizeLegacyColumnIds();
+
+  // AI Platform P0 tables — safe for all DB modes
+  await createPlaygroundTables();
+  await createPromptEvalTables();
+  await createPromptTestTables();
+  await createPromptVersionTables();
+  await createPromptBuilderTables();
+  await createKnowledgeTables();
+}
+
+async function createPlaygroundTables(): Promise<void> {
+  if (!prisma) return;
+  try {
+    await prisma.$executeRawUnsafe(`
+      CREATE TABLE IF NOT EXISTS "playground_sessions" (
+        "id" INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+        "uid" TEXT UNIQUE,
+        "user_id" TEXT NOT NULL,
+        "project_id" INTEGER,
+        "name" TEXT NOT NULL DEFAULT 'Untitled Session',
+        "system_prompt" TEXT,
+        "user_prompt" TEXT NOT NULL DEFAULT '',
+        "models_json" TEXT NOT NULL DEFAULT '[]',
+        "temperature" REAL NOT NULL DEFAULT 0.7,
+        "max_tokens" INTEGER NOT NULL DEFAULT 2048,
+        "response_format" TEXT NOT NULL DEFAULT 'text',
+        "results_json" TEXT NOT NULL DEFAULT '[]',
+        "created_at" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        "updated_at" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+      )`);
+  } catch (err: any) {
+    logger.warn({ err: err?.message }, "Failed to create playground_sessions table (non-fatal)");
+  }
+}
+
+async function createPromptEvalTables(): Promise<void> {
+  if (!prisma) return;
+  try {
+    await prisma.$executeRawUnsafe(`
+      CREATE TABLE IF NOT EXISTS "prompt_evaluations" (
+        "id" INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+        "uid" TEXT UNIQUE,
+        "user_id" TEXT NOT NULL,
+        "prompt_text" TEXT NOT NULL,
+        "system_prompt" TEXT,
+        "overall_score" REAL NOT NULL DEFAULT 0,
+        "eval_results_json" TEXT NOT NULL DEFAULT '{}',
+        "model_used" TEXT,
+        "created_at" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+      )`);
+  } catch (err: any) {
+    logger.warn({ err: err?.message }, "Failed to create prompt_evaluations table (non-fatal)");
+  }
+}
+
+async function createPromptTestTables(): Promise<void> {
+  if (!prisma) return;
+  try {
+    await prisma.$executeRawUnsafe(`
+      CREATE TABLE IF NOT EXISTS "prompt_tests" (
+        "id" INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+        "uid" TEXT UNIQUE,
+        "user_id" TEXT NOT NULL,
+        "project_id" INTEGER,
+        "name" TEXT NOT NULL,
+        "prompt_text" TEXT NOT NULL,
+        "system_prompt" TEXT,
+        "expected_behavior" TEXT NOT NULL DEFAULT '',
+        "forbidden_behavior" TEXT NOT NULL DEFAULT '',
+        "rules_json" TEXT NOT NULL DEFAULT '[]',
+        "threshold" REAL NOT NULL DEFAULT 0.7,
+        "last_status" TEXT NOT NULL DEFAULT 'untested',
+        "last_run_at" DATETIME,
+        "created_at" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        "updated_at" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+      )`);
+    await prisma.$executeRawUnsafe(`
+      CREATE TABLE IF NOT EXISTS "prompt_test_runs" (
+        "id" INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+        "test_id" INTEGER NOT NULL,
+        "prompt_text" TEXT NOT NULL,
+        "model_used" TEXT,
+        "passed" INTEGER NOT NULL DEFAULT 0,
+        "score" REAL,
+        "actual_output" TEXT,
+        "details_json" TEXT NOT NULL DEFAULT '{}',
+        "is_regression" INTEGER NOT NULL DEFAULT 0,
+        "created_at" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        CONSTRAINT "prompt_test_runs_test_id_fkey" FOREIGN KEY ("test_id") REFERENCES "prompt_tests" ("id") ON DELETE CASCADE
+      )`);
+    await prisma.$executeRawUnsafe(`CREATE INDEX IF NOT EXISTS "idx_prompt_test_runs_test" ON "prompt_test_runs"("test_id")`);
+  } catch (err: any) {
+    logger.warn({ err: err?.message }, "Failed to create prompt test tables (non-fatal)");
+  }
+}
+
+async function createPromptVersionTables(): Promise<void> {
+  if (!prisma) return;
+  try {
+    await prisma.$executeRawUnsafe(`
+      CREATE TABLE IF NOT EXISTS "prompt_versions" (
+        "id" INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+        "uid" TEXT UNIQUE,
+        "user_id" TEXT NOT NULL,
+        "project_id" INTEGER,
+        "name" TEXT NOT NULL DEFAULT 'Untitled Prompt',
+        "prompt_text" TEXT NOT NULL DEFAULT '',
+        "system_prompt" TEXT,
+        "variables_json" TEXT NOT NULL DEFAULT '[]',
+        "models_json" TEXT NOT NULL DEFAULT '[]',
+        "version_label" TEXT NOT NULL DEFAULT 'draft',
+        "status" TEXT NOT NULL DEFAULT 'draft',
+        "eval_result_json" TEXT,
+        "security_result_json" TEXT,
+        "created_by" TEXT,
+        "created_at" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        "updated_at" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+      )`);
+    await prisma.$executeRawUnsafe(`CREATE INDEX IF NOT EXISTS "idx_prompt_versions_project" ON "prompt_versions"("project_id")`);
+    await prisma.$executeRawUnsafe(`CREATE INDEX IF NOT EXISTS "idx_prompt_versions_user" ON "prompt_versions"("user_id")`);
+  } catch (err: any) {
+    logger.warn({ err: err?.message }, "Failed to create prompt_versions table (non-fatal)");
+  }
+}
+
+async function createPromptBuilderTables(): Promise<void> {
+  if (!prisma) return;
+  try {
+    await prisma.$executeRawUnsafe(`
+      CREATE TABLE IF NOT EXISTS "prompt_blocks" (
+        "id" INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+        "uid" TEXT UNIQUE,
+        "user_id" TEXT NOT NULL,
+        "project_id" INTEGER,
+        "block_type" TEXT NOT NULL,
+        "label" TEXT NOT NULL,
+        "content" TEXT NOT NULL DEFAULT '',
+        "is_enabled" INTEGER NOT NULL DEFAULT 1,
+        "is_locked" INTEGER NOT NULL DEFAULT 0,
+        "sort_order" INTEGER NOT NULL DEFAULT 0,
+        "created_at" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        "updated_at" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+      )`);
+    await prisma.$executeRawUnsafe(`
+      CREATE TABLE IF NOT EXISTS "prompt_variables" (
+        "id" INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+        "uid" TEXT UNIQUE,
+        "user_id" TEXT NOT NULL,
+        "project_id" INTEGER,
+        "var_key" TEXT NOT NULL,
+        "var_type" TEXT NOT NULL DEFAULT 'string',
+        "default_value" TEXT NOT NULL DEFAULT '',
+        "description" TEXT,
+        "is_required" INTEGER NOT NULL DEFAULT 0,
+        "created_at" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        "updated_at" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+      )`);
+    await prisma.$executeRawUnsafe(`CREATE INDEX IF NOT EXISTS "idx_prompt_blocks_project" ON "prompt_blocks"("project_id", "sort_order")`);
+    await prisma.$executeRawUnsafe(`CREATE INDEX IF NOT EXISTS "idx_prompt_variables_project" ON "prompt_variables"("project_id")`);
+  } catch (err: any) {
+    logger.warn({ err: err?.message }, "Failed to create prompt builder tables (non-fatal)");
+  }
+}
+
+async function createKnowledgeTables(): Promise<void> {
+  if (!prisma) return;
+  try {
+    await prisma.$executeRawUnsafe(`
+      CREATE TABLE IF NOT EXISTS "knowledge_entries" (
+        "id" INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+        "uid" TEXT UNIQUE,
+        "user_id" TEXT NOT NULL,
+        "project_id" INTEGER,
+        "category" TEXT NOT NULL DEFAULT 'general',
+        "title" TEXT NOT NULL,
+        "content" TEXT NOT NULL DEFAULT '',
+        "is_pinned" INTEGER NOT NULL DEFAULT 0,
+        "created_at" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        "updated_at" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+      )`);
+    await prisma.$executeRawUnsafe(`CREATE INDEX IF NOT EXISTS "idx_knowledge_entries_project" ON "knowledge_entries"("project_id")`);
+    await prisma.$executeRawUnsafe(`CREATE INDEX IF NOT EXISTS "idx_knowledge_entries_user" ON "knowledge_entries"("user_id")`);
+  } catch (err: any) {
+    logger.warn({ err: err?.message }, "Failed to create knowledge_entries table (non-fatal)");
+  }
 }

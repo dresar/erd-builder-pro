@@ -20,6 +20,11 @@ import {
   Sparkles,
   Users,
   Braces,
+  Play,
+  FlaskConical,
+  Blocks,
+  BookOpen,
+  Activity,
 } from "lucide-react"
 import { useNavigate, useLocation } from "react-router-dom"
 
@@ -271,6 +276,8 @@ export const AppSidebar = React.memo(({
 
   // Filtered non-deleted projects
   const activeProjects = projects.filter(p => !p.is_deleted);
+  const currentProject = projects.find(p => p.uid === selectedWorkspaceUid || String(p.id) === String(selectedWorkspaceUid));
+  const currentProjectSlug = currentProject?.uid || (currentProject?.id ? String(currentProject.id) : '');
 
   const handleWorkspaceClick = (uid: string | null | undefined, fallbackId?: number | string) => {
     const id = uid ?? (fallbackId != null ? String(fallbackId) : null);
@@ -302,6 +309,65 @@ export const AppSidebar = React.memo(({
         </SidebarGroup>
       </SidebarHeader>
       <SidebarContent>
+        {/* AI Platform section */}
+        <SidebarGroup className="px-4 group-data-[collapsible=icon]:p-2">
+          <SidebarGroupLabel>AI Platform</SidebarGroupLabel>
+          <SidebarGroupContent>
+            <SidebarMenu>
+              <SidebarMenuItem>
+                <SidebarMenuButton
+                  tooltip="Prompt Playground"
+                  isActive={location.pathname === '/playground'}
+                  onClick={() => navigate('/playground')}
+                >
+                  <Play className="h-4 w-4 shrink-0" />
+                  <span>Playground</span>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+              <SidebarMenuItem>
+                <SidebarMenuButton
+                  tooltip="Prompt Eval"
+                  isActive={location.pathname === '/eval'}
+                  onClick={() => navigate('/eval')}
+                >
+                  <FlaskConical className="h-4 w-4 shrink-0" />
+                  <span>Evaluasi</span>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+              <SidebarMenuItem>
+                <SidebarMenuButton
+                  tooltip="Prompt Builder"
+                  isActive={location.pathname === '/prompt-builder'}
+                  onClick={() => navigate('/prompt-builder')}
+                >
+                  <Blocks className="h-4 w-4 shrink-0" />
+                  <span>Builder</span>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+              <SidebarMenuItem>
+                <SidebarMenuButton
+                  tooltip="Basis Pengetahuan"
+                  isActive={location.pathname.startsWith('/knowledge')}
+                  onClick={() => navigate(currentProjectSlug ? `/knowledge/${currentProjectSlug}` : '/knowledge')}
+                >
+                  <BookOpen className="h-4 w-4 shrink-0" />
+                  <span>Knowledge</span>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+              <SidebarMenuItem>
+                <SidebarMenuButton
+                  tooltip="Kesehatan Proyek"
+                  isActive={location.pathname.startsWith('/project-health')}
+                  onClick={() => navigate(currentProjectSlug ? `/project-health/${currentProjectSlug}` : '/project-health')}
+                >
+                  <Activity className="h-4 w-4 shrink-0" />
+                  <span>Kesehatan</span>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
+
         {/* Workspaces section */}
         <SidebarGroup className="px-4 group-data-[collapsible=icon]:p-2">
           <SidebarGroupLabel className="flex items-center justify-between">
