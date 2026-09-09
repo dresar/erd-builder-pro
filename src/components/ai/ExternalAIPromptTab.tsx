@@ -15,6 +15,7 @@ import {
   STRATEGY_PRESETS,
   DOMAIN_PRESETS,
   SCALE_PRESETS,
+  AVAILABLE_MODULES,
 } from './externalPromptTemplates';
 import { ExternalAIDeploymentSection, DeploymentMethod } from './ExternalAIDeploymentSection';
 
@@ -35,6 +36,10 @@ interface ExternalAIPromptTabProps {
   setCustomDeployment: (v: string) => void;
   complianceItems: string[];
   toggleCompliance: (item: string) => void;
+  websiteDescription: string;
+  setWebsiteDescription: (v: string) => void;
+  includedModules: string[];
+  toggleModule: (id: string) => void;
   customNoteContext: string;
   setCustomNoteContext: (v: string) => void;
   customErdContext: string;
@@ -63,6 +68,10 @@ export function ExternalAIPromptTab({
   setCustomDeployment,
   complianceItems,
   toggleCompliance,
+  websiteDescription,
+  setWebsiteDescription,
+  includedModules,
+  toggleModule,
   customNoteContext,
   setCustomNoteContext,
   customErdContext,
@@ -107,7 +116,7 @@ export function ExternalAIPromptTab({
             </FieldLabel>
             <input
               type="text"
-              placeholder="Nama Proyek"
+              placeholder="Nama"
               value={projectName}
               onChange={(e) => setProjectName(e.target.value)}
               className="flex h-8.5 w-full rounded-lg border border-border/60 bg-background px-2.5 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-indigo-500"
@@ -121,17 +130,14 @@ export function ExternalAIPromptTab({
             </FieldLabel>
             <Select value={selectedStrategy} onValueChange={(v) => v && setSelectedStrategy(v as PromptStrategy)}>
               <SelectTrigger className="h-8.5 text-xs bg-background border-border/60">
-                <SelectValue placeholder="Pilih Strategi">
+                <SelectValue placeholder="Pilih">
                   {STRATEGY_PRESETS.find((s) => s.id === selectedStrategy)?.label || 'All-in-One'}
                 </SelectValue>
               </SelectTrigger>
               <SelectContent>
                 {STRATEGY_PRESETS.map((strat) => (
                   <SelectItem key={strat.id} value={strat.id} className="text-xs py-1.5">
-                    <div className="flex items-center gap-2">
-                      <span className="font-medium">{strat.label}</span>
-                      <span className="text-[10px] text-muted-foreground">({strat.badge})</span>
-                    </div>
+                    <span className="font-medium">{strat.label}</span> <span className="text-[10px] text-muted-foreground">({strat.badge})</span>
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -145,7 +151,7 @@ export function ExternalAIPromptTab({
             </FieldLabel>
             <Select value={selectedScale} onValueChange={(v) => v && setSelectedScale(v as any)}>
               <SelectTrigger className="h-8.5 text-xs bg-background border-border/60">
-                <SelectValue placeholder="Pilih Skala">
+                <SelectValue placeholder="Pilih">
                   {SCALE_PRESETS.find((s) => s.id === selectedScale)?.label || '35+ Tabel'}
                 </SelectValue>
               </SelectTrigger>
@@ -166,7 +172,7 @@ export function ExternalAIPromptTab({
             </FieldLabel>
             <Select value={selectedDomain} onValueChange={(v) => v && setSelectedDomain(v)}>
               <SelectTrigger className="h-8.5 text-xs bg-background border-border/60">
-                <SelectValue placeholder="Pilih Domain">
+                <SelectValue placeholder="Pilih">
                   {DOMAIN_PRESETS.find((d) => d.id === selectedDomain)?.label || 'SaaS'}
                 </SelectValue>
               </SelectTrigger>
@@ -182,7 +188,7 @@ export function ExternalAIPromptTab({
               <div className="mt-1.5">
                 <input
                   type="text"
-                  placeholder="Ketik domain khusus..."
+                  placeholder="Domain"
                   value={customDomain}
                   onChange={(e) => setCustomDomain(e.target.value)}
                   className="flex h-8.5 w-full rounded-lg border border-border/60 bg-background px-2.5 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-indigo-500"
@@ -198,6 +204,65 @@ export function ExternalAIPromptTab({
             customDeployment={customDeployment}
             setCustomDeployment={setCustomDeployment}
           />
+        </div>
+
+        {/* Penjelasan Website */}
+        <div className="pt-2 border-t border-border/40 space-y-1.5">
+          <div className="flex items-center justify-between px-1">
+            <FieldLabel className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/70 flex items-center gap-1.5">
+              <span>Penjelasan Website</span>
+              <span title="Uraikan konsep, target pengguna, dan fitur utama website Anda" className="cursor-help text-muted-foreground hover:text-foreground">[i]</span>
+            </FieldLabel>
+            {websiteDescription.trim() && (
+              <button
+                type="button"
+                onClick={() => setWebsiteDescription('')}
+                className="text-[10px] text-muted-foreground hover:text-foreground cursor-pointer"
+              >
+                Reset
+              </button>
+            )}
+          </div>
+          <textarea
+            rows={3}
+            placeholder="Deskripsi"
+            value={websiteDescription}
+            onChange={(e) => setWebsiteDescription(e.target.value)}
+            className="w-full p-2.5 text-xs rounded-lg bg-background border border-border/60 text-foreground resize-y outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500/50 leading-relaxed font-sans"
+          />
+        </div>
+
+        {/* Komponen Output */}
+        <div className="pt-2 border-t border-border/40 space-y-1.5">
+          <div className="flex items-center justify-between px-1">
+            <FieldLabel className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/70 flex items-center gap-1.5">
+              <span>Komponen Output</span>
+              <span title="Pilih modul spesifikasi yang ingin disertakan ke dalam prompt dan output JSON" className="cursor-help text-muted-foreground hover:text-foreground">[i]</span>
+            </FieldLabel>
+            <span className="text-[10px] text-muted-foreground">{includedModules.length} dipilih</span>
+          </div>
+          <div className="flex flex-wrap gap-1.5">
+            {AVAILABLE_MODULES.map((m) => {
+              const isSelected = includedModules.includes(m.id);
+              return (
+                <button
+                  key={m.id}
+                  type="button"
+                  onClick={() => toggleModule(m.id)}
+                  title={m.desc}
+                  className={`px-2.5 py-1 rounded-md border text-xs transition-all cursor-pointer flex items-center gap-1.5 ${
+                    isSelected
+                      ? 'bg-indigo-500/10 border-indigo-500/40 text-indigo-400 font-semibold ring-1 ring-indigo-500/20'
+                      : 'bg-muted/10 border-border/40 text-muted-foreground hover:bg-muted/20'
+                  }`}
+                >
+                  <span>{isSelected ? '✓' : '+'}</span>
+                  <span>{m.label}</span>
+                  <span className="text-[9px] opacity-70">({m.badge})</span>
+                </button>
+              );
+            })}
+          </div>
         </div>
 
         {/* Keamanan & Kepatuhan */}
@@ -249,11 +314,7 @@ export function ExternalAIPromptTab({
                 defaultValue=""
               >
                 <option value="" disabled>Pilih Catatan</option>
-                {notes.map((n) => (
-                  <option key={n.uid || n.id} value={n.uid || n.id}>
-                    {n.title || 'Catatan'}
-                  </option>
-                ))}
+                {notes.map((n) => <option key={n.uid || n.id} value={n.uid || n.id}>{n.title || 'Catatan'}</option>)}
               </select>
             )}
           </div>
@@ -281,11 +342,7 @@ export function ExternalAIPromptTab({
                     defaultValue=""
                   >
                     <option value="" disabled>Pilih ERD</option>
-                    {diagrams.map((d) => (
-                      <option key={d.uid || d.id} value={d.uid || d.id}>
-                        {d.name || 'Diagram'}
-                      </option>
-                    ))}
+                    {diagrams.map((d) => <option key={d.uid || d.id} value={d.uid || d.id}>{d.name || 'Diagram'}</option>)}
                   </select>
                 )}
               </div>
@@ -320,7 +377,7 @@ export function ExternalAIPromptTab({
             className="h-7.5 gap-1.5 px-3 text-xs bg-indigo-600 hover:bg-indigo-700 text-white cursor-pointer rounded-lg shadow-sm"
           >
             {copied ? <Check className="size-3.5" /> : <Copy className="size-3.5" />}
-            <span>{copied ? '✓ Disalin' : 'Salin Prompt'}</span>
+            <span>{copied ? '✓ Disalin' : 'Salin'}</span>
           </Button>
         </div>
 

@@ -124,7 +124,7 @@ export function ExternalAIImportTab({
           className="relative"
         >
           <textarea
-            placeholder="Tempel JSON atau seret berkas ke sini..."
+            placeholder="JSON"
             value={rawJson}
             onChange={(e) => {
               setRawJson(e.target.value);
@@ -154,7 +154,7 @@ export function ExternalAIImportTab({
           <span className="text-xs font-semibold text-foreground">Analisis</span>
           
           {parsedData ? (
-            <div className="grid grid-cols-3 gap-2">
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
               <div className="p-2 rounded-lg border border-border/30 bg-background flex items-center gap-2">
                 <FileText className={`size-3.5 ${parsedData.prd ? 'text-emerald-500' : 'text-muted-foreground'}`} />
                 <div className="truncate">
@@ -181,6 +181,16 @@ export function ExternalAIImportTab({
                   <p className="text-xs font-bold truncate">Alur</p>
                   <p className="text-[10px] text-muted-foreground truncate">
                     {parsedData.flowchart?.nodes?.length ? `✓ ${parsedData.flowchart.nodes.length} node` : '–'}
+                  </p>
+                </div>
+              </div>
+
+              <div className="p-2 rounded-lg border border-border/30 bg-background flex items-center gap-2">
+                <FileCode className={`size-3.5 ${parsedData.api?.endpoints?.length ? 'text-purple-400' : 'text-muted-foreground'}`} />
+                <div className="truncate">
+                  <p className="text-xs font-bold truncate">API</p>
+                  <p className="text-[10px] text-muted-foreground truncate">
+                    {parsedData.api?.endpoints?.length ? `✓ ${parsedData.api.endpoints.length} rute` : '–'}
                   </p>
                 </div>
               </div>

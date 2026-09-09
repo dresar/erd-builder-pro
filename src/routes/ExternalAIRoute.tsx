@@ -45,11 +45,21 @@ export function ExternalAIRoute() {
     'Soft Deletes (deleted_at)',
     'Multi-Tenant Data Isolation'
   ]);
+  const [websiteDescription, setWebsiteDescription] = useState('');
+  const [includedModules, setIncludedModules] = useState<string[]>(['prd', 'erd', 'flowchart', 'api']);
   const [customNoteContext, setCustomNoteContext] = useState('');
   const [customErdContext, setCustomErdContext] = useState('');
 
   const [rawJson, setRawJson] = useState('');
   const [targetMode, setTargetMode] = useState<'new_project' | 'current_project'>('new_project');
+
+  const toggleModule = (modId: string) => {
+    setIncludedModules(prev =>
+      prev.includes(modId)
+        ? prev.length > 1 ? prev.filter(m => m !== modId) : prev
+        : [...prev, modId]
+    );
+  };
 
   const generatedPrompt = useMemo(() => {
     const domainLabel = selectedDomain === 'custom' 
@@ -66,11 +76,13 @@ export function ExternalAIRoute() {
       architectureStyle,
       compliance: complianceItems,
       techStack: techStack.trim(),
+      websiteDescription: websiteDescription.trim(),
+      includedModules,
       existingNotesContext: customNoteContext.trim(),
       existingErdContext: customErdContext.trim(),
     };
     return generateExternalAIPrompt(config);
-  }, [selectedStrategy, projectName, selectedDomain, customDomain, selectedScale, deploymentMethod, customDeployment, architectureStyle, techStack, complianceItems, customNoteContext, customErdContext]);
+  }, [selectedStrategy, projectName, selectedDomain, customDomain, selectedScale, deploymentMethod, customDeployment, architectureStyle, techStack, complianceItems, websiteDescription, includedModules, customNoteContext, customErdContext]);
 
   const handleCopyPrompt = async () => {
     try {
@@ -134,12 +146,26 @@ export function ExternalAIRoute() {
           }
         }
 
-        if (prdObj || erdObj || fcObj) {
+        const rawApi = parsed.api ?? parsed.endpoints ?? parsed.rest_api;
+        let apiObj: ParsedExternalBundle['api'] | undefined;
+        if (rawApi && typeof rawApi === 'object') {
+          const endpoints = Array.isArray(rawApi.endpoints) ? rawApi.endpoints : (Array.isArray(rawApi) ? rawApi : []);
+          if (endpoints.length > 0) {
+            apiObj = {
+              title: rawApi.title || `API - ${projName || 'Sistem'}`,
+              base_url: rawApi.base_url || '/api/v1',
+              endpoints,
+            };
+          }
+        }
+
+        if (prdObj || erdObj || fcObj || apiObj) {
           return {
             project: { name: projName || 'Proyek Enterprise' },
             prd: prdObj,
             erd: erdObj,
             flowchart: fcObj,
+            api: apiObj,
           };
         }
       }
@@ -196,6 +222,7 @@ export function ExternalAIRoute() {
         handleSidebarPrdCreate,
         handleSidebarFlowchartCreate,
         handleSidebarDiagramCreate,
+        handleSidebarNoteCreate,
         handleDiagramSelect,
         handleViewChange,
         onClose: () => {
@@ -309,6 +336,10 @@ export function ExternalAIRoute() {
             setCustomDeployment={setCustomDeployment}
             complianceItems={complianceItems}
             toggleCompliance={toggleCompliance}
+            websiteDescription={websiteDescription}
+            setWebsiteDescription={setWebsiteDescription}
+            includedModules={includedModules}
+            toggleModule={toggleModule}
             customNoteContext={customNoteContext}
             setCustomNoteContext={setCustomNoteContext}
             customErdContext={customErdContext}

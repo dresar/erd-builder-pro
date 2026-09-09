@@ -226,3 +226,5 @@ Detection: `isDesktopMode()`, `isLocalPostgres()`, `useLocalAuth()`. Supabase au
 - Global 401 interceptor in `main.tsx` — respects `API_BASE_URL` prefix
 - `res.on("close")` (not `req.on("close")`) for AI proxy — req fires too early
 - Seed AI providers on every server startup (`seedAIProviders()`)
+- AI Generator Prompting: Always include explicit top-level JSON keys (e.g. `"api"`, `"prd"`, `"erd"`, `"flowchart"`) in the output schema template; LLMs omit modules missing from the example schema
+- UI/UX Microcopy: Form placeholders must strictly be 1 word (e.g. `Deskripsi`, `Nama`, `Domain`, `Tabel`); buttons max 1-2 words; zero filler text

@@ -16,4 +16,9 @@ export interface ParsedExternalBundle {
     nodes?: any[];
     edges?: any[];
   };
+  api?: {
+    title?: string;
+    base_url?: string;
+    endpoints?: any[];
+  };
 }

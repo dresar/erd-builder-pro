@@ -16,6 +16,7 @@ export interface ApplyExternalBundleParams {
   handleSidebarPrdCreate: (title: string, projectId?: string | null, content?: string, options?: { silent?: boolean }) => Promise<any>;
   handleSidebarFlowchartCreate: (title: string, projectId?: string | null, data?: string, options?: { silent?: boolean }) => Promise<any>;
   handleSidebarDiagramCreate: (title: string, projectId?: string | null, options?: { silent?: boolean }) => Promise<any>;
+  handleSidebarNoteCreate?: (title: string, projectId?: string | null, content?: string, options?: { silent?: boolean }) => Promise<any>;
   handleDiagramSelect: (id: any) => Promise<any>;
   handleViewChange: (view: any, immediate?: boolean, projectId?: string | null) => Promise<void>;
   onClose: () => void;
@@ -30,6 +31,7 @@ export async function applyExternalBundle({
   handleSidebarPrdCreate,
   handleSidebarFlowchartCreate,
   handleSidebarDiagramCreate,
+  handleSidebarNoteCreate,
   handleDiagramSelect,
   handleViewChange,
   onClose,
@@ -58,6 +60,33 @@ export async function applyExternalBundle({
     localStorage.setItem('pending_prd_content', parsedData.prd.content_markdown);
     localStorage.setItem('pending_note_strategy', 'replace');
     await handleSidebarPrdCreate(cleanPrdTitle, projectId, parsedData.prd.content_markdown, { silent: true });
+  }
+
+  if (parsedData.api?.endpoints && parsedData.api.endpoints.length > 0 && handleSidebarNoteCreate) {
+    toast.info('Menyimpan Kontrak API...');
+    const apiTitle = parsedData.api.title || `API - ${effectiveName}`;
+    const baseUrl = parsedData.api.base_url || '/api/v1';
+
+    let apiMarkdown = `# ${apiTitle}\n\n`;
+    apiMarkdown += `**Base URL**: \`${baseUrl}\`\n\n`;
+    apiMarkdown += `## Daftar Endpoint REST\n\n`;
+
+    parsedData.api.endpoints.forEach((ep, idx) => {
+      apiMarkdown += `### ${idx + 1}. [${ep.method.toUpperCase()}] \`${ep.path}\`\n`;
+      apiMarkdown += `**Ringkasan**: ${ep.summary}\n\n`;
+      if (ep.description) {
+        apiMarkdown += `**Deskripsi**: ${ep.description}\n\n`;
+      }
+      if (ep.request_body && Object.keys(ep.request_body).length > 0) {
+        apiMarkdown += `**Request Body**:\n\`\`\`json\n${JSON.stringify(ep.request_body, null, 2)}\n\`\`\`\n\n`;
+      }
+      if (ep.responses && Object.keys(ep.responses).length > 0) {
+        apiMarkdown += `**Responses**:\n\`\`\`json\n${JSON.stringify(ep.responses, null, 2)}\n\`\`\`\n\n`;
+      }
+      apiMarkdown += `---\n\n`;
+    });
+
+    await handleSidebarNoteCreate(apiTitle, projectId, apiMarkdown, { silent: true });
   }
 
   if (parsedData.flowchart?.nodes && parsedData.flowchart.nodes.length > 0) {
