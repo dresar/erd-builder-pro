@@ -238,17 +238,17 @@ export function DashboardRoute() {
 
   const projectsWithCounts = useMemo(() => {
     const matchPid = (item: any, p: any) => {
-      const pid = String(item.project_id ?? item.projectId ?? item.workspace?.id ?? '');
-      return pid === String(p.id) || (p.uid && pid === String(p.uid));
+      const pid = String(item.project_id ?? item.projectId ?? item.workspace?.id ?? item.project?.id ?? '');
+      return (p.id && pid === String(p.id)) || (p.uid && pid === String(p.uid));
     };
     return (ctx.projects || [])
       .filter((p: any) => !p.is_deleted)
       .map((p: any) => {
-        const notesCount = (ctx.notes || []).filter(n => !n.is_deleted && matchPid(n, p)).length;
-        const diagramsCount = (ctx.diagrams || []).filter(d => !d.is_deleted && !isDbClientDiagram(d) && matchPid(d, p)).length;
-        const drawingsCount = (ctx.drawings || []).filter(d => !d.is_deleted && matchPid(d, p)).length;
-        const flowchartsCount = (ctx.flowcharts || []).filter(f => !f.is_deleted && matchPid(f, p)).length;
-        const total = notesCount + diagramsCount + drawingsCount + flowchartsCount;
+        const notesCount = p.notes_count ?? (ctx.notes || []).filter(n => !n.is_deleted && matchPid(n, p)).length;
+        const diagramsCount = p.diagrams_count ?? (ctx.diagrams || []).filter(d => !d.is_deleted && !isDbClientDiagram(d) && matchPid(d, p)).length;
+        const drawingsCount = p.drawings_count ?? (ctx.drawings || []).filter(d => !d.is_deleted && matchPid(d, p)).length;
+        const flowchartsCount = p.flowcharts_count ?? (ctx.flowcharts || []).filter(f => !f.is_deleted && matchPid(f, p)).length;
+        const total = p.files_count ?? (notesCount + diagramsCount + drawingsCount + flowchartsCount);
         return {
           ...p,
           notesCount,

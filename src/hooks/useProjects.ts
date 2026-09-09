@@ -43,13 +43,24 @@ export function useProjects(isGuest: boolean = false) {
       }));
       if (searchQuery) filteredProjects = filteredProjects.filter(p => p.name.toLowerCase().includes(searchQuery.toLowerCase()));
 
-      const projectsWithFiles = filteredProjects.map(p => ({
-        ...p,
-        diagrams: uDiagrams.filter(f => !f.is_deleted && (String(f.project_id) === String(p.id) || String(f.project_id) === String(p.uid))),
-        notes: uNotes.filter(f => !f.is_deleted && (String(f.project_id) === String(p.id) || String(f.project_id) === String(p.uid))),
-        drawings: uDrawings.filter(f => !f.is_deleted && (String(f.project_id) === String(p.id) || String(f.project_id) === String(p.uid))),
-        flowcharts: uFlowcharts.filter(f => !f.is_deleted && (String(f.project_id) === String(p.id) || String(f.project_id) === String(p.uid))),
-      }));
+      const projectsWithFiles = filteredProjects.map(p => {
+        const pDiag = uDiagrams.filter(f => !f.is_deleted && (String(f.project_id) === String(p.id) || String(f.project_id) === String(p.uid)));
+        const pNotes = uNotes.filter(f => !f.is_deleted && (String(f.project_id) === String(p.id) || String(f.project_id) === String(p.uid)));
+        const pDrawings = uDrawings.filter(f => !f.is_deleted && (String(f.project_id) === String(p.id) || String(f.project_id) === String(p.uid)));
+        const pFlowcharts = uFlowcharts.filter(f => !f.is_deleted && (String(f.project_id) === String(p.id) || String(f.project_id) === String(p.uid)));
+        return {
+          ...p,
+          diagrams: pDiag,
+          notes: pNotes,
+          drawings: pDrawings,
+          flowcharts: pFlowcharts,
+          diagrams_count: pDiag.length,
+          notes_count: pNotes.length,
+          drawings_count: pDrawings.length,
+          flowcharts_count: pFlowcharts.length,
+          files_count: pDiag.length + pNotes.length + pDrawings.length + pFlowcharts.length,
+        };
+      });
 
       if (projectsWithFiles.length > 0 || isGuestCheck()) {
         setProjects(projectsWithFiles);

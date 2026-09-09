@@ -93,8 +93,12 @@ export function ApiExplorerRoute() {
       return projectSiblings.diagrams;
     }
     if (!currentProject) return diagrams;
-    const pId = String(currentProject.id || currentProject.uid);
-    return diagrams.filter(d => String(d.project_id || d.projectId) === pId);
+    const pId = String(currentProject.id ?? '');
+    const pUid = currentProject.uid ? String(currentProject.uid) : '';
+    return diagrams.filter(d => {
+      const dPid = String(d.project_id ?? d.projectId ?? d.project?.id ?? d.project?.uid ?? '');
+      return (pId && dPid === pId) || (pUid && dPid === pUid);
+    });
   }, [projectSiblings, diagrams, currentProject]);
 
   const filteredFlowcharts = useMemo(() => {
@@ -102,8 +106,12 @@ export function ApiExplorerRoute() {
       return projectSiblings.flowcharts;
     }
     if (!currentProject) return flowcharts;
-    const pId = String(currentProject.id || currentProject.uid);
-    return flowcharts.filter(f => String(f.project_id || f.projectId) === pId);
+    const pId = String(currentProject.id ?? '');
+    const pUid = currentProject.uid ? String(currentProject.uid) : '';
+    return flowcharts.filter(f => {
+      const fPid = String(f.project_id ?? f.projectId ?? f.project?.id ?? f.project?.uid ?? '');
+      return (pId && fPid === pId) || (pUid && fPid === pUid);
+    });
   }, [projectSiblings, flowcharts, currentProject]);
 
   const dbmlSource = useMemo(() => {
@@ -221,10 +229,18 @@ export function ApiExplorerRoute() {
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 pt-1">
           {filteredProjects.map(proj => {
-            const pId = String(proj.id || proj.uid);
+            const pId = String(proj.id ?? '');
+            const pUid = proj.uid ? String(proj.uid) : '';
             const pSlug = proj.slug || proj.uid || pId;
-            const tableCount = diagrams.filter(d => String(d.project_id || d.projectId) === pId).length;
-            const fcCount = flowcharts.filter(f => String(f.project_id || f.projectId) === pId).length;
+
+            const matchProj = (item: any) => {
+              if (!item) return false;
+              const fPid = String(item.project_id ?? item.projectId ?? item.project?.id ?? item.project?.uid ?? item.workspace?.id ?? '');
+              return (pId && fPid === pId) || (pUid && fPid === pUid);
+            };
+
+            const tableCount = proj.diagrams_count ?? (proj.diagrams?.length || diagrams.filter(matchProj).length);
+            const fcCount = proj.flowcharts_count ?? (proj.flowcharts?.length || flowcharts.filter(matchProj).length);
 
             return (
               <div

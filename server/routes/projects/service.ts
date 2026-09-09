@@ -65,6 +65,21 @@ export async function listProjects(
   const [projects, total] = await Promise.all([
     prisma?.project.findMany({
       where: whereClause,
+      include: {
+        _count: {
+          select: {
+            diagrams: {
+              where: {
+                isDeleted: false,
+                OR: [{ sourceType: null }, { sourceType: { not: "production_db" } }],
+              },
+            },
+            flowcharts: { where: { isDeleted: false } },
+            notes: { where: { isDeleted: false } },
+            drawings: { where: { isDeleted: false } },
+          },
+        },
+      },
       orderBy: { createdAt: "desc" },
       skip: offset,
       take: limit,
@@ -72,11 +87,21 @@ export async function listProjects(
     prisma?.project.count({ where: whereClause }) || Promise.resolve(0),
   ]);
 
-  const projectsWithFiles = (projects || []).map((project: any) => ({
-    ...project,
-    diagrams: [], notes: [], drawings: [], flowcharts: [],
-    files_count: 0,
-  }));
+  const projectsWithFiles = (projects || []).map((project: any) => {
+    const diagCount = project._count?.diagrams ?? 0;
+    const fcCount = project._count?.flowcharts ?? 0;
+    const notesCount = project._count?.notes ?? 0;
+    const dwCount = project._count?.drawings ?? 0;
+    return {
+      ...project,
+      diagrams: [], notes: [], drawings: [], flowcharts: [],
+      diagrams_count: diagCount,
+      flowcharts_count: fcCount,
+      notes_count: notesCount,
+      drawings_count: dwCount,
+      files_count: diagCount + fcCount + notesCount + dwCount,
+    };
+  });
 
   return {
     data: projectsWithFiles,
