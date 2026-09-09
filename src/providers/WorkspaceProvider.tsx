@@ -653,20 +653,51 @@ export function WorkspaceProvider({
     }
   }, [debouncedSearchQuery, fetchProjects, isAuthenticated, isPublicView]);
 
-  // Background delta sync after login — loads only changed items since last sync
+  useEffect(() => {
+    if (!isAuthenticated || isGuest || !userId) return;
+    let cancelled = false;
+    void (async () => {
+      const [cachedProjects, cachedDiagrams, cachedNotes, cachedFlowcharts, cachedDrawings] = await Promise.all([
+        loadFromCache('projects'),
+        loadFromCache('diagrams'),
+        loadFromCache('notes'),
+        loadFromCache('flowcharts'),
+        loadFromCache('drawings'),
+      ]);
+      if (cancelled) return;
+      if (cachedProjects?.length) setProjects(cachedProjects);
+      if (cachedDiagrams?.length) setDiagrams(cachedDiagrams);
+      if (cachedNotes?.length) setNotes(cachedNotes);
+      if (cachedFlowcharts?.length) setFlowcharts(cachedFlowcharts);
+      if (cachedDrawings?.length) setDrawings(cachedDrawings);
+    })();
+    return () => { cancelled = true; };
+  }, [isAuthenticated, isGuest, userId, loadFromCache, setProjects, setDiagrams, setNotes, setFlowcharts, setDrawings]);
+
   useEffect(() => {
     if (!isAuthenticated || isGuest || !userId) return;
     const timer = setTimeout(() => {
       runDeltaSync((entity, items) => {
-        if (entity === 'projects') saveToCache('projects', items);
-        else if (entity === 'diagrams') saveToCache('diagrams', items);
-        else if (entity === 'notes') saveToCache('notes', items);
-        else if (entity === 'flowcharts') saveToCache('flowcharts', items);
-        else if (entity === 'drawings') saveToCache('drawings', items);
+        if (entity === 'projects') {
+          saveToCache('projects', items);
+          setProjects(items);
+        } else if (entity === 'diagrams') {
+          saveToCache('diagrams', items);
+          setDiagrams(items);
+        } else if (entity === 'notes') {
+          saveToCache('notes', items);
+          setNotes(items);
+        } else if (entity === 'flowcharts') {
+          saveToCache('flowcharts', items);
+          setFlowcharts(items);
+        } else if (entity === 'drawings') {
+          saveToCache('drawings', items);
+          setDrawings(items);
+        }
       });
-    }, 2000);
+    }, 1500);
     return () => clearTimeout(timer);
-  }, [isAuthenticated, isGuest, userId, runDeltaSync, saveToCache]);
+  }, [isAuthenticated, isGuest, userId, runDeltaSync, saveToCache, setProjects, setDiagrams, setNotes, setFlowcharts, setDrawings]);
 
   // ── Theme: resolve + apply ──
   // Keep a ref so the mediaQuery change handler never goes stale

@@ -58,20 +58,20 @@ function remapCol(handle: string | null | undefined, colMap: Map<string, string>
 
 import { AIActionProvider, useAIAction } from '@/contexts/AIActionContext';
 import { RightChatSidebar } from '@/components/ai/RightChatSidebar';
-import { DBMLEditorPanel } from '@/components/diagram/DBMLEditorPanel';
+const DBMLEditorPanel = React.lazy(() => import('@/components/diagram/DBMLEditorPanel').then(m => ({ default: m.DBMLEditorPanel })));
 import { ERDTableListPanel } from '@/components/diagram/ERDTableListPanel';
 import PropertiesPanel from '@/components/PropertiesPanel';
 import { VersionHistoryPanel, type HistoryEntityType } from '@/components/history/VersionHistoryPanel';
 import { RepositoryPanel } from '@/components/repository/RepositoryPanel';
-import { applyDBMLMetadata, dbmlToERD, erdToDBML, findMatchingCanvasEdge } from '@/lib/dbml-converter';
 import { closeRepositoryPreview, ERD_REPOSITORY_APPLIED_EVENT } from '@/lib/repository-preview';
 import { getDbClientCache, setDbClientCache } from '@/hooks/useDataViewerHelpers';
 
 // ── Inner component that uses AIAction context ──
 
-function isValidDBMLSource(content: string): boolean {
+async function isValidDBMLSource(content: string): Promise<boolean> {
   if (!content.trim()) return false;
   try {
+    const { dbmlToERD } = await import('@/lib/dbml-converter');
     dbmlToERD(content);
     return true;
   } catch {
@@ -358,7 +358,7 @@ function AppLayoutInner() {
       if (legacyDbml.trim()) {
         dbmlPersistTimerRef.current && clearTimeout(dbmlPersistTimerRef.current);
         dbmlPersistTimerRef.current = setTimeout(async () => {
-          if (!isValidDBMLSource(legacyDbml)) return;
+          if (!await isValidDBMLSource(legacyDbml)) return;
           await saveDiagram(nodes, edges, viewportRef?.current || { x: 0, y: 0, zoom: 1 }, { dbmlSource: legacyDbml });
           if (!isGuest) triggerDebouncedSync();
         }, 300);
@@ -374,7 +374,8 @@ function AppLayoutInner() {
     dbmlPersistTimerRef.current && clearTimeout(dbmlPersistTimerRef.current);
 
     const persist = async () => {
-      if (!isValidDBMLSource(content)) return;
+      if (!await isValidDBMLSource(content)) return;
+      const { applyDBMLMetadata } = await import('@/lib/dbml-converter');
       const metadataNodes = applyDBMLMetadata(nodes, content);
       setNodes(metadataNodes);
       await saveDiagram(metadataNodes, edges, viewportRef?.current || { x: 0, y: 0, zoom: 1 }, { dbmlSource: content });
@@ -403,12 +404,10 @@ function AppLayoutInner() {
       return;
     }
     if (nodes.length === 0) return;
-    try {
+    import('@/lib/dbml-converter').then(({ erdToDBML }) => {
       const dbml = erdToDBML(nodes, edges);
       if (dbml.trim()) handleDBMLContentChange(dbml, true);
-    } catch {
-      // The panel still opens; the regular sync effect will retry after canvas settles.
-    }
+    }).catch(() => {});
   }, [activeDiagram, isActiveDiagramContext, setRightPanelMode, dbmlContent, nodes, edges, handleDBMLContentChange]);
 
   // ── Generate DBML from canvas on the first panel open. Keep the source text
@@ -416,10 +415,10 @@ function AppLayoutInner() {
   // TableGroup) which the canvas does not model completely.
   useEffect(() => {
     if (rightPanelMode === 'dbml' && isActiveDiagramContext && nodes.length > 0 && !dbmlContent.trim()) {
-      try {
+      import('@/lib/dbml-converter').then(({ erdToDBML }) => {
         const dbml = erdToDBML(nodes, edges);
         if (dbml.trim()) handleDBMLContentChange(dbml, true);
-      } catch { /* ignore conversion errors */ }
+      }).catch(() => {});
     }
   }, [rightPanelMode, isActiveDiagramContext, nodes, edges, dbmlContent, handleDBMLContentChange]);
 
@@ -961,17 +960,19 @@ function AppLayoutInner() {
                 {/* ── Tab content ── */}
                 <div className="flex-1 min-h-0">
                   {rightPanelMode === 'dbml' && showDBMLPanel && (
-                    <DBMLEditorPanel
-                      value={dbmlContent}
-                      onChange={handleDBMLContentChange}
-                      onApply={handleDBMLApply}
-                      nodes={nodes}
-                      edges={edges}
-                      onSelectTable={(name) => {
-                        const node = nodes.find(n => n.data.name.toLowerCase() === name.toLowerCase());
-                        if (node) setSelectedNodeId(node.id);
-                      }}
-                    />
+                    <React.Suspense fallback={<div className="p-4 text-xs text-muted-foreground">Memuat editor...</div>}>
+                      <DBMLEditorPanel
+                        value={dbmlContent}
+                        onChange={handleDBMLContentChange}
+                        onApply={handleDBMLApply}
+                        nodes={nodes}
+                        edges={edges}
+                        onSelectTable={(name) => {
+                          const node = nodes.find(n => n.data.name.toLowerCase() === name.toLowerCase());
+                          if (node) setSelectedNodeId(node.id);
+                        }}
+                      />
+                    </React.Suspense>
                   )}
                   {rightPanelMode === 'properties' && !activeDiagramIsProductionDb && (
                     propertiesEntity ? (

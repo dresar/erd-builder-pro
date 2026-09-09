@@ -1,4 +1,4 @@
-const CACHE_NAME = 'prd-pro-cache-v2.0';
+const CACHE_NAME = 'prd-pro-cache-v2.1';
 const API_CACHE_NAME = 'prd-pro-api-v1.0';
 
 const SHELL_ASSETS = [
@@ -93,13 +93,15 @@ self.addEventListener('fetch', (event) => {
     event.respondWith(
       caches.match(event.request).then((cached) => {
         if (cached) return cached;
-        return fetch(event.request).then((res) => {
-          if (res && res.status === 200 && res.type === 'basic') {
-            const clone = res.clone();
-            caches.open(CACHE_NAME).then((c) => c.put(event.request, clone));
-          }
-          return res;
-        });
+        return fetch(event.request)
+          .then((res) => {
+            if (res && res.status === 200 && res.type === 'basic') {
+              const clone = res.clone();
+              caches.open(CACHE_NAME).then((c) => c.put(event.request, clone));
+            }
+            return res;
+          })
+          .catch(() => cached || new Response('Asset unavailable', { status: 503 }));
       })
     );
     return;

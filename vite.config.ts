@@ -26,12 +26,22 @@ export default defineConfig(({mode}) => {
     },
     build: {
       chunkSizeWarningLimit: 10000,
+      modulePreload: false,
       // Packaged Tauri keeps one bundle to avoid its Windows chunk-missing bug.
       rollupOptions: singleBundle ? {
         output: {
           manualChunks: () => 'app',
         },
-      } : undefined,
+      } : {
+        output: {
+          manualChunks(id) {
+            if (id.includes('@dbml/core')) return 'dbml-core';
+            if (id.includes('mammoth') || id.includes('jszip')) return 'doc-importers';
+            if (id.includes('@excalidraw')) return 'excalidraw-vendor';
+            if (id.includes('@xyflow')) return 'xyflow-vendor';
+          },
+        },
+      },
     },
     server: {
       port: 5173,

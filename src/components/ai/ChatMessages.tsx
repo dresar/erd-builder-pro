@@ -5,8 +5,9 @@ import { useWorkspace } from '@/providers/WorkspaceProvider';
 import { Button } from '@/components/ui/button';
 import { AssistantMarkdown } from './AssistantMarkdown';
 import { formatTime } from './chatUtils';
-import { ErdFromSqlDialog } from './ErdFromSqlDialog';
-import { FlowchartFromJsonDialog } from './FlowchartFromJsonDialog';
+import { lazy, Suspense } from 'react';
+const ErdFromSqlDialog = lazy(() => import('./ErdFromSqlDialog').then(m => ({ default: m.ErdFromSqlDialog })));
+const FlowchartFromJsonDialog = lazy(() => import('./FlowchartFromJsonDialog').then(m => ({ default: m.FlowchartFromJsonDialog })));
 import { NoteFromTextDialog } from './NoteFromTextDialog';
 import { AssistantMessageActions } from './AssistantMessageActions';
 import { UserMessageBody } from './UserMessageBody';
@@ -333,29 +334,33 @@ export const ChatMessages = memo(function ChatMessages({
 
       {/* ERD from SQL dialog */}
       {erdDialogSchema && (
-        <ErdFromSqlDialog
-          schema={erdDialogSchema}
-          onClose={() => setErdDialogSchema(null)}
-          diagrams={diagrams}
-          targetProjectId={targetProjectId}
-          erdDefaultName={erdDefaultName}
-          handleSidebarDiagramCreate={handleSidebarDiagramCreate}
-          handleDiagramSelect={handleDiagramSelect}
-          triggerPendingErdDiff={triggerPendingErdDiff}
-        />
+        <Suspense fallback={null}>
+          <ErdFromSqlDialog
+            schema={erdDialogSchema}
+            onClose={() => setErdDialogSchema(null)}
+            diagrams={diagrams}
+            targetProjectId={targetProjectId}
+            erdDefaultName={erdDefaultName}
+            handleSidebarDiagramCreate={handleSidebarDiagramCreate}
+            handleDiagramSelect={handleDiagramSelect}
+            triggerPendingErdDiff={triggerPendingErdDiff}
+          />
+        </Suspense>
       )}
 
       {/* Flowchart from JSON dialog */}
       {flowchartDialogJson && (
-        <FlowchartFromJsonDialog
-          json={flowchartDialogJson}
-          onClose={() => setFlowchartDialogJson(null)}
-          flowcharts={flowcharts}
-          targetProjectId={targetProjectId}
-          flowchartDefaultName={flowchartDefaultName}
-          handleSidebarFlowchartCreate={handleSidebarFlowchartCreate}
-          handleFlowchartSelect={handleFlowchartSelect}
-        />
+        <Suspense fallback={null}>
+          <FlowchartFromJsonDialog
+            json={flowchartDialogJson}
+            onClose={() => setFlowchartDialogJson(null)}
+            flowcharts={flowcharts}
+            targetProjectId={targetProjectId}
+            flowchartDefaultName={flowchartDefaultName}
+            handleSidebarFlowchartCreate={handleSidebarFlowchartCreate}
+            handleFlowchartSelect={handleFlowchartSelect}
+          />
+        </Suspense>
       )}
       {/* Note from text dialog */}
       {noteDialogText && (

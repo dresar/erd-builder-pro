@@ -1,7 +1,6 @@
 import { useCallback } from 'react';
 import { toast } from 'sonner';
 import { getMarkdownFromHtml, copyMarkdownToClipboard } from '../lib/markdownUtils';
-import { NoteImporter } from '../lib/importers/note-importer';
 
 interface FileOperationsProps {
   activeNote: any;
@@ -62,6 +61,7 @@ export const useFileOperations = ({
       let html = '';
       const extension = file.name.split('.').pop()?.toLowerCase();
 
+      const { NoteImporter } = await import('../lib/importers/note-importer');
       if (extension === 'docx') {
         html = await NoteImporter.convertDocxToHtml(file);
       } else {

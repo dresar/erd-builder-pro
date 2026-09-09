@@ -6,7 +6,6 @@ import { localPersistence } from '../lib/localPersistence';
 import { edgeToRelationship } from '../lib/diagram-payload';
 import { apiFetch } from '../lib/api';
 import { getCachedDiagramVersion } from '../lib/diagramVersioning';
-import { applyDBMLMetadata, dbmlToERD, erdToDBML } from '../lib/dbml-converter';
 
 function normalizeDiagramRecord(diagram: any): Diagram {
   if (!diagram) return diagram;
@@ -78,9 +77,10 @@ function readDraftSchemaFingerprint(data: any): string | null {
   }
 }
 
-function dbmlMatchesCanvas(dbml: string | null | undefined, nodes: Node<Entity>[], edges: Edge[]): boolean {
+async function dbmlMatchesCanvas(dbml: string | null | undefined, nodes: Node<Entity>[], edges: Edge[]): Promise<boolean> {
   if (!dbml?.trim()) return true;
   try {
+    const { dbmlToERD } = await import('../lib/dbml-converter');
     const parsed = dbmlToERD(dbml);
     return schemaFingerprint(parsed.nodes, parsed.edges) === schemaFingerprint(nodes, edges);
   } catch {
@@ -451,18 +451,19 @@ export function useDiagrams(isAuthenticated: boolean | null, view: 'erd' | 'diag
       const nextSchemaFingerprint = schemaFingerprint(nodes, edges);
       const previousSchemaFingerprint = readDraftSchemaFingerprint((currentDiagram as any)?.data);
       const fallbackDbmlSource = cachedDbmlSource ?? currentDiagram?.dbml_source ?? currentDiagram?.dbmlSource ?? '';
+      const matches = fallbackDbmlSource ? await dbmlMatchesCanvas(fallbackDbmlSource, nodes, edges) : true;
       const shouldRefreshDbmlFromCanvas = dbmlSource === undefined &&
         !!fallbackDbmlSource &&
         (
           previousSchemaFingerprint !== null
             ? previousSchemaFingerprint !== nextSchemaFingerprint
-            : !dbmlMatchesCanvas(fallbackDbmlSource, nodes, edges)
+            : !matches
         );
-      const nextDbmlSource = dbmlSource ?? (
-        shouldRefreshDbmlFromCanvas
-          ? erdToDBML(nodes, edges)
-          : fallbackDbmlSource
-      );
+      let nextDbmlSource = dbmlSource ?? fallbackDbmlSource;
+      if (dbmlSource === undefined && shouldRefreshDbmlFromCanvas) {
+        const { erdToDBML } = await import('../lib/dbml-converter');
+        nextDbmlSource = erdToDBML(nodes, edges);
+      }
       dbmlKeys.forEach(key => { dbmlSourceRef.current[key] = nextDbmlSource; });
 
       const shouldApplyDbmlMetadata = !isProductionDb && !!nextDbmlSource.trim() && (
@@ -470,9 +471,11 @@ export function useDiagrams(isAuthenticated: boolean | null, view: 'erd' | 'diag
         shouldRefreshDbmlFromCanvas ||
         nodes.some(node => !Array.isArray(node.data.constraints) || !Array.isArray(node.data.indexes))
       );
-      const persistedNodes = shouldApplyDbmlMetadata
-        ? applyDBMLMetadata(nodes, nextDbmlSource)
-        : nodes;
+      let persistedNodes = nodes;
+      if (shouldApplyDbmlMetadata) {
+        const { applyDBMLMetadata } = await import('../lib/dbml-converter');
+        persistedNodes = applyDBMLMetadata(nodes, nextDbmlSource);
+      }
       const persistedSchemaFingerprint = schemaFingerprint(persistedNodes, edges);
       
       let data: string;

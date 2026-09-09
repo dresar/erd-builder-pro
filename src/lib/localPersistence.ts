@@ -5,7 +5,7 @@
 
 const DB_NAME = 'erd-builder-pro-db';
 const STORE_NAME = 'drafts';
-const DB_VERSION = 3;
+const DB_VERSION = 4;
 
 import { DraftType } from '../types';
 

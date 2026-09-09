@@ -27,7 +27,6 @@ import { AnimatePresence } from 'framer-motion';
 import { marked } from 'marked';
 import DOMPurify from 'dompurify';
 import { toast } from 'sonner';
-import { NoteImporter } from '../lib/importers/note-importer';
 
 import {
   LucideIconExtension,
@@ -49,13 +48,11 @@ import { LinkDialog } from './editor/dialogs/LinkDialog';
 import { FileMentionMenu, FileMentionMenuRef, FileMentionOption } from './editor/FileMentionMenu';
 import { useNavigate } from 'react-router-dom';
 import { localPersistence } from '@/lib/localPersistence';
-import { applyToErdContent } from '@/components/ai/actions/erdActions';
-import { previewFlowchartContent } from '@/components/ai/actions/flowchartActions';
-import { edgeToRelationship } from '@/lib/diagram-payload';
 import { NestedTaskList } from '../lib/tiptap/nested-task-list';
 import { useWorkspace } from '@/providers/WorkspaceContext';
-import { ErdFromSqlDialog } from '@/components/ai/ErdFromSqlDialog';
-import { FlowchartFromJsonDialog } from '@/components/ai/FlowchartFromJsonDialog';
+
+const ErdFromSqlDialog = React.lazy(() => import('@/components/ai/ErdFromSqlDialog').then(m => ({ default: m.ErdFromSqlDialog })));
+const FlowchartFromJsonDialog = React.lazy(() => import('@/components/ai/FlowchartFromJsonDialog').then(m => ({ default: m.FlowchartFromJsonDialog })));
 import { CODE_BLOCK_CONVERT_EVENT, type CodeBlockConversionDetail } from './editor/extensions/ExecutableCodeBlock';
 
 const MARKDOWN_PATTERNS = [
@@ -811,32 +808,36 @@ export function TiptapEditor({ content, onChange, isReadOnly = false, disableAIS
       />
 
       {erdDialogSchema && (
-        <ErdFromSqlDialog
-          schema={erdDialogSchema}
-          onClose={() => { setErdDialogSchema(null); setConversionPosition(undefined); }}
-          diagrams={diagrams}
-          targetProjectId={targetProjectId}
-          erdDefaultName={noteTitle}
-          handleSidebarDiagramCreate={handleSidebarDiagramCreate}
-          handleDiagramSelect={handleDiagramSelect}
-          triggerPendingErdDiff={triggerPendingErdDiff}
-          createSilently
-          onCreated={persistGeneratedErd}
-        />
+        <React.Suspense fallback={null}>
+          <ErdFromSqlDialog
+            schema={erdDialogSchema}
+            onClose={() => { setErdDialogSchema(null); setConversionPosition(undefined); }}
+            diagrams={diagrams}
+            targetProjectId={targetProjectId}
+            erdDefaultName={noteTitle}
+            handleSidebarDiagramCreate={handleSidebarDiagramCreate}
+            handleDiagramSelect={handleDiagramSelect}
+            triggerPendingErdDiff={triggerPendingErdDiff}
+            createSilently
+            onCreated={persistGeneratedErd}
+          />
+        </React.Suspense>
       )}
 
       {flowchartDialogJson && (
-        <FlowchartFromJsonDialog
-          json={flowchartDialogJson}
-          onClose={() => { setFlowchartDialogJson(null); setConversionPosition(undefined); }}
-          flowcharts={flowcharts}
-          targetProjectId={targetProjectId}
-          flowchartDefaultName={noteTitle}
-          handleSidebarFlowchartCreate={handleSidebarFlowchartCreate}
-          handleFlowchartSelect={handleFlowchartSelect}
-          createSilently
-          onCreated={persistGeneratedFlowchart}
-        />
+        <React.Suspense fallback={null}>
+          <FlowchartFromJsonDialog
+            json={flowchartDialogJson}
+            onClose={() => { setFlowchartDialogJson(null); setConversionPosition(undefined); }}
+            flowcharts={flowcharts}
+            targetProjectId={targetProjectId}
+            flowchartDefaultName={noteTitle}
+            handleSidebarFlowchartCreate={handleSidebarFlowchartCreate}
+            handleFlowchartSelect={handleFlowchartSelect}
+            createSilently
+            onCreated={persistGeneratedFlowchart}
+          />
+        </React.Suspense>
       )}
 
       <AnimatePresence>

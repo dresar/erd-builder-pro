@@ -316,17 +316,15 @@ export function DashboardRoute() {
   const isLoading = ctx.isLoading || ctx.isProjectsLoading;
 
   useEffect(() => {
-    if (!isLoading) {
+    if (!isLoading || (ctx.projects && ctx.projects.length > 0) || recentDocs.length > 0) {
       setInitialLoadDone(true);
     }
-  }, [isLoading]);
+  }, [isLoading, ctx.projects, recentDocs.length]);
 
-  // Show empty state as soon as projects are loaded and empty —
-  // don't wait for documents to finish loading
-  const isEmpty = (!ctx.isProjectsLoading && (ctx.projects || []).filter((p: any) => !p.is_deleted).length === 0 && totalDocs === 0 && !serverRecentDocs?.length);
-
-  // Show dashboard content as soon as we have projects or documents
-  const showContent = !isEmpty && initialLoadDone;
+  const hasData = (ctx.projects || []).filter((p: any) => !p.is_deleted).length > 0 || totalDocs > 0 || !!serverRecentDocs?.length;
+  const isEmpty = !isLoading && !hasData;
+  const showSkeleton = !initialLoadDone && !hasData;
+  const showContent = hasData || (!isLoading && !isEmpty);
 
   const createDocument = (cfg: typeof typeConfig[number]) => {
     const fn = (ctx as Record<string, any>)[cfg.createFn];
@@ -334,6 +332,36 @@ export function DashboardRoute() {
   };
 
   const lastDocument = recentDocs[0];
+
+  if (showSkeleton) {
+    return (
+      <div className="flex h-full w-full flex-col overflow-y-auto animate-pulse">
+        <div className="border-b border-border/60 px-5 py-5">
+          <div className="h-4 w-24 rounded bg-muted/60" />
+          <div className="mt-2 h-6 w-48 rounded bg-muted/80" />
+          <div className="mt-1 h-3 w-36 rounded bg-muted/50" />
+        </div>
+        <main className="flex w-full flex-col gap-5 px-5 py-5">
+          <div className="grid gap-4 lg:grid-cols-[minmax(0,1.35fr)_minmax(250px,0.65fr)]">
+            <div className="h-40 rounded-xl border border-border/60 bg-muted/20 p-4" />
+            <div className="h-40 rounded-xl border border-border/60 bg-muted/20 p-4" />
+          </div>
+          <div className="grid gap-5 lg:grid-cols-[minmax(0,1.35fr)_minmax(250px,0.65fr)]">
+            <div className="space-y-3">
+              <div className="h-5 w-32 rounded bg-muted/60" />
+              <div className="h-16 rounded-xl border border-border/60 bg-muted/20" />
+              <div className="h-16 rounded-xl border border-border/60 bg-muted/20" />
+              <div className="h-16 rounded-xl border border-border/60 bg-muted/20" />
+            </div>
+            <div className="space-y-3">
+              <div className="h-5 w-28 rounded bg-muted/60" />
+              <div className="h-32 rounded-xl border border-border/60 bg-muted/20" />
+            </div>
+          </div>
+        </main>
+      </div>
+    );
+  }
 
   return (
     <div className="flex h-full w-full flex-col overflow-y-auto">

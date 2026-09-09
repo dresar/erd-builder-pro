@@ -24,6 +24,7 @@ class DataCache {
   async get<T = any>(entity: string, userId: string): Promise<T[] | null> {
     try {
       const db = await this.getDb();
+      if (!db.objectStoreNames.contains('cache_v1')) return null;
       const key = `${entity}:${userId}`;
       return new Promise((resolve) => {
         const tx = db.transaction('cache_v1', 'readonly');
@@ -46,6 +47,7 @@ class DataCache {
   async set<T = any>(entity: string, userId: string, data: T[]): Promise<void> {
     try {
       const db = await this.getDb();
+      if (!db.objectStoreNames.contains('cache_v1')) return;
       const entry: CacheEntry<T> = {
         cache_key: `${entity}:${userId}`,
         entity,
@@ -86,6 +88,7 @@ class DataCache {
   async invalidate(entity: string, userId: string): Promise<void> {
     try {
       const db = await this.getDb();
+      if (!db.objectStoreNames.contains('cache_v1')) return;
       const key = `${entity}:${userId}`;
       return new Promise((resolve) => {
         const tx = db.transaction('cache_v1', 'readwrite');
@@ -106,6 +109,7 @@ class DataCache {
   async getSyncMeta(userId: string): Promise<SyncMeta | null> {
     try {
       const db = await this.getDb();
+      if (!db.objectStoreNames.contains('sync_meta')) return null;
       return new Promise((resolve) => {
         const tx = db.transaction('sync_meta', 'readonly');
         const req = tx.objectStore('sync_meta').get(`sync:${userId}`);
@@ -120,6 +124,7 @@ class DataCache {
   async setSyncMeta(userId: string, meta: Omit<SyncMeta, 'key'>): Promise<void> {
     try {
       const db = await this.getDb();
+      if (!db.objectStoreNames.contains('sync_meta')) return;
       return new Promise((resolve) => {
         const tx = db.transaction('sync_meta', 'readwrite');
         tx.objectStore('sync_meta').put({ key: `sync:${userId}`, ...meta });
@@ -132,6 +137,7 @@ class DataCache {
   async clearSyncMeta(userId: string): Promise<void> {
     try {
       const db = await this.getDb();
+      if (!db.objectStoreNames.contains('sync_meta')) return;
       return new Promise((resolve) => {
         const tx = db.transaction('sync_meta', 'readwrite');
         tx.objectStore('sync_meta').delete(`sync:${userId}`);

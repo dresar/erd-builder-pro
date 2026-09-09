@@ -37,12 +37,12 @@ router.get("/sync", syncLimiter, authenticate, async (req, res) => {
     const [projects, diagrams, notes, flowcharts, drawings] = await Promise.allSettled([
       requestedEntities.includes("projects") && prisma
         ? prisma.project.findMany({
-            where: { userId, updatedAt: gt },
+            where: isValidSince ? { userId, createdAt: gt } : { userId },
             select: {
-              id: true, uid: true, name: true, description: true,
-              isDeleted: true, createdAt: true, updatedAt: true,
+              id: true, uid: true, name: true,
+              isDeleted: true, createdAt: true,
             },
-            orderBy: { updatedAt: "desc" },
+            orderBy: { createdAt: "desc" },
           })
         : Promise.resolve([]),
 

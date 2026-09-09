@@ -8,7 +8,6 @@ import { marked } from 'marked';
 import DOMPurify from 'dompurify';
 import { toast } from 'sonner';
 import { getMarkdownFromHtml } from '@/lib/markdownUtils';
-import { NoteImporter } from '@/lib/importers/note-importer';
 import { applyToNoteContent } from '@/components/ai/actions/notesActions';
 import { stripAiFluff } from '@/components/ai/chatUtils';
 import { NotesHistoryPreview } from '@/components/history/NotesHistoryPreview';
