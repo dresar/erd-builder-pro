@@ -17,9 +17,13 @@ export function AppInitialization({ type, view = 'Document' }: AppInitialization
     if (isDark) {
       root.classList.add('dark');
       body.classList.add('dark');
+      root.style.colorScheme = 'dark';
+      body.style.colorScheme = 'dark';
     } else {
       root.classList.remove('dark');
       body.classList.remove('dark');
+      root.style.colorScheme = 'light';
+      body.style.colorScheme = 'light';
     }
 
     // Also watch for system changes while this component is mounted (pre-hydration)
@@ -29,9 +33,13 @@ export function AppInitialization({ type, view = 'Document' }: AppInitialization
         if (mediaQuery.matches) {
           root.classList.add('dark');
           body.classList.add('dark');
+          root.style.colorScheme = 'dark';
+          body.style.colorScheme = 'dark';
         } else {
           root.classList.remove('dark');
           body.classList.remove('dark');
+          root.style.colorScheme = 'light';
+          body.style.colorScheme = 'light';
         }
       }
     };

@@ -661,9 +661,13 @@ export function WorkspaceProvider({
       if (resolved === 'dark') {
         root.classList.add('dark');
         body.classList.add('dark');
+        root.style.colorScheme = 'dark';
+        body.style.colorScheme = 'dark';
       } else {
         root.classList.remove('dark');
         body.classList.remove('dark');
+        root.style.colorScheme = 'light';
+        body.style.colorScheme = 'light';
       }
     };
 
@@ -702,32 +706,40 @@ export function WorkspaceProvider({
         const osTheme = await appWindow.theme();
         if (osTheme && themeRef.current === 'system') {
           const resolved = osTheme as 'light' | 'dark';
+          setResolvedTheme(resolved);
           const root = document.documentElement;
           const body = document.body;
           if (resolved === 'dark') {
             root.classList.add('dark');
             body.classList.add('dark');
+            root.style.colorScheme = 'dark';
+            body.style.colorScheme = 'dark';
           } else {
             root.classList.remove('dark');
             body.classList.remove('dark');
+            root.style.colorScheme = 'light';
+            body.style.colorScheme = 'light';
           }
-          setResolvedTheme(resolved);
         }
 
         // Listen for OS theme changes
         unlisten = await appWindow.onThemeChanged(({ payload: newTheme }) => {
           if (themeRef.current === 'system' && newTheme) {
             const resolved = newTheme as 'light' | 'dark';
+            setResolvedTheme(resolved);
             const root = document.documentElement;
             const body = document.body;
             if (resolved === 'dark') {
               root.classList.add('dark');
               body.classList.add('dark');
+              root.style.colorScheme = 'dark';
+              body.style.colorScheme = 'dark';
             } else {
               root.classList.remove('dark');
               body.classList.remove('dark');
+              root.style.colorScheme = 'light';
+              body.style.colorScheme = 'light';
             }
-            setResolvedTheme(resolved);
           }
         });
       } catch (err) {
