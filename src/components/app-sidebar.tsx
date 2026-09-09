@@ -18,6 +18,7 @@ import {
   Loader2,
   Bot,
   Sparkles,
+  Users,
 } from "lucide-react"
 import { useNavigate, useLocation } from "react-router-dom"
 
@@ -234,6 +235,13 @@ export const AppSidebar = React.memo(({
       icon: Sparkles,
       isActive: location.pathname === '/ai-chat',
       onClick: () => navigate('/ai-chat'),
+    },
+    {
+      title: "Generator Agen",
+      url: "/agent-generator",
+      icon: Users,
+      isActive: location.pathname === '/agent-generator',
+      onClick: () => navigate('/agent-generator'),
     },
     {
       title: "AI Eksternal",
