@@ -1,8 +1,6 @@
-import React, { useMemo } from 'react';
+import React, { useState, useMemo } from 'react';
 import {
   Table,
-  TableBody,
-  TableCell,
   TableHead,
   TableHeader,
   TableRow,
@@ -11,15 +9,15 @@ import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
   DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
   DropdownMenuTrigger,
   DropdownMenuCheckboxItem,
 } from '@/components/ui/dropdown-menu';
-import { Plus, FileText, MoreHorizontal, Pencil, Trash2, ChevronLeft, ChevronRight, Columns3, Search } from 'lucide-react';
+import { Plus, FileText, ChevronLeft, ChevronRight, Columns3, Search, LayoutGrid, List } from 'lucide-react';
 import { useColumnVisibility, ColumnDef } from '@/hooks/useColumnVisibility';
 import { Input } from '@/components/ui/input';
 import { parsePrdMetadata } from './prdTemplate';
+import { PRDCard } from './PRDCard';
+import { PRDTableRows } from './PRDTableRows';
 
 interface PRDTableViewProps {
   prds: any[];
@@ -68,6 +66,15 @@ export const PRDTableView = React.memo(function PRDTableView({
   onSearchChange,
   searchRef,
 }: PRDTableViewProps) {
+  const [layoutMode, setLayoutMode] = useState<'grid' | 'table'>(() => {
+    return (localStorage.getItem('prd-view-layout') as 'grid' | 'table') || 'grid';
+  });
+
+  const handleLayoutChange = (mode: 'grid' | 'table') => {
+    setLayoutMode(mode);
+    localStorage.setItem('prd-view-layout', mode);
+  };
+
   const totalPages = Math.max(1, Math.ceil(totalPrds / ITEMS_PER_PAGE));
   const { toggle, visibleCols } = useColumnVisibility(STORAGE_KEY, COLUMNS);
   const cols = visibleCols();
@@ -119,7 +126,7 @@ export const PRDTableView = React.memo(function PRDTableView({
             ({totalPrds} prd)
           </span>
         </div>
-        <div className="flex items-center justify-between gap-2">
+        <div className="flex flex-wrap items-center justify-between gap-2">
           <div className="relative flex items-center max-w-64 w-full">
             <Search className="pointer-events-none absolute left-2.5 top-1/2 size-3.5 -translate-y-1/2 select-none text-muted-foreground" />
             <Input
@@ -131,177 +138,162 @@ export const PRDTableView = React.memo(function PRDTableView({
               className="h-8 pl-8 text-xs"
             />
           </div>
-          <div className="flex items-center gap-2">
-            <DropdownMenu>
-              <DropdownMenuTrigger render={
-                <Button variant="outline" size="icon-sm" aria-label="Kolom" title="Kolom">
-                  <Columns3 className="w-4 h-4" />
-                </Button>
-              } />
-              <DropdownMenuContent align="end" className="w-44">
-                {COLUMNS.filter(c => c.hideable).map(col => (
-                  <DropdownMenuCheckboxItem
-                    key={col.id}
-                    checked={cols.some(v => v.id === col.id)}
-                    onCheckedChange={() => toggle(col.id)}
-                  >
-                    {col.label}
-                  </DropdownMenuCheckboxItem>
-                ))}
-              </DropdownMenuContent>
-            </DropdownMenu>
-            <Button size="sm" onClick={onCreatePrd}>
-              <Plus className="w-4 h-4 sm:mr-1.5" />
-              <span className="hidden sm:inline">Buat PRD</span>
+          <div className="flex items-center gap-1.5">
+            <div className="flex items-center rounded-lg border border-border/70 p-0.5 bg-muted/40">
+              <Button
+                variant={layoutMode === 'grid' ? 'secondary' : 'ghost'}
+                size="icon-xs"
+                onClick={() => handleLayoutChange('grid')}
+                title="Grid"
+                className="h-7 w-7 rounded-md cursor-pointer"
+              >
+                <LayoutGrid className="size-3.5" />
+              </Button>
+              <Button
+                variant={layoutMode === 'table' ? 'secondary' : 'ghost'}
+                size="icon-xs"
+                onClick={() => handleLayoutChange('table')}
+                title="Tabel"
+                className="h-7 w-7 rounded-md cursor-pointer"
+              >
+                <List className="size-3.5" />
+              </Button>
+            </div>
+
+            {layoutMode === 'table' && (
+              <DropdownMenu>
+                <DropdownMenuTrigger render={
+                  <Button variant="outline" size="icon-sm" aria-label="Kolom" title="Kolom">
+                    <Columns3 className="w-4 h-4" />
+                  </Button>
+                } />
+                <DropdownMenuContent align="end" className="w-44">
+                  {COLUMNS.filter(c => c.hideable).map(col => (
+                    <DropdownMenuCheckboxItem
+                      key={col.id}
+                      checked={cols.some(v => v.id === col.id)}
+                      onCheckedChange={() => toggle(col.id)}
+                    >
+                      {col.label}
+                    </DropdownMenuCheckboxItem>
+                  ))}
+                </DropdownMenuContent>
+              </DropdownMenu>
+            )}
+
+            <Button size="sm" onClick={onCreatePrd} className="h-8 gap-1.5 px-3 text-xs bg-indigo-600 hover:bg-indigo-700 text-white cursor-pointer font-medium">
+              <Plus className="size-3.5" />
+              <span>Buat PRD</span>
             </Button>
           </div>
         </div>
       </div>
 
-      <div className="overflow-auto rounded-xl border">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              {cols.map(col => (
-                <TableHead key={col.id} className={col.width}>{col.label}</TableHead>
-              ))}
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {isLoading && filteredPrds.length === 0 && projects.length > 0 ? (
-              <TableRow>
-                <TableCell colSpan={cols.length} className="h-40 text-center text-muted-foreground">
-                  <span className="inline-flex items-center gap-2 text-xs">
-                    <span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-primary/30 border-t-primary" />
-                    Memuat...
-                  </span>
-                </TableCell>
-              </TableRow>
-            ) : filteredPrds.length === 0 ? (
-              <TableRow>
-                <TableCell colSpan={cols.length} className="h-48 text-center">
-                  <div className="flex flex-col items-center justify-center gap-2 text-muted-foreground py-4">
-                    <div className="size-10 rounded-xl bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center text-indigo-400">
-                      <FileText className="size-5" />
-                    </div>
-                    <p className="text-xs font-semibold text-foreground mt-1">
-                      {searchQuery.trim() ? 'Dokumen Tidak Ditemukan' : 'Belum Ada Dokumen PRD'}
-                    </p>
-                    <p className="text-[11px] text-muted-foreground max-w-sm leading-relaxed">
-                      {searchQuery.trim()
-                        ? 'Tidak ada dokumen PRD yang cocok dengan kata kunci pencarian.'
-                        : 'Mulai buat dokumen Product Requirement Document untuk mendefinisikan fitur dan alur sistem.'}
-                    </p>
-                    {!searchQuery.trim() && (
-                      <Button
-                        size="sm"
-                        onClick={onCreatePrd}
-                        className="mt-1.5 h-7.5 gap-1.5 px-3 text-xs bg-indigo-600 hover:bg-indigo-700 text-white cursor-pointer font-medium"
-                      >
-                        <Plus className="size-3.5" />
-                        <span>Buat PRD</span>
-                      </Button>
-                    )}
+      {layoutMode === 'grid' ? (
+        isLoading && filteredPrds.length === 0 && projects.length > 0 ? (
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 p-0.5">
+            {[1, 2, 3, 4].map(idx => (
+              <div key={idx} className="rounded-xl border border-border/60 bg-card/60 p-4 space-y-3 animate-pulse">
+                <div className="flex items-center gap-2.5">
+                  <div className="size-8 rounded-lg bg-muted" />
+                  <div className="space-y-1 flex-1">
+                    <div className="h-3 w-24 bg-muted rounded" />
+                    <div className="h-2.5 w-16 bg-muted/60 rounded" />
                   </div>
-                </TableCell>
-              </TableRow>
-            ) : (
-              filteredPrds.map(doc => {
-                const uid = doc.uid ?? String(doc.id);
-                const currentProjectUid = getProjectUid(doc);
-                const cleanTitle = doc.title?.replace(/^\[PRD\]\s*/, '') || 'Spesifikasi PRD';
-                const meta = parsePrdMetadata(doc.content || '', cleanTitle);
-                const statusLabel = meta.status === 'production' ? 'Produksi' : meta.status === 'approved' ? 'Disetujui' : meta.status === 'in_review' ? 'Review' : 'Draft';
-                const statusColor = meta.status === 'production'
-                  ? 'bg-emerald-500/10 text-emerald-400'
-                  : meta.status === 'approved'
-                    ? 'bg-indigo-500/10 text-indigo-400'
-                    : meta.status === 'in_review'
-                      ? 'bg-amber-500/10 text-amber-500'
-                      : 'bg-muted text-muted-foreground';
-
-                return (
-                  <TableRow
-                    key={uid}
-                    className="cursor-pointer group"
-                    onClick={() => onSelectPrd(uid)}
-                  >
-                    {cols.map(col => {
-                      if (col.id === 'name') {
-                        return (
-                          <TableCell key="name" className="font-medium">
-                            <span className="truncate block max-w-70">{cleanTitle}</span>
-                          </TableCell>
-                        );
-                      }
-                      if (col.id === 'workspace') {
-                        return (
-                          <TableCell key="workspace">
-                            <span
-                              className="inline-flex items-center gap-1 text-xs bg-muted px-2 py-0.5 rounded-full cursor-pointer hover:bg-accent transition-colors"
-                              onClick={e => { e.stopPropagation(); onWorkspaceClick(currentProjectUid); }}
-                            >
-                              {getProjectName(doc)}
-                            </span>
-                          </TableCell>
-                        );
-                      }
-                      if (col.id === 'updated') {
-                        return (
-                          <TableCell key="updated" className="text-muted-foreground text-xs">
-                            {formatDate(doc.updated_at || doc.updatedAt)}
-                          </TableCell>
-                        );
-                      }
-                      if (col.id === 'status') {
-                        return (
-                          <TableCell key="status">
-                            <span className={`inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full ${statusColor}`}>
-                              {statusLabel}
-                            </span>
-                          </TableCell>
-                        );
-                      }
-                      if (col.id === 'created') {
-                        return (
-                          <TableCell key="created" className="text-muted-foreground text-xs">
-                            {formatDate(doc.created_at || doc.createdAt)}
-                          </TableCell>
-                        );
-                      }
-                      if (col.id === 'actions') {
-                        return (
-                          <TableCell key="actions" className="text-right" onClick={e => e.stopPropagation()}>
-                            <DropdownMenu>
-                              <DropdownMenuTrigger render={
-                                <Button variant="ghost" size="icon-xs" className="opacity-0 group-hover:opacity-100 transition-opacity">
-                                  <MoreHorizontal className="h-4 w-4" />
-                                </Button>
-                              } />
-                              <DropdownMenuContent align="end">
-                                <DropdownMenuItem onClick={() => onOpenEditDocument(uid)}>
-                                  <Pencil className="h-4 w-4 mr-2" />
-                                  Edit Dokumen
-                                </DropdownMenuItem>
-                                <DropdownMenuSeparator />
-                                <DropdownMenuItem onClick={() => onDeletePrd(uid)} className="text-destructive">
-                                  <Trash2 className="h-4 w-4 mr-2" />
-                                  Hapus
-                                </DropdownMenuItem>
-                              </DropdownMenuContent>
-                            </DropdownMenu>
-                          </TableCell>
-                        );
-                      }
-                      return null;
-                    })}
-                  </TableRow>
-                );
-              })
+                </div>
+                <div className="h-2 bg-muted/40 rounded w-full" />
+                <div className="h-7 bg-muted/60 rounded-md" />
+              </div>
+            ))}
+          </div>
+        ) : filteredPrds.length === 0 ? (
+          <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-border/80 bg-card/40 p-8 sm:p-14 text-center mt-1 space-y-3">
+            <div className="size-10 rounded-xl bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center text-indigo-400">
+              <FileText className="size-5" />
+            </div>
+            <div className="space-y-1 max-w-sm">
+              <h3 className="text-xs font-semibold text-foreground">
+                {searchQuery.trim() ? 'Dokumen Tidak Ditemukan' : 'Belum Ada Dokumen PRD'}
+              </h3>
+              <p className="text-[11px] text-muted-foreground leading-relaxed">
+                {searchQuery.trim()
+                  ? 'Tidak ada dokumen PRD yang cocok dengan kata kunci pencarian.'
+                  : 'Mulai buat dokumen Product Requirement Document untuk mendefinisikan fitur dan alur sistem.'}
+              </p>
+            </div>
+            {!searchQuery.trim() && (
+              <Button
+                size="sm"
+                onClick={onCreatePrd}
+                className="mt-1 h-7.5 gap-1.5 px-3 text-xs bg-indigo-600 hover:bg-indigo-700 text-white cursor-pointer font-medium"
+              >
+                <Plus className="size-3.5" />
+                <span>Buat PRD</span>
+              </Button>
             )}
-          </TableBody>
-        </Table>
-      </div>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 overflow-y-auto custom-scrollbar p-0.5">
+            {filteredPrds.map(doc => {
+              const uid = doc.uid ?? String(doc.id);
+              const currentProjectUid = getProjectUid(doc);
+              const cleanTitle = doc.title?.replace(/^\[PRD\]\s*/, '') || 'Spesifikasi PRD';
+              const meta = parsePrdMetadata(doc.content || '', cleanTitle);
+              const statusLabel = meta.status === 'production' ? 'Produksi' : meta.status === 'approved' ? 'Disetujui' : meta.status === 'in_review' ? 'Review' : 'Draft';
+              const statusColor = meta.status === 'production'
+                ? 'bg-emerald-500/10 text-emerald-400'
+                : meta.status === 'approved'
+                  ? 'bg-indigo-500/10 text-indigo-400'
+                  : meta.status === 'in_review'
+                    ? 'bg-amber-500/10 text-amber-500'
+                    : 'bg-muted text-muted-foreground';
+
+              return (
+                <PRDCard
+                  key={uid}
+                  doc={doc}
+                  projectName={getProjectName(doc)}
+                  projectUid={currentProjectUid}
+                  statusLabel={statusLabel}
+                  statusColor={statusColor}
+                  formattedDate={formatDate(doc.updated_at || doc.updatedAt)}
+                  onSelect={() => onSelectPrd(uid)}
+                  onEdit={() => onOpenEditDocument(uid)}
+                  onDelete={() => onDeletePrd(uid)}
+                  onWorkspaceClick={onWorkspaceClick}
+                />
+              );
+            })}
+          </div>
+        )
+      ) : (
+        <div className="overflow-auto rounded-xl border">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                {cols.map(col => (
+                  <TableHead key={col.id} className={col.width}>{col.label}</TableHead>
+                ))}
+              </TableRow>
+            </TableHeader>
+            <PRDTableRows
+              cols={cols}
+              isLoading={isLoading}
+              filteredPrds={filteredPrds}
+              projects={projects}
+              searchQuery={searchQuery}
+              onSelectPrd={onSelectPrd}
+              onCreatePrd={onCreatePrd}
+              onWorkspaceClick={onWorkspaceClick}
+              onOpenEditDocument={onOpenEditDocument}
+              onDeletePrd={onDeletePrd}
+              getProjectName={getProjectName}
+              getProjectUid={getProjectUid}
+              formatDate={formatDate}
+            />
+          </Table>
+        </div>
+      )}
 
       {totalPages > 1 && (
         <div className="flex items-center justify-between border-x border-b bg-background px-4 py-2 shrink-0 rounded-b-xl">
