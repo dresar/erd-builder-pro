@@ -50,6 +50,10 @@ import { useNavigate } from 'react-router-dom';
 import { localPersistence } from '@/lib/localPersistence';
 import { NestedTaskList } from '../lib/tiptap/nested-task-list';
 import { useWorkspace } from '@/providers/WorkspaceContext';
+import { NoteImporter } from '@/lib/importers/note-importer';
+import { applyToErdContent } from '@/components/ai/actions/erdActions';
+import { edgeToRelationship } from '@/lib/diagram-payload';
+import { previewFlowchartContent } from '@/components/ai/actions/flowchartActions';
 
 const ErdFromSqlDialog = React.lazy(() => import('@/components/ai/ErdFromSqlDialog').then(m => ({ default: m.ErdFromSqlDialog })));
 const FlowchartFromJsonDialog = React.lazy(() => import('@/components/ai/FlowchartFromJsonDialog').then(m => ({ default: m.FlowchartFromJsonDialog })));

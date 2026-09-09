@@ -272,7 +272,7 @@ export function DashboardRoute() {
     }
   }, [isLoading, ctx.projects, recentDocs.length]);
 
-  const hasData = (ctx.projects || []).filter((p: any) => !p.is_deleted).length > 0 || totalDocs > 0 || !!serverRecentDocs?.length;
+  const hasData = (ctx.projects || []).filter((p: any) => !p.is_deleted).length > 0 || totalDocs > 0 || recentDocs.length > 0;
   const isEmpty = !isLoading && !hasData;
   const showSkeleton = !initialLoadDone && !hasData;
   const showContent = hasData || (!isLoading && !isEmpty);

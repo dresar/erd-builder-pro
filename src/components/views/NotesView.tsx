@@ -10,6 +10,7 @@ import { toast } from 'sonner';
 import { getMarkdownFromHtml } from '@/lib/markdownUtils';
 import { applyToNoteContent } from '@/components/ai/actions/notesActions';
 import { stripAiFluff } from '@/components/ai/chatUtils';
+import { NoteImporter } from '@/lib/importers/note-importer';
 import { NotesHistoryPreview } from '@/components/history/NotesHistoryPreview';
 import { NOTE_HISTORY_PREVIEW_EVENT } from '@/lib/note-history-diff';
 import { useWorkspace } from '@/providers/WorkspaceContext';

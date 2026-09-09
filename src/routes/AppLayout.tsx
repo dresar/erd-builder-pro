@@ -20,6 +20,7 @@ import { RelationshipPropertiesModal } from '@/components/modals/RelationshipPro
 import { ImportNoteModal } from '@/components/modals/ImportNoteModal';
 import { ExportNoteModal } from '@/components/modals/ExportNoteModal';
 import { NoteExporter } from '@/lib/exporters/note-exporter';
+import { findMatchingCanvasEdge } from '@/lib/dbml-converter';
 import { OfflineOverlay } from '@/components/layout/OfflineOverlay';
 
 // UI
