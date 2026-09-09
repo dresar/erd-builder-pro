@@ -1,16 +1,10 @@
 import React from 'react';
 import { FieldLabel } from '@/components/ui/field';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 export type DeploymentMethod = 'vercel' | 'ai_choice' | 'local' | 'vps' | 'cloudflare' | 'aws' | 'other';
 
-interface ExternalAIDeploymentSectionProps {
-  deploymentMethod: DeploymentMethod;
-  setDeploymentMethod: (v: DeploymentMethod) => void;
-  customDeployment: string;
-  setCustomDeployment: (v: string) => void;
-}
-
-const DEPLOYMENT_OPTIONS: Array<{ id: DeploymentMethod; label: string }> = [
+export const DEPLOYMENT_OPTIONS: Array<{ id: DeploymentMethod; label: string }> = [
   { id: 'vercel', label: 'Vercel' },
   { id: 'ai_choice', label: 'AI Pilih' },
   { id: 'local', label: 'Lokal' },
@@ -20,6 +14,13 @@ const DEPLOYMENT_OPTIONS: Array<{ id: DeploymentMethod; label: string }> = [
   { id: 'other', label: 'Lainnya' },
 ];
 
+interface ExternalAIDeploymentSectionProps {
+  deploymentMethod: DeploymentMethod;
+  setDeploymentMethod: (v: DeploymentMethod) => void;
+  customDeployment: string;
+  setCustomDeployment: (v: string) => void;
+}
+
 export function ExternalAIDeploymentSection({
   deploymentMethod,
   setDeploymentMethod,
@@ -27,39 +28,34 @@ export function ExternalAIDeploymentSection({
   setCustomDeployment,
 }: ExternalAIDeploymentSectionProps) {
   return (
-    <div className="space-y-1.5">
-      <FieldLabel className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/70 px-1">
+    <div>
+      <FieldLabel className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/70 px-1 mb-1 block">
         Deployment
       </FieldLabel>
 
-      <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-7 gap-1.5">
-        {DEPLOYMENT_OPTIONS.map((opt) => {
-          const isSelected = deploymentMethod === opt.id;
-          return (
-            <button
-              key={opt.id}
-              type="button"
-              onClick={() => setDeploymentMethod(opt.id)}
-              className={`p-2 rounded-lg border text-xs font-medium truncate text-center transition-all cursor-pointer ${
-                isSelected
-                  ? 'bg-primary/10 border-primary/40 text-foreground font-semibold ring-1 ring-primary/20'
-                  : 'bg-muted/10 border-border/40 text-muted-foreground hover:bg-muted/20'
-              }`}
-            >
-              {opt.label}
-            </button>
-          );
-        })}
-      </div>
+      <Select value={deploymentMethod} onValueChange={(v) => v && setDeploymentMethod(v as DeploymentMethod)}>
+        <SelectTrigger className="h-8.5 text-xs bg-background border-border/60">
+          <SelectValue placeholder="Pilih Deployment">
+            {DEPLOYMENT_OPTIONS.find((d) => d.id === deploymentMethod)?.label || 'Vercel'}
+          </SelectValue>
+        </SelectTrigger>
+        <SelectContent>
+          {DEPLOYMENT_OPTIONS.map((opt) => (
+            <SelectItem key={opt.id} value={opt.id} className="text-xs py-1.5">
+              <span className="font-medium">{opt.label}</span>
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
 
       {deploymentMethod === 'other' && (
-        <div className="pt-1">
+        <div className="mt-1.5">
           <input
             type="text"
-            placeholder="Target"
+            placeholder="Target deployment..."
             value={customDeployment}
             onChange={(e) => setCustomDeployment(e.target.value)}
-            className="flex h-8 w-full rounded-lg border border-border/60 bg-background px-2.5 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
+            className="flex h-8.5 w-full rounded-lg border border-border/60 bg-background px-2.5 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
           />
         </div>
       )}

@@ -4,6 +4,13 @@ import { Button } from '@/components/ui/button';
 import { FieldLabel } from '@/components/ui/field';
 import { Badge } from '@/components/ui/badge';
 import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import {
   PromptStrategy,
   STRATEGY_PRESETS,
   DOMAIN_PRESETS,
@@ -88,29 +95,140 @@ export function ExternalAIPromptTab({
 
   return (
     <div className="space-y-4">
-      <div className="space-y-1.5">
-        <FieldLabel className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/70 px-1">
-          Strategi
-        </FieldLabel>
+      {/* ── Form Controls (Dropdowns & Inputs) ── */}
+      <div className="rounded-xl border border-border/60 bg-card/20 p-3.5 sm:p-4 space-y-3.5">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+          {/* Nama Proyek */}
+          <div>
+            <FieldLabel className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/70 px-1 mb-1 block">
+              Nama Proyek
+            </FieldLabel>
+            <input
+              type="text"
+              placeholder="Nama Proyek"
+              value={projectName}
+              onChange={(e) => setProjectName(e.target.value)}
+              className="flex h-8.5 w-full rounded-lg border border-border/60 bg-background px-2.5 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-indigo-500"
+            />
+          </div>
 
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-          {STRATEGY_PRESETS.map((strat) => {
-            const isSelected = selectedStrategy === strat.id;
-            return (
-              <button
-                key={strat.id}
-                type="button"
-                onClick={() => setSelectedStrategy(strat.id)}
-                className={`p-2 rounded-lg border text-xs font-medium truncate text-center transition-all cursor-pointer ${
-                  isSelected
-                    ? 'bg-indigo-500/10 border-indigo-500/40 text-foreground font-semibold ring-1 ring-indigo-500/20'
-                    : 'bg-muted/10 border-border/40 text-muted-foreground hover:bg-muted/20'
-                }`}
-              >
-                {strat.label}
-              </button>
-            );
-          })}
+          {/* Strategi */}
+          <div>
+            <FieldLabel className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/70 px-1 mb-1 block">
+              Strategi
+            </FieldLabel>
+            <Select value={selectedStrategy} onValueChange={(v) => v && setSelectedStrategy(v as PromptStrategy)}>
+              <SelectTrigger className="h-8.5 text-xs bg-background border-border/60">
+                <SelectValue placeholder="Pilih Strategi">
+                  {STRATEGY_PRESETS.find((s) => s.id === selectedStrategy)?.label || 'All-in-One'}
+                </SelectValue>
+              </SelectTrigger>
+              <SelectContent>
+                {STRATEGY_PRESETS.map((strat) => (
+                  <SelectItem key={strat.id} value={strat.id} className="text-xs py-1.5">
+                    <div className="flex items-center gap-2">
+                      <span className="font-medium">{strat.label}</span>
+                      <span className="text-[10px] text-muted-foreground">({strat.badge})</span>
+                    </div>
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          {/* Skala Tabel */}
+          <div>
+            <FieldLabel className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/70 px-1 mb-1 block">
+              Skala Tabel
+            </FieldLabel>
+            <Select value={selectedScale} onValueChange={(v) => v && setSelectedScale(v as any)}>
+              <SelectTrigger className="h-8.5 text-xs bg-background border-border/60">
+                <SelectValue placeholder="Pilih Skala">
+                  {SCALE_PRESETS.find((s) => s.id === selectedScale)?.label || '35+ Tabel'}
+                </SelectValue>
+              </SelectTrigger>
+              <SelectContent>
+                {SCALE_PRESETS.map((scale) => (
+                  <SelectItem key={scale.id} value={scale.id} className="text-xs py-1.5">
+                    <span className="font-medium">{scale.label}</span>
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          {/* Domain Bisnis */}
+          <div>
+            <FieldLabel className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/70 px-1 mb-1 block">
+              Domain Bisnis
+            </FieldLabel>
+            <Select value={selectedDomain} onValueChange={(v) => v && setSelectedDomain(v)}>
+              <SelectTrigger className="h-8.5 text-xs bg-background border-border/60">
+                <SelectValue placeholder="Pilih Domain">
+                  {DOMAIN_PRESETS.find((d) => d.id === selectedDomain)?.label || 'SaaS'}
+                </SelectValue>
+              </SelectTrigger>
+              <SelectContent>
+                {DOMAIN_PRESETS.map((domain) => (
+                  <SelectItem key={domain.id} value={domain.id} className="text-xs py-1.5">
+                    <span className="font-medium">{domain.label}</span>
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            {selectedDomain === 'custom' && (
+              <div className="mt-1.5">
+                <input
+                  type="text"
+                  placeholder="Ketik domain khusus..."
+                  value={customDomain}
+                  onChange={(e) => setCustomDomain(e.target.value)}
+                  className="flex h-8.5 w-full rounded-lg border border-border/60 bg-background px-2.5 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                />
+              </div>
+            )}
+          </div>
+
+          {/* Deployment */}
+          <ExternalAIDeploymentSection
+            deploymentMethod={deploymentMethod}
+            setDeploymentMethod={setDeploymentMethod}
+            customDeployment={customDeployment}
+            setCustomDeployment={setCustomDeployment}
+          />
+        </div>
+
+        {/* Keamanan & Kepatuhan */}
+        <div className="pt-2 border-t border-border/40 space-y-1.5">
+          <FieldLabel className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/70 px-1">
+            Keamanan & Kepatuhan
+          </FieldLabel>
+          <div className="flex flex-wrap gap-1.5">
+            {[
+              'Audit Trail',
+              'RBAC',
+              'Soft Delete',
+              'Multi-Tenant',
+              '2FA',
+              'GDPR',
+            ].map((item) => {
+              const isSelected = complianceItems.some((c) => c.toLowerCase().includes(item.toLowerCase()));
+              return (
+                <button
+                  key={item}
+                  type="button"
+                  onClick={() => toggleCompliance(item)}
+                  className={`px-2.5 py-1 rounded-md border text-xs transition-all cursor-pointer ${
+                    isSelected
+                      ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-500 font-semibold'
+                      : 'bg-muted/10 border-border/40 text-muted-foreground hover:bg-muted/20'
+                  }`}
+                >
+                  {isSelected ? '✓ ' : '+ '}{item}
+                </button>
+              );
+            })}
+          </div>
         </div>
       </div>
 
@@ -180,121 +298,6 @@ export function ExternalAIPromptTab({
           )}
         </div>
       )}
-
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-        <div>
-          <FieldLabel className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/70 px-1 mb-1 block">
-            Nama Proyek
-          </FieldLabel>
-          <input
-            type="text"
-            placeholder="Nama"
-            value={projectName}
-            onChange={(e) => setProjectName(e.target.value)}
-            className="flex h-8 w-full rounded-lg border border-border/60 bg-background px-2.5 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-indigo-500"
-          />
-        </div>
-
-        <div>
-          <FieldLabel className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/70 px-1 mb-1 block">
-            Skala Tabel
-          </FieldLabel>
-          <div className="grid grid-cols-3 gap-1.5">
-            {SCALE_PRESETS.map((scale) => {
-              const isSelected = selectedScale === scale.id;
-              return (
-                <button
-                  key={scale.id}
-                  type="button"
-                  onClick={() => setSelectedScale(scale.id as any)}
-                  className={`p-1.5 rounded-lg border text-xs font-medium truncate text-center transition-all cursor-pointer ${
-                    isSelected
-                      ? 'bg-indigo-500/10 border-indigo-500/40 text-foreground font-semibold ring-1 ring-indigo-500/20'
-                      : 'bg-muted/10 border-border/40 text-muted-foreground hover:bg-muted/20'
-                  }`}
-                >
-                  {scale.label}
-                </button>
-              );
-            })}
-          </div>
-        </div>
-      </div>
-
-      <div className="space-y-1.5">
-        <FieldLabel className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/70 px-1">
-          Domain Bisnis
-        </FieldLabel>
-        <div className="grid grid-cols-3 sm:grid-cols-6 gap-1.5">
-          {DOMAIN_PRESETS.map((domain) => {
-            const isSelected = selectedDomain === domain.id;
-            return (
-              <button
-                key={domain.id}
-                type="button"
-                onClick={() => setSelectedDomain(domain.id)}
-                className={`p-1.5 rounded-lg border text-xs font-medium truncate text-center transition-all cursor-pointer ${
-                  isSelected
-                    ? 'bg-indigo-500/10 border-indigo-500/40 text-foreground font-semibold ring-1 ring-indigo-500/20'
-                    : 'bg-muted/10 border-border/40 text-muted-foreground hover:bg-muted/20'
-                }`}
-              >
-                {domain.label}
-              </button>
-            );
-          })}
-        </div>
-        {selectedDomain === 'custom' && (
-          <div className="pt-1">
-            <input
-              type="text"
-              placeholder="Domain"
-              value={customDomain}
-              onChange={(e) => setCustomDomain(e.target.value)}
-              className="flex h-8 w-full rounded-lg border border-border/60 bg-background px-2.5 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-indigo-500"
-            />
-          </div>
-        )}
-      </div>
-
-      <ExternalAIDeploymentSection
-        deploymentMethod={deploymentMethod}
-        setDeploymentMethod={setDeploymentMethod}
-        customDeployment={customDeployment}
-        setCustomDeployment={setCustomDeployment}
-      />
-
-      <div className="space-y-1.5">
-        <FieldLabel className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/70 px-1">
-          Keamanan
-        </FieldLabel>
-        <div className="flex flex-wrap gap-1.5">
-          {[
-            'Audit Trail',
-            'RBAC',
-            'Soft Delete',
-            'Multi-Tenant',
-            '2FA',
-            'GDPR',
-          ].map((item) => {
-            const isSelected = complianceItems.some(c => c.toLowerCase().includes(item.toLowerCase()));
-            return (
-              <button
-                key={item}
-                type="button"
-                onClick={() => toggleCompliance(item)}
-                className={`px-2.5 py-1 rounded-md border text-xs transition-all cursor-pointer ${
-                  isSelected
-                    ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-500 font-semibold'
-                    : 'bg-muted/10 border-border/40 text-muted-foreground hover:bg-muted/20'
-                }`}
-              >
-                {isSelected ? '✓ ' : '+ '}{item}
-              </button>
-            );
-          })}
-        </div>
-      </div>
 
       <div className="space-y-1.5 pt-1">
         <div className="flex items-center justify-between">
