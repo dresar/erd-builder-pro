@@ -5,7 +5,7 @@
 
 const DB_NAME = 'erd-builder-pro-db';
 const STORE_NAME = 'drafts';
-const DB_VERSION = 2;
+const DB_VERSION = 3;
 
 import { DraftType } from '../types';
 
@@ -31,10 +31,17 @@ class LocalPersistence {
         if (!db.objectStoreNames.contains(STORE_NAME)) {
           db.createObjectStore(STORE_NAME, { keyPath: ['type', 'id'] });
         }
-        // Store for full resources (not just drafts)
         if (!db.objectStoreNames.contains('resources')) {
           const resourceStore = db.createObjectStore('resources', { keyPath: 'id' });
           resourceStore.createIndex('type', 'type', { unique: false });
+        }
+        if (!db.objectStoreNames.contains('cache_v1')) {
+          const cacheStore = db.createObjectStore('cache_v1', { keyPath: 'cache_key' });
+          cacheStore.createIndex('entity', 'entity', { unique: false });
+          cacheStore.createIndex('user_id', 'user_id', { unique: false });
+        }
+        if (!db.objectStoreNames.contains('sync_meta')) {
+          db.createObjectStore('sync_meta', { keyPath: 'key' });
         }
       };
 

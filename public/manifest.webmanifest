@@ -1,13 +1,24 @@
 {
-  "name": "ERD Builder Pro",
-  "short_name": "ERD Builder Pro",
-  "description": "Professional Entity Relationship Diagram (ERD) and Flowchart Builder.",
+  "name": "PRD PRO",
+  "short_name": "PRD PRO",
+  "description": "Generate PRD, ERD, flowchart, and docs with AI. Professional project planning tool.",
   "id": "/",
   "start_url": "/",
+  "scope": "/",
   "display": "standalone",
-  "background_color": "#020617",
-  "theme_color": "#020617",
+  "display_override": ["window-controls-overlay", "standalone", "minimal-ui"],
+  "orientation": "any",
+  "background_color": "#0d1526",
+  "theme_color": "#1a85f7",
+  "lang": "id",
+  "dir": "ltr",
   "icons": [
+    {
+      "src": "/logo.png",
+      "sizes": "any",
+      "type": "image/png",
+      "purpose": "any"
+    },
     {
       "src": "/icons/icon-192x192-any.png",
       "sizes": "192x192",
@@ -33,6 +44,39 @@
       "purpose": "maskable"
     }
   ],
-  "screenshots": [],
-  "categories": ["productivity", "design", "utilities"]
+  "screenshots": [
+    {
+      "src": "/logo.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "form_factor": "narrow",
+      "label": "PRD PRO - AI Project Planner"
+    },
+    {
+      "src": "/logo.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "form_factor": "wide",
+      "label": "PRD PRO - Dashboard"
+    }
+  ],
+  "categories": ["productivity", "design", "utilities", "business"],
+  "related_applications": [],
+  "prefer_related_applications": false,
+  "shortcuts": [
+    {
+      "name": "Buat Catatan",
+      "short_name": "Catatan",
+      "description": "Buat dokumen baru",
+      "url": "/",
+      "icons": [{ "src": "/logo.png", "sizes": "any" }]
+    },
+    {
+      "name": "ERD Builder",
+      "short_name": "ERD",
+      "description": "Buat Entity Relationship Diagram",
+      "url": "/",
+      "icons": [{ "src": "/logo.png", "sizes": "any" }]
+    }
+  ]
 }

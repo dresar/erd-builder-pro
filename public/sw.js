@@ -1,83 +1,121 @@
-const CACHE_NAME = 'erd-builder-cache-v1.6';
-const ASSETS_TO_CACHE = [
+const CACHE_NAME = 'prd-pro-cache-v2.0';
+const API_CACHE_NAME = 'prd-pro-api-v1.0';
+
+const SHELL_ASSETS = [
   '/',
   '/index.html',
   '/favicon.png',
+  '/logo.png',
   '/manifest.webmanifest',
-  '/icons/icon-180x180-any.png',
   '/icons/icon-192x192-any.png',
   '/icons/icon-192x192-maskable.png',
   '/icons/icon-512x512-any.png',
   '/icons/icon-512x512-maskable.png',
 ];
 
-// Install Event: Precaching core assets
+const CACHEABLE_API_PATHS = [
+  '/api/projects',
+  '/api/diagrams',
+  '/api/notes',
+  '/api/flowcharts',
+  '/api/drawings',
+];
+
 self.addEventListener('install', (event) => {
   event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => {
-      return Promise.allSettled(
-        ASSETS_TO_CACHE.map(asset => cache.add(asset))
-      );
-    })
+    caches.open(CACHE_NAME).then((cache) =>
+      Promise.allSettled(SHELL_ASSETS.map((a) => cache.add(a)))
+    )
   );
   self.skipWaiting();
 });
 
-// Activate Event: Clean up old caches
 self.addEventListener('activate', (event) => {
   event.waitUntil(
-    caches.keys().then((cacheNames) => {
-      return Promise.all(
-        cacheNames.map((cache) => {
-          if (cache !== CACHE_NAME) {
-            return caches.delete(cache);
-          }
+    caches.keys().then((keys) =>
+      Promise.all(
+        keys.map((k) => {
+          if (k !== CACHE_NAME && k !== API_CACHE_NAME) return caches.delete(k);
         })
-      );
-    })
+      )
+    )
   );
   self.clients.claim();
 });
 
-// Fetch Event
+function isCacheableApiRequest(url) {
+  const u = new URL(url);
+  return CACHEABLE_API_PATHS.some((p) => u.pathname.startsWith(p));
+}
+
 self.addEventListener('fetch', (event) => {
   if (event.request.method !== 'GET') return;
-  if (event.request.url.includes('/api/')) return;
-  if (event.request.url.includes('/assets/')) return;
-  if (!event.request.url.startsWith(self.location.origin)) return;
 
-  // STRATEGY: Network-First with Offline Fallback for Navigation (SPA Support)
+  const url = event.request.url;
+
+  if (!url.startsWith(self.location.origin) && !url.includes('/api/')) return;
+
   if (event.request.mode === 'navigate') {
     event.respondWith(
       fetch(event.request).catch(async () => {
         const cached = (await caches.match('/index.html')) || (await caches.match('/'));
+        return cached || new Response('Offline', { status: 503, headers: { 'Content-Type': 'text/plain' } });
+      })
+    );
+    return;
+  }
+
+  if (url.includes('/api/')) {
+    if (!isCacheableApiRequest(url)) return;
+
+    event.respondWith(
+      caches.open(API_CACHE_NAME).then(async (cache) => {
+        try {
+          const networkResponse = await fetch(event.request.clone());
+          if (networkResponse.ok) {
+            cache.put(event.request, networkResponse.clone());
+          }
+          return networkResponse;
+        } catch {
+          const cached = await cache.match(event.request);
+          if (cached) return cached;
+          return new Response(JSON.stringify({ error: 'offline', cached: false }), {
+            status: 503,
+            headers: { 'Content-Type': 'application/json' },
+          });
+        }
+      })
+    );
+    return;
+  }
+
+  if (url.includes('/assets/')) {
+    event.respondWith(
+      caches.match(event.request).then((cached) => {
         if (cached) return cached;
-        return new Response('Network error. Please reload.', {
-          status: 503,
-          headers: { 'Content-Type': 'text/plain' },
+        return fetch(event.request).then((res) => {
+          if (res && res.status === 200 && res.type === 'basic') {
+            const clone = res.clone();
+            caches.open(CACHE_NAME).then((c) => c.put(event.request, clone));
+          }
+          return res;
         });
       })
     );
     return;
   }
 
-  // STRATEGY: Stale-While-Revalidate for other assets
   event.respondWith(
-    caches.match(event.request).then((cachedResponse) => {
+    caches.match(event.request).then((cached) => {
       const fetchPromise = fetch(event.request)
-        .then((networkResponse) => {
-          if (networkResponse && networkResponse.status === 200 && networkResponse.type === 'basic') {
-            const clone = networkResponse.clone();
-            caches.open(CACHE_NAME).then((cache) => cache.put(event.request, clone));
+        .then((res) => {
+          if (res && res.status === 200 && res.type === 'basic') {
+            caches.open(CACHE_NAME).then((c) => c.put(event.request, res.clone()));
           }
-          return networkResponse;
+          return res;
         })
-        .catch(() => {
-          if (cachedResponse) return cachedResponse;
-          return new Response('', { status: 408 });
-        });
-
-      return cachedResponse || fetchPromise;
+        .catch(() => cached || new Response('', { status: 408 }));
+      return cached || fetchPromise;
     })
   );
 });

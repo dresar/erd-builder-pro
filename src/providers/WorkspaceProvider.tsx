@@ -48,6 +48,7 @@ import { useDocumentActions } from '../hooks/useDocumentActions';
 import { useAppMetadata } from '../hooks/useAppMetadata';
 import { useFileOperations } from '../hooks/useFileOperations';
 import { useActiveItemGuard } from '../hooks/useActiveItemGuard';
+import { useDataCache } from '../hooks/useDataCache';
 
 // Lib & Types
 import { getSharePathInfo } from '../lib/urlUtils';
@@ -226,6 +227,12 @@ export function WorkspaceProvider({
   const { isInstallable, installApp } = usePWAInstall();
   const { handleExportSQL } = useSQLGenerator();
   const { handleExportImage } = useImageExporter();
+
+  const userId = user?.id ? String(user.id) : null;
+  const { loadFromCache, saveToCache, runDeltaSync, clearCache } = useDataCache({
+    userId,
+    isGuest: !!isGuest,
+  });
 
   // Use props instead of local hook
   const isPublicView = _isPublicView;
@@ -601,8 +608,8 @@ export function WorkspaceProvider({
     if (isInstallable) {
       const hasSeenToast = sessionStorage.getItem('pwa-install-toast-shown');
       if (!hasSeenToast) {
-        toast('✨ Enhance your experience', {
-          description: 'Install ERD Builder Pro as a desktop app for offline access and better performance.',
+        toast('✨ Install PRD PRO', {
+          description: 'Install sebagai app untuk akses offline & performa lebih cepat.',
           action: { label: 'Install', onClick: () => installApp() },
           duration: 10000,
         });
@@ -645,6 +652,21 @@ export function WorkspaceProvider({
       fetchProjects(false, debouncedSearchQuery);
     }
   }, [debouncedSearchQuery, fetchProjects, isAuthenticated, isPublicView]);
+
+  // Background delta sync after login — loads only changed items since last sync
+  useEffect(() => {
+    if (!isAuthenticated || isGuest || !userId) return;
+    const timer = setTimeout(() => {
+      runDeltaSync((entity, items) => {
+        if (entity === 'projects') saveToCache('projects', items);
+        else if (entity === 'diagrams') saveToCache('diagrams', items);
+        else if (entity === 'notes') saveToCache('notes', items);
+        else if (entity === 'flowcharts') saveToCache('flowcharts', items);
+        else if (entity === 'drawings') saveToCache('drawings', items);
+      });
+    }, 2000);
+    return () => clearTimeout(timer);
+  }, [isAuthenticated, isGuest, userId, runDeltaSync, saveToCache]);
 
   // ── Theme: resolve + apply ──
   // Keep a ref so the mediaQuery change handler never goes stale

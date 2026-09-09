@@ -36,6 +36,7 @@ import repositoriesRouter from "./routes/repositories/index.js";
 import oauthConsentRouter from "./routes/oauth-consent.js";
 import { createPublicMcpRouter } from "./mcp/public-router.js";
 import { getPublicMcpClientConfig } from "./mcp/public-auth.js";
+import syncRouter from "./routes/sync.js";
 
 const app = express();
 
@@ -209,7 +210,7 @@ function camelToSnake(obj: unknown): unknown {
 
 app.use((_req, res, next) => {
   // Skip camelToSnake for new routes: accounts & catalogs use camelCase natively
-  if (_req.path.startsWith('/api/accounts') || _req.path.startsWith('/api/catalogs') || _req.path.startsWith('/api/storage')) {
+  if (_req.path.startsWith('/api/accounts') || _req.path.startsWith('/api/catalogs') || _req.path.startsWith('/api/storage') || _req.path.startsWith('/api/sync')) {
     return next();
   }
   const originalJson = res.json.bind(res);
@@ -377,6 +378,7 @@ app.use("/api/desktop", desktopImportRouter);
 app.use("/api", connectionsRouter);
 app.use("/api/storage", storageRouter);
 app.use("/api/entity-changes", entityChangesRouter);
+app.use("/api", syncRouter);
 
 // ── Auto-backup scheduler (desktop mode) ──
 initAutoBackupScheduler().catch((err) => {
