@@ -297,7 +297,7 @@ export async function getProjectSiblings(projectIdOrUid: number | string, userId
     }),
     prisma.diagram.findMany({
       where: { projectId, userId, isDeleted: false, OR: [{ sourceType: null }, { sourceType: { not: "production_db" } }] },
-      select: { id: true, uid: true, name: true, sourceType: true, updatedAt: true },
+      select: { id: true, uid: true, name: true, sourceType: true, updatedAt: true, dbmlSource: true },
     }),
     prisma.flowchart.findMany({
       where: { projectId, userId, isDeleted: false },
@@ -322,6 +322,7 @@ export async function getProjectSiblings(projectIdOrUid: number | string, userId
 
   const diagramsWithEntities = diagrams.map(d => ({
     ...d,
+    dbml_source: (d as any).dbmlSource || (d as any).dbml_source || "",
     entities: entities
       .filter(e => e.diagramId === d.id)
       .map(e => ({

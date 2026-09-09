@@ -1,6 +1,6 @@
 export function getSkillsStandardsSection(): string {
   return `=======================================================================
-[SECTION 2: MANDATORY MASTER ENGINEERING STANDARDS & AUTHORITATIVE SKILLS]
+[SECTION 4: MANDATORY MASTER ENGINEERING STANDARDS & AUTHORITATIVE SKILLS]
 =======================================================================
 You MUST strictly embed and enforce the following engineering skills into every file, component, schema, and API route:
 

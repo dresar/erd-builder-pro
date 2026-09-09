@@ -1,0 +1,82 @@
+export function getEnterprisePrdSection(projectName: string, domain: string, existingNotes: string): string {
+  if (existingNotes && existingNotes.trim().length > 100) {
+    return `=======================================================================
+[SECTION 1: PRODUCT REQUIREMENTS DOCUMENT (PRD - BAHASA INDONESIA RESMI)]
+=======================================================================
+# DOKUMEN SPESIFIKASI PRODUK & KEBUTUHAN SISTEM (PRD)
+> Sistem: ${projectName}
+> Domain: ${domain}
+> Klasifikasi: Spesifikasi Produksi Enterprise Multi-Tenant
+> Target Ketersediaan: 99.9% Uptime SLA | Same-Day Settlement | Zero Data Leak
+
+${existingNotes.trim()}
+`;
+  }
+
+  return `=======================================================================
+[SECTION 1: PRODUCT REQUIREMENTS DOCUMENT (PRD - BAHASA INDONESIA RESMI)]
+=======================================================================
+# DOKUMEN SPESIFIKASI PRODUK & ARSITEKTUR (PRD) — ${projectName.toUpperCase()}
+
+> Proyek: ${projectName}
+> Domain Bisnis: ${domain}
+> Status: Spesifikasi Produksi Enterprise
+> Versi: 1.0.0
+> Target Arsitektur: Modular Monolith / Cloud-Native Multi-Tenant
+
+## 1. Latar Belakang & Sasaran Strategis
+Sistem ini dirancang untuk menjawab tantangan operasional berskala enterprise pada domain ${domain}.
+Sistem yang ada sebelumnya terfragmentasi, mengandalkan proses manual yang rentan terhadap human error, rekonsiliasi data yang lambat, serta visibilitas pelaporan yang minim.
+${projectName} hadir sebagai single source of truth yang mengintegrasikan seluruh siklus proses bisnis dari hulu ke hilir.
+
+Sasaran Strategis:
+1. Memangkas waktu pemrosesan operasional utama hingga 75% melalui otomatisasi alur kerja digital.
+2. Mencapai rekonsiliasi finansial dan transaksional same-day dengan audit trail tak terhapus.
+3. Menjamin isolasi data antar-entitas / tenant secara absolut (Zero Data Leakage).
+4. Menyediakan antarmuka responsif kelas dunia dengan latensi interaksi di bawah 100ms.
+
+## 2. Arsitektur Solusi & Topologi Sistem
+Arsitektur menerapkan pola Modular Monolith dengan batas domain (bounded context) yang tegas.
+- Frontend: Next.js 15 (App Router) + React 19 + Tailwind CSS v4 + Lucide Icons.
+- Backend: RESTful API Layer (Express / Next Serverless Routes) dengan arsitektur controller-service-repository.
+- Basis Data: PostgreSQL (Neon / Supabase) dengan connection pooling (PgBouncer) dan skema relasional tertata.
+- Penyimpanan Berkas: Object Storage S3-Compatible (Cloudflare R2) dengan presigned URL berbatas waktu.
+- Keamanan: Row Level Security (RLS) berbasis tenant_id/campus_id, JWT dengan refresh token rotasi berkala.
+
+## 3. Dekomposisi Modul Fungsional (Domain-Driven Design)
+1. Modul Manajemen Identitas, Autentikasi & RBAC:
+   - Manajemen pengguna, peran (roles), izin modular (permissions), dan sesi aman.
+2. Modul Operasional Inti (Core Engine):
+   - Manajemen master data, siklus hidup entitas utama, validasi status berjenjang.
+3. Modul Transaksi & Keuangan Digital:
+   - Invoice generator, integrasi payment gateway (Virtual Account / QRIS), pembukuan otomatis.
+4. Modul Pelaporan & Dasbor Analitik:
+   - Agregasi metrik performa real-time, ekspor laporan berkala, filter data multi-dimensi.
+5. Modul Audit Trail & Notifikasi:
+   - Pencatatan log perubahan data sensitif, webhook pesan WhatsApp / Email terotomasi.
+
+## 4. Matriks Peran & Hak Akses (RBAC)
+- Superadmin: Akses penuh (Full Access) lintas seluruh tenant dan modul konfigurasi global.
+- Tenant Admin / Manajer: Akses administratif penuh terbatas pada lingkup tenant terkait.
+- Staf Operasional: Akses tulis/edit pada modul operasional harian sesuai penugasan.
+- Verifikator / Auditor: Hak baca (Read-only) dan verifikasi dokumen/transaksi khusus.
+- Pengguna Akhir / Klien: Hak kelola profil pribadi, melihat tagihan, dan mengajukan permohonan.
+
+## 5. Standar Kontrak API & Komunikasi
+- Pola RESTful standar dengan awalan /api/v1.
+- Format respon JSON konsisten: { success: boolean, data?: any, error?: { code: string, message: string } }.
+- Pagination standar berbasis query param limit & page/offset.
+- Wajib header otorisasi Bearer Token dan tenant identifier pada seluruh endpoint privat.
+
+## 6. Kebijakan Keamanan & Kepatuhan
+- Enkripsi at-rest untuk kolom sensitif (AES-256).
+- Enkripsi in-transit (TLS 1.3 wajib pada seluruh komunikasi jaringan).
+- Pola soft-delete pada seluruh tabel transaksional untuk integritas referensial.
+- Rate limiting ketat per IP dan per sesi pengguna untuk mencegah brute-force dan DoS.
+
+## 7. Service Level Agreement (SLA) & Target Performa
+- Ketersediaan Sistem: 99.9% uptime per bulan kalender.
+- Response Time: API p95 < 200ms, Server-side rendered pages < 500ms.
+- Target RTO (Recovery Time Objective) < 1 jam, RPO (Recovery Point Objective) < 15 menit.
+`;
+}

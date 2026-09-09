@@ -14,6 +14,9 @@ export interface MultiAgentProjectConfig {
   flowcharts?: any[];
   notes?: any[];
   customInstructions?: string;
+  customDbml?: string;
+  customPrd?: string;
+  customWorkflows?: string;
 }
 
 export const AGENT_TEAM = [
@@ -63,15 +66,25 @@ Table users {
 
   const chunks: string[] = [];
   for (const diag of diagrams) {
-    if (diag.dbml_source || diag.dbmlSource) {
-      chunks.push(String(diag.dbml_source || diag.dbmlSource).trim());
+    let rawData = diag.data;
+    if (typeof rawData === 'string') {
+      try {
+        rawData = JSON.parse(rawData);
+      } catch {}
+    }
+
+    const rawDbml = diag.dbml_source || diag.dbmlSource || rawData?.dbml_source || rawData?.dbmlSource;
+    if (rawDbml && String(rawDbml).trim()) {
+      chunks.push(String(rawDbml).trim());
       continue;
     }
-    const entities = diag.entities || [];
+
+    const entities = diag.entities || (Array.isArray(rawData?.nodes) ? rawData.nodes.map((n: any) => n.data) : []);
     if (entities.length === 0) continue;
 
     chunks.push(`// --- Diagram: ${diag.name || 'Core'} ---`);
     for (const ent of entities) {
+      if (!ent) continue;
       const tableName = (ent.name || 'table').toLowerCase().replace(/\s+/g, '_');
       const lines: string[] = [`Table ${tableName} {`];
       const cols = ent.columns || [];
@@ -93,6 +106,13 @@ Table users {
       lines.push('}');
       chunks.push(lines.join('\n'));
     }
+
+    const rels = diag.relationships || (Array.isArray(rawData?.edges) ? rawData.edges : []);
+    for (const rel of rels) {
+      if (rel.source && rel.target && rel.source_column_id && rel.target_column_id) {
+        chunks.push(`Ref: ${rel.source}.${rel.source_column_id} > ${rel.target}.${rel.target_column_id}`);
+      }
+    }
   }
 
   return chunks.length > 0 ? chunks.join('\n\n') : '// No tables defined';
@@ -106,7 +126,12 @@ function extractFullWorkflows(flowcharts: any[] = []): string {
   const sections: string[] = [];
   for (const fc of flowcharts) {
     const title = fc.title || fc.name || 'Alur Logika Bisnis';
-    const data = fc.data || fc;
+    let data = fc.data || fc;
+    if (typeof data === 'string') {
+      try {
+        data = JSON.parse(data);
+      } catch {}
+    }
     const nodes = Array.isArray(data?.nodes) ? data.nodes : [];
     const edges = Array.isArray(data?.edges) ? data.edges : [];
 
@@ -115,13 +140,15 @@ function extractFullWorkflows(flowcharts: any[] = []): string {
       nodes.forEach((n: any, idx: number) => {
         const label = n.data?.label || n.label || `Langkah ${idx + 1}`;
         const shape = n.data?.shape || n.shape || 'proses';
-        sections.push(`${idx + 1}. [${shape.toUpperCase()}] ${label}`);
+        sections.push(`${idx + 1}. [${String(shape).toUpperCase()}] ${label}`);
       });
     }
     if (edges.length > 0) {
       edges.forEach((e: any) => {
-        const source = nodes.find((n: any) => n.id === e.source)?.data?.label || e.source;
-        const target = nodes.find((n: any) => n.id === e.target)?.data?.label || e.target;
+        const sourceNode = nodes.find((n: any) => n.id === e.source || n.label === e.sourceLabel);
+        const targetNode = nodes.find((n: any) => n.id === e.target || n.label === e.targetLabel);
+        const source = sourceNode?.data?.label || sourceNode?.label || e.sourceLabel || e.source;
+        const target = targetNode?.data?.label || targetNode?.label || e.targetLabel || e.target;
         const edgeLabel = e.label ? ` (Kondisi: ${e.label})` : '';
         sections.push(`- \`${source}\` ➔ \`${target}\`${edgeLabel}`);
       });
@@ -134,14 +161,27 @@ function extractFullWorkflows(flowcharts: any[] = []): string {
 function extractFullNotes(notes: any[] = []): string {
   if (!notes || notes.length === 0) return '';
   return notes
-    .map((n) => `### Catatan: ${n.title || 'Dokumen'}\n${(n.content || '').replace(/<[^>]+>/g, '').trim()}`)
+    .map((n) => {
+      const rawContent = n.content_markdown || n.content || '';
+      const cleanContent = rawContent
+        .replace(/<[^>]+>/g, '')
+        .replace(/&amp;/g, '&')
+        .replace(/&lt;/g, '<')
+        .replace(/&gt;/g, '>')
+        .replace(/&quot;/g, '"')
+        .replace(/&#39;/g, "'")
+        .trim();
+      if (!cleanContent) return '';
+      return `### ${n.title || 'Dokumen Spesifikasi / PRD'}\n${cleanContent}`;
+    })
+    .filter(Boolean)
     .join('\n\n');
 }
 
 export function buildClaudeMasterPrompt(config: MultiAgentProjectConfig): string {
-  const fullDbml = extractFullDbml(config.diagrams);
-  const fullWorkflows = extractFullWorkflows(config.flowcharts);
-  const fullNotes = extractFullNotes(config.notes);
+  const fullDbml = config.customDbml?.trim() || extractFullDbml(config.diagrams);
+  const fullWorkflows = config.customWorkflows?.trim() || extractFullWorkflows(config.flowcharts);
+  const fullNotes = config.customPrd?.trim() || extractFullNotes(config.notes);
 
   return generateClaudeMasterPrompt({
     projectName: config.projectName,

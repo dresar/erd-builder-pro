@@ -1,6 +1,6 @@
 export function getAgentTeamworkSection(): string {
   return `=======================================================================
-[SECTION 4: 5-AGENT SYNCHRONIZED TEAMWORK PROTOCOL (.agents/ FOLDER)]
+[SECTION 6: 5-AGENT SYNCHRONIZED TEAMWORK PROTOCOL (.agents/ FOLDER)]
 =======================================================================
 You MUST generate detailed operational guidelines for 5 specialized AI agents working as a synchronized engineering team:
 

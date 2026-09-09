@@ -1,3 +1,4 @@
+import { getEnterprisePrdSection } from './enterprisePrdSection';
 import { getSkillsStandardsSection } from './skillsStandardsSection';
 import { getUiArchitecturalBehaviorsSection } from './uiArchitecturalBehaviorsSection';
 import { getAgentTeamworkSection } from './agentTeamworkSection';
@@ -34,23 +35,45 @@ LANGUAGE & FORMATTING RULE:
 - Zero placeholders: NEVER emit "// TODO", "// remaining tables", or abbreviations. Every table, column, role, and module must be written in full.
 
 =======================================================================
-[SECTION 1: CORE PROJECT CONTEXT & ENTITY DATA]
+[PROJECT CORE IDENTITY & TARGET ARCHITECTURE]
 =======================================================================
 Project Name: "${proj}"
 Business Domain: "${domain}"
-Default Infrastructure: Serverless on Neon PostgreSQL (or Supabase) + Edge Functions
+Target Infrastructure: Serverless on Neon PostgreSQL (Prisma ORM) + Next.js 15 / Express
 Target Tech Stack: ${techStack}
 Single Monorepo Rule: 1 unified package.json at root. Strictly no duplicated node_modules. Backend and frontend unified.
 
---- DATABASE SCHEMA (EXTRACTED RELATIONAL DBML):
+${getEnterprisePrdSection(proj, domain, context.fullNotes)}
+
+=======================================================================
+[SECTION 2: SKEMA BASIS DATA RELASIONAL PENUH (FULL DBML & DDL)]
+=======================================================================
+Di bawah ini adalah skema relasional lengkap (Database Schema) dari proyek "${proj}" dalam format DBML standar industri.
+Seluruh tabel, tipe data, primary key (UUID/BigInt), foreign key referensial, unique index, dan enum wajib diimplementasikan 100% tanpa ada yang dikurangi:
+
 \`\`\`dbml
 ${context.fullDbml}
 \`\`\`
 
---- BUSINESS LOGIC & WORKFLOWS (EXTRACTED FLOWCHARTS):
+Pedoman Basis Data Wajib:
+1. Setiap entitas transaksional wajib memiliki kolom audit: created_at, updated_at, dan deleted_at (soft delete).
+2. Setiap entitas berstatus multi-tenant wajib memiliki kolom isolasi tenant (misal: campus_id / tenant_id).
+3. Pengindeksan: Kolom referensial (Foreign Keys) dan kolom unik wajib diindeks secara eksplisit.
+4. Enkripsi Data: Kolom sensitif (PIN, riwayat medis, nomor telepon pribadi) wajib dienkripsi at-rest.
+
+=======================================================================
+[SECTION 3: DIAGRAM ALUR KERJA & LOGIKA BISNIS (WORKFLOW FLOWCHARTS)]
+=======================================================================
+Di bawah ini adalah alur logika proses bisnis utama yang telah dipetakan untuk "${proj}".
+Setiap langkah, percabangan keputusan (decision diamond), dan status transisi wajib diwujudkan dalam flow state engine backend dan antarmuka pengguna:
+
 ${context.fullWorkflows}
 
-${context.fullNotes ? `--- EXISTING PROJECT NOTES & SPECIFICATIONS:\n${context.fullNotes}\n` : ''}${context.customInstructions ? `--- CUSTOM INSTRUCTIONS:\n${context.customInstructions}\n` : ''}
+${context.customInstructions ? `=======================================================================
+[INSTRUKSI KHUSUS TAMBAHAN DARI PEMILIK PROYEK]
+=======================================================================
+${context.customInstructions}
+` : ''}
 ${getSkillsStandardsSection()}
 
 ${getUiArchitecturalBehaviorsSection()}

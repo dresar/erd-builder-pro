@@ -2,7 +2,7 @@ export function getClaudeZipExecutionSection(projectName: string): string {
   const safeSlug = projectName.toLowerCase().replace(/[^a-z0-9]+/g, '_').replace(/^_+|_+$/g, '') || 'project';
 
   return `=======================================================================
-[SECTION 5: MANDATORY 20+ MARKDOWN ARCHITECTURE FILES & DIRECT ZIP PACKAGING]
+[SECTION 7: MANDATORY 20+ MARKDOWN ARCHITECTURE FILES & DIRECT ZIP PACKAGING]
 =======================================================================
 You MUST generate an EXHAUSTIVE, PROFESSIONAL project package with a minimum of 20 SPECIALIZED MARKDOWN (.md) FILES.
 Every single folder MUST contain a dedicated README.md explaining the exact responsibility, architectural boundary, and file inventory of that folder.

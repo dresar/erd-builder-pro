@@ -1,6 +1,6 @@
 export function getUiArchitecturalBehaviorsSection(): string {
   return `=======================================================================
-[SECTION 3: MANDATORY UI/UX & ARCHITECTURAL BEHAVIORAL SPECIFICATIONS]
+[SECTION 5: MANDATORY UI/UX & ARCHITECTURAL BEHAVIORAL SPECIFICATIONS]
 =======================================================================
 The generated application MUST implement the following behavioral specifications:
 
