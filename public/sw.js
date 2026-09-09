@@ -1,4 +1,4 @@
-const CACHE_NAME = 'erd-builder-cache-v1.5';
+const CACHE_NAME = 'erd-builder-cache-v1.6';
 const ASSETS_TO_CACHE = [
   '/',
   '/index.html',
@@ -43,6 +43,7 @@ self.addEventListener('activate', (event) => {
 self.addEventListener('fetch', (event) => {
   if (event.request.method !== 'GET') return;
   if (event.request.url.includes('/api/')) return;
+  if (event.request.url.includes('/assets/')) return;
   if (!event.request.url.startsWith(self.location.origin)) return;
 
   // STRATEGY: Network-First with Offline Fallback for Navigation (SPA Support)

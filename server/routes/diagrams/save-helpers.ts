@@ -88,6 +88,44 @@ export async function insertRelationshipsBulk(rows: any[], diagramId: number) {
   });
 }
 
+export async function insertTableConstraintsBulk(rows: any[]) {
+  if (rows.length === 0 || !prisma) return;
+  const CHUNK = 500;
+  for (let i = 0; i < rows.length; i += CHUNK) {
+    const batch = rows.slice(i, i + CHUNK);
+    await prisma.tableConstraint.createMany({
+      data: batch.map(constraint => ({
+        id: constraint.id,
+        entityId: constraint._entity_id,
+        kind: constraint.kind,
+        name: constraint.name || null,
+        columnIds: Array.isArray(constraint.column_ids) ? JSON.stringify(constraint.column_ids) : constraint.column_ids || null,
+        expression: constraint.expression || null,
+      })),
+      skipDuplicates: true,
+    });
+  }
+}
+
+export async function insertTableIndexesBulk(rows: any[]) {
+  if (rows.length === 0 || !prisma) return;
+  const CHUNK = 500;
+  for (let i = 0; i < rows.length; i += CHUNK) {
+    const batch = rows.slice(i, i + CHUNK);
+    await prisma.tableIndex.createMany({
+      data: batch.map(index => ({
+        id: index.id,
+        entityId: index._entity_id,
+        name: index.name,
+        columnIds: Array.isArray(index.column_ids) ? JSON.stringify(index.column_ids) : String(index.column_ids || "[]"),
+        isUnique: Boolean(index.is_unique),
+        algorithm: index.algorithm || null,
+      })),
+      skipDuplicates: true,
+    });
+  }
+}
+
 export async function upsertEntities(rows: any[], diagramId: number) {
   if (rows.length === 0 || !prisma) return;
   const CHUNK = 50;

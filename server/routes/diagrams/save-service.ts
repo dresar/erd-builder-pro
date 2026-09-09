@@ -7,11 +7,8 @@ import {
   insertEntitiesBulk,
   insertColumnsBulk,
   insertRelationshipsBulk,
-  upsertEntities,
-  upsertColumns,
-  upsertRelationships,
-  upsertTableConstraints,
-  upsertTableIndexes,
+  insertTableConstraintsBulk,
+  insertTableIndexesBulk,
 } from "./service.js";
 export { fetchDBSchema, testDBConnection, createDiagramFromDB } from "./db-service.js";
 
@@ -81,135 +78,45 @@ export async function saveDiagram(
     (body.data !== undefined && typeof body.data === "object" && (body.data as any)?._type === "production_db_positions");
 
   if (!isProductionDbSave) {
-    const existingRelationships = await prisma.relationship.findMany({
-      where: { diagramId },
-      select: { id: true },
-    });
-
-    const existingRelIds = new Set(existingRelationships.map(r => r.id));
-    const newRelIds = new Set(dedupedRelationships.map((r: any) => r.id));
-
     const existingEntities = await prisma.entity.findMany({
       where: { diagramId },
       select: { id: true },
     });
 
-    const existingEntityIds = new Set(existingEntities.map(e => e.id));
-    const newEntityIds = new Set(dedupedEntities.map((e: any) => e.id));
-    const entitiesToDelete = Array.from(existingEntityIds).filter(id => !newEntityIds.has(id));
+    if (existingEntities.length > 0) {
+      const existingIds = existingEntities.map(e => e.id);
+      await prisma.relationship.deleteMany({ where: { diagramId } });
+      await prisma.column.deleteMany({ where: { entityId: { in: existingIds } } });
+      await prisma.tableConstraint.deleteMany({ where: { entityId: { in: existingIds } } });
+      await prisma.tableIndex.deleteMany({ where: { entityId: { in: existingIds } } });
+      await prisma.entity.deleteMany({ where: { diagramId } });
+    }
 
-    if (existingEntities.length === 0 || entitiesToDelete.length === existingEntities.length) {
-      if (entitiesToDelete.length > 0) {
-        await prisma.relationship.deleteMany({ where: { diagramId } });
-        await prisma.column.deleteMany({ where: { entityId: { in: entitiesToDelete } } });
-        await prisma.tableConstraint.deleteMany({ where: { entityId: { in: entitiesToDelete } } });
-        await prisma.tableIndex.deleteMany({ where: { entityId: { in: entitiesToDelete } } });
-        await prisma.entity.deleteMany({ where: { diagramId } });
-      }
-      if (dedupedEntities.length > 0) {
-        await insertEntitiesBulk(dedupedEntities, diagramId);
+    if (dedupedEntities.length > 0) {
+      await insertEntitiesBulk(dedupedEntities, diagramId);
 
-        const allColumns: any[] = [];
-        for (const entity of dedupedEntities) {
-          for (const col of entity.columns || []) {
-            allColumns.push({ ...col, _entity_id: entity.id });
-          }
+      const allColumns: any[] = [];
+      for (const entity of dedupedEntities) {
+        for (const col of entity.columns || []) {
+          allColumns.push({ ...col, _entity_id: entity.id });
         }
-        if (allColumns.length > 0) {
-          await insertColumnsBulk(allColumns);
-        }
-
-        const allConstraints = dedupedEntities.flatMap(entity =>
-          (entity.constraints || []).map((constraint: any) => ({ ...constraint, _entity_id: entity.id }))
-        );
-        const allIndexes = dedupedEntities.flatMap(entity =>
-          (entity.indexes || []).map((index: any) => ({ ...index, _entity_id: entity.id }))
-        );
-        if (allConstraints.length > 0) await upsertTableConstraints(allConstraints);
-        if (allIndexes.length > 0) await upsertTableIndexes(allIndexes);
+      }
+      if (allColumns.length > 0) {
+        await insertColumnsBulk(allColumns);
       }
 
-      if (dedupedRelationships.length > 0) {
-        await insertRelationshipsBulk(dedupedRelationships, diagramId);
-      }
-    } else {
-      let colsToDelete: string[] = [];
+      const allConstraints = dedupedEntities.flatMap(entity =>
+        (entity.constraints || []).map((constraint: any) => ({ ...constraint, _entity_id: entity.id }))
+      );
+      const allIndexes = dedupedEntities.flatMap(entity =>
+        (entity.indexes || []).map((index: any) => ({ ...index, _entity_id: entity.id }))
+      );
+      if (allConstraints.length > 0) await insertTableConstraintsBulk(allConstraints);
+      if (allIndexes.length > 0) await insertTableIndexesBulk(allIndexes);
+    }
 
-      if (dedupedEntities.length > 0) {
-        await upsertEntities(dedupedEntities, diagramId);
-
-        const allColumns: any[] = [];
-        const newColIds = new Set();
-        const seenColIds = new Set();
-        for (const entity of dedupedEntities) {
-          for (const col of entity.columns || []) {
-            if (seenColIds.has(col.id)) continue;
-            seenColIds.add(col.id);
-            allColumns.push({ ...col, _entity_id: entity.id });
-            newColIds.add(col.id);
-          }
-        }
-
-        if (allColumns.length > 0) {
-          await upsertColumns(allColumns);
-        }
-
-        const allConstraints = dedupedEntities.flatMap(entity =>
-          (entity.constraints || []).map((constraint: any) => ({ ...constraint, _entity_id: entity.id }))
-        );
-        const allIndexes = dedupedEntities.flatMap(entity =>
-          (entity.indexes || []).map((index: any) => ({ ...index, _entity_id: entity.id }))
-        );
-        if (allConstraints.length > 0) await upsertTableConstraints(allConstraints);
-        if (allIndexes.length > 0) await upsertTableIndexes(allIndexes);
-
-        const keptEntityIds = Array.from(existingEntityIds).filter(id => newEntityIds.has(id));
-        if (keptEntityIds.length > 0) {
-          const existingColumns = await prisma.column.findMany({
-            where: { entityId: { in: keptEntityIds } },
-            select: { id: true },
-          });
-          const existingColIds = new Set(existingColumns.map((c: any) => c.id));
-          colsToDelete = Array.from(existingColIds).filter(id => !newColIds.has(id)) as string[];
-        }
-
-        const existingConstraints = await prisma.tableConstraint.findMany({ where: { entityId: { in: Array.from(existingEntityIds) } }, select: { id: true } });
-        const existingIndexes = await prisma.tableIndex.findMany({ where: { entityId: { in: Array.from(existingEntityIds) } }, select: { id: true } });
-        const newConstraintIds = new Set(allConstraints.map((constraint: any) => constraint.id));
-        const newIndexIds = new Set(allIndexes.map((index: any) => index.id));
-        const constraintsToDelete = existingConstraints.map(item => item.id).filter(id => !newConstraintIds.has(id));
-        const indexesToDelete = existingIndexes.map(item => item.id).filter(id => !newIndexIds.has(id));
-        if (constraintsToDelete.length > 0) await prisma.tableConstraint.deleteMany({ where: { id: { in: constraintsToDelete } } });
-        if (indexesToDelete.length > 0) await prisma.tableIndex.deleteMany({ where: { id: { in: indexesToDelete } } });
-      }
-
-      if (dedupedRelationships.length > 0) {
-        await upsertRelationships(dedupedRelationships, diagramId);
-      }
-
-      const relsToDelete = Array.from(existingRelIds).filter(id => !newRelIds.has(id));
-      if (relsToDelete.length > 0) {
-        await prisma.relationship.deleteMany({
-          where: { id: { in: relsToDelete } },
-        });
-      }
-
-      if (colsToDelete.length > 0) {
-        await prisma.column.deleteMany({
-          where: { id: { in: colsToDelete } },
-        });
-      }
-
-      if (entitiesToDelete.length > 0) {
-        await prisma.tableConstraint.deleteMany({ where: { entityId: { in: entitiesToDelete } } });
-        await prisma.tableIndex.deleteMany({ where: { entityId: { in: entitiesToDelete } } });
-        await prisma.column.deleteMany({
-          where: { entityId: { in: entitiesToDelete } },
-        });
-        await prisma.entity.deleteMany({
-          where: { id: { in: entitiesToDelete } },
-        });
-      }
+    if (dedupedRelationships.length > 0) {
+      await insertRelationshipsBulk(dedupedRelationships, diagramId);
     }
   }
 

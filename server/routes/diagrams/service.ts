@@ -78,6 +78,8 @@ export {
   insertEntitiesBulk,
   insertColumnsBulk,
   insertRelationshipsBulk,
+  insertTableConstraintsBulk,
+  insertTableIndexesBulk,
   upsertEntities,
   upsertColumns,
   upsertRelationships,

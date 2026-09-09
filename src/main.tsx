@@ -40,6 +40,11 @@ window.fetch = async (...args) => {
   return response;
 };
 
+// Auto-reload when dynamic chunk hashes change after deployment
+window.addEventListener('vite:preloadError', () => {
+  window.location.reload();
+});
+
 // Register Service Worker for Offline Assets Caching (production only)
 if ('serviceWorker' in navigator) {
   const isDev = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
