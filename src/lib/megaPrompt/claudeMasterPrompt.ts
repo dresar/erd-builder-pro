@@ -3,6 +3,7 @@ import { getSkillsStandardsSection } from './skillsStandardsSection';
 import { getUiArchitecturalBehaviorsSection } from './uiArchitecturalBehaviorsSection';
 import { getAgentTeamworkSection } from './agentTeamworkSection';
 import { getClaudeZipExecutionSection } from './claudeZipExecutionSection';
+import { getApiEndpointsSection } from './apiEndpointsSection';
 
 export interface ClaudePromptContext {
   projectName: string;
@@ -81,5 +82,7 @@ ${getUiArchitecturalBehaviorsSection()}
 ${getAgentTeamworkSection()}
 
 ${getClaudeZipExecutionSection(proj)}
+
+${getApiEndpointsSection(proj, context.fullDbml)}
 `;
 }

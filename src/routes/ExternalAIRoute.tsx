@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Bot, Check, Copy, Loader2 } from 'lucide-react';
+import { Bot, Check, Copy, Loader2, Braces } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { useWorkspace } from '@/providers/WorkspaceProvider';
@@ -227,6 +227,19 @@ export function ExternalAIRoute() {
           </div>
 
           <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => {
+                const activeProj = projects.find(p => p.uid === selectedWorkspaceUid || p.id === selectedWorkspaceUid);
+                navigate(activeProj?.slug ? `/api-explorer/${activeProj.slug}` : '/api-explorer');
+              }}
+              className="h-8 gap-1.5 px-3 text-xs border-indigo-500/30 text-indigo-400 hover:bg-indigo-500/10 cursor-pointer"
+            >
+              <Braces className="size-3.5" />
+              <span>API</span>
+            </Button>
+
             <div className="flex gap-1 bg-muted border border-border/40 rounded-lg p-0.5">
               <button
                 type="button"

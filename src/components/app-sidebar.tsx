@@ -19,6 +19,7 @@ import {
   Bot,
   Sparkles,
   Users,
+  Braces,
 } from "lucide-react"
 import { useNavigate, useLocation } from "react-router-dom"
 
@@ -249,6 +250,13 @@ export const AppSidebar = React.memo(({
       icon: Bot,
       isActive: location.pathname === '/ai-generator',
       onClick: () => navigate('/ai-generator'),
+    },
+    {
+      title: "API",
+      url: "/api-explorer",
+      icon: Braces,
+      isActive: location.pathname.startsWith('/api-explorer') || location.pathname.startsWith('/api'),
+      onClick: () => navigate('/api-explorer'),
     },
   ];
 

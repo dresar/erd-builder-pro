@@ -35,6 +35,7 @@ const AdminRoute = lazy(() => import('./routes/AdminRoute').then(module => ({ de
 const ExternalAIRoute = lazy(() => import('./routes/ExternalAIRoute').then(module => ({ default: module.ExternalAIRoute })));
 const AgentGeneratorRoute = lazy(() => import('./routes/AgentGeneratorRoute').then(module => ({ default: module.AgentGeneratorRoute })));
 const AIChatRoute = lazy(() => import('./routes/AIChatRoute').then(module => ({ default: module.AIChatRoute })));
+const ApiExplorerRoute = lazy(() => import('./routes/ApiExplorerRoute').then(module => ({ default: module.ApiExplorerRoute })));
 
 function lazyRoute(element: ReactNode) {
   return <Suspense fallback={<div className="flex flex-1 items-center justify-center text-xs text-muted-foreground">Opening file…</div>}>{element}</Suspense>;
@@ -167,6 +168,10 @@ function AppContent() {
           <Route path="agent-generator" element={lazyRoute(<AgentGeneratorRoute />)} />
           <Route path="agent-generator/:projectSlug" element={lazyRoute(<AgentGeneratorRoute />)} />
           <Route path="ai-chat" element={lazyRoute(<AIChatRoute />)} />
+          <Route path="api" element={lazyRoute(<ApiExplorerRoute />)} />
+          <Route path="api/:projectSlug" element={lazyRoute(<ApiExplorerRoute />)} />
+          <Route path="api-explorer" element={lazyRoute(<ApiExplorerRoute />)} />
+          <Route path="api-explorer/:projectSlug" element={lazyRoute(<ApiExplorerRoute />)} />
 
           {/* Default: Dashboard */}
           <Route index element={<DashboardRoute />} />
