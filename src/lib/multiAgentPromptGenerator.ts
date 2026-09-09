@@ -1,4 +1,5 @@
 import JSZip from 'jszip';
+import { generateClaudeMasterPrompt } from './megaPrompt/claudeMasterPrompt';
 
 export interface MultiAgentProjectConfig {
   projectName: string;
@@ -143,148 +144,19 @@ function extractFullNotes(notes: any[] = []): string {
 }
 
 export function buildClaudeMasterPrompt(config: MultiAgentProjectConfig): string {
-  const proj = config.projectName.trim() || 'Sistem Enterprise';
-  const domain = config.domain.trim() || 'SaaS Multi-Tenant';
-  const techStack = config.techStack.trim() || 'Next.js 15 + Neon PostgreSQL (Prisma) + Express + Tailwind CSS';
   const fullDbml = extractFullDbml(config.diagrams);
   const fullWorkflows = extractFullWorkflows(config.flowcharts);
   const fullNotes = extractFullNotes(config.notes);
 
-  return `# =======================================================================
-# MEGA ORCHESTRATOR PROMPT: COMPLETE MULTI-AGENT PROJECT GENERATOR
-# TARGET SYSTEM: "${proj}" | DOMAIN: "${domain}"
-# =======================================================================
-
-ROLE & MISSION (ENGLISH DIRECTIVE):
-You are a Principal Software Architect, Lead Multi-Agent Systems Engineer, and Production Master Orchestrator.
-Your objective is to generate an EXHAUSTIVE, PRODUCTION-GRADE, END-TO-END PROJECT PACKAGE for "${proj}".
-This package is built for modern AI coding tools and human engineering teams to execute immediately without missing context.
-
-LANGUAGE & FORMATTING RULE:
-- ALL AI Agent system instructions, teamwork protocols, and engineering governance must be written in authoritative, precise ENGLISH.
-- The Product Requirements Document (docs/PRD.md), user stories, and business domain specifications must be written in comprehensive, formal INDONESIAN (Bahasa Indonesia baku kelas enterprise) with extreme detail.
-- Zero placeholders: NEVER emit "// TODO", "// remaining tables", or abbreviations. Every table, column, role, and module must be written in full.
-
-=======================================================================
-[SECTION 1: CORE PROJECT CONTEXT & ENTITY DATA]
-=======================================================================
-Project Name: "${proj}"
-Business Domain: "${domain}"
-Default Infrastructure: Serverless on Neon PostgreSQL (or Supabase) + Edge Functions
-Target Tech Stack: ${techStack}
-Single Monorepo Rule: 1 unified package.json at root. Strictly no duplicated node_modules. Backend and frontend unified.
-
---- DATABASE SCHEMA (EXTRACTED RELATIONAL DBML):
-\`\`\`dbml
-${fullDbml}
-\`\`\`
-
---- BUSINESS LOGIC & WORKFLOWS (EXTRACTED FLOWCHARTS):
-${fullWorkflows}
-
-${fullNotes ? `--- EXISTING PROJECT NOTES & SPECIFICATIONS:\n${fullNotes}\n` : ''}${config.customInstructions ? `--- CUSTOM INSTRUCTIONS:\n${config.customInstructions}\n` : ''}
-
-=======================================================================
-[SECTION 2: MANDATORY MASTER ENGINEERING STANDARDS & SKILLS]
-=======================================================================
-You MUST enforce and bake the following authoritative skills into the architecture:
-
-1. /ui-ux-text (MICROCOPY & TEXT HIERARCHY):
-   - Form Placeholders: STRICTLY 1 WORD (e.g. "Nama", "Domain", "Stack", "Email", "Cari").
-   - Action & Button Labels: STRICTLY 1–2 WORDS (e.g. "Simpan", "Hapus", "Salin", "Unduh ZIP", "Generate AI").
-   - Title & Headings: Short hierarchy (1–3 words). Zero text bloat, no filler paragraphs.
-
-2. /precision-card-button-ui & /button-presisi:
-   - Subtle rounded rectangle geometry: 6px–8px radius (rounded-lg).
-   - STRICT PROHIBITION: Never use rounded-full (pill/capsule) for main buttons or form controls.
-   - Compact heights: 32px–38px height (h-8 to h-9.5).
-   - Typography: 11px–13px font with medium/semibold weight.
-   - Thin 1px subtle border (border border-border/70) with lightweight elevation.
-
-3. /nokomen (STRICT ZERO-COMMENT CODE STANDARD):
-   - All generated code in TypeScript/JavaScript/Python MUST HAVE ZERO INLINE COMMENTS.
-   - Code must be self-documenting through clean naming, modularity, and strong domain structure.
-
-4. /master (8-PHASE ENGINEERING LIFECYCLE):
-   - Phase 1: Master Protocol -> Phase 2: Architecture Discovery -> Phase 3: Task Impact Analysis ->
-     Phase 4: Execution (Nokomen) -> Phase 5: Security Validation -> Phase 6: QA/Build Verification ->
-     Phase 7: Self-Healing Loop -> Phase 8: Final Audit.
-
-5. /env-secrets-management (CREDENTIAL SECURITY):
-   - Zero tolerance for hardcoded tokens, passwords, or secret keys in source code.
-   - Always load from process.env via .env and provide a sanitized .env.example template.
-   - Server secrets must NEVER be exposed to the client bundle.
-
-6. /anti-slop-writing:
-   - Zero AI clichés and banned words ("delve", "tapestry", "robust", "seamless", "elevate", "streamline").
-   - Natural human cadence, dynamic sentence lengths, active voice, and authentic engineering terminology.
-
-=======================================================================
-[SECTION 3: MANDATORY UI/UX & ARCHITECTURAL BEHAVIORS]
-=======================================================================
-1. CREATE ACTION: DO NOT USE STANDARD CENTER MODALS!
-   - When creating a record or opening an editor, animate a Card sliding up from the bottom (Slide-Up Bottom Sheet Card).
-2. DELETE CONFIRMATION: DO NOT USE BROWSER DEFAULT window.confirm!
-   - Provide an in-app custom confirmation card with clear destructive action and safety checks.
-3. FIXED STICKY HEADER & SIDEBAR:
-   - When scrolling content vertically, the top Header and left Sidebar MUST remain pinned (fixed/sticky) and forbidden to move!
-4. DESKTOP SIDEBAR COLLAPSIBLE:
-   - Sidebar on desktop can be toggled/collapsed cleanly with a smooth transition.
-5. DUAL VIEW MODE (GRID & LIST):
-   - Data catalog / lists must provide an instant toggle between Grid View and List View.
-6. MANDATORY MOBILE 2-GRID RULE:
-   - When viewing Grid Mode on mobile screens, the layout MUST STRICTLY be 2 columns (grid-cols-2), NEVER single column (grid-cols-1)!
-7. BACKEND ARCHITECTURE:
-   - Prioritize backend first. Single root package.json.
-   - Unified serverless API (Next.js route handlers or Express API).
-   - Default Database: Neon Serverless PostgreSQL with Prisma ORM.
-8. APP & MOBILE HYBRID CAPABILITY:
-   - Codebase must be clean and responsive, ready to run as a Web App, PWA, or wrapped desktop/mobile shell.
-
-=======================================================================
-[SECTION 4: 5-AGENT TEAMWORK ORCHESTRATION (.agents/ FOLDER)]
-=======================================================================
-You must configure 5 specialized AI agents working as a synchronized engineering team:
-
-- Agent 1: Tech Lead & Architect (.agents/01_TECH_LEAD.md)
-  Mission: System architecture, Clean Architecture domain boundaries, task decomposition, code review.
-- Agent 2: Database & Backend Engineer (.agents/02_DATABASE_BACKEND.md)
-  Mission: Relational data modeling, PostgreSQL migrations, Prisma schema, transactional service layers, REST APIs.
-- Agent 3: Frontend & UI/UX Specialist (.agents/03_FRONTEND_UI.md)
-  Mission: Responsive UI components, Tailwind CSS, slide-up bottom sheet cards, mobile 2-grid layouts, microcopy.
-- Agent 4: Security & Compliance Specialist (.agents/04_SECURITY_AUTH.md)
-  Mission: Session auth, RBAC matrices, tenant data isolation, audit trail logging, OWASP defenses.
-- Agent 5: QA & Verification Engineer (.agents/05_QA_TESTER.md)
-  Mission: Automated testing, edge-case validation, verification checklists, regression prevention.
-
-=======================================================================
-[SECTION 5: MANDATORY BUNDLE FILE TREE & ZIP GENERATION]
-=======================================================================
-You MUST generate the entire project bundle matching this exact structure:
-
-project-bundle/
-├── docs/
-│   ├── PRD.md                     <-- Exhaustive enterprise PRD in formal Indonesian (min. 2,500+ words)
-│   ├── ARCHITECTURE.md            <-- System topology, C4 model, caching, queues
-│   └── WORKFLOWS.md               <-- Business logic flows with Mermaid diagrams
-├── database/
-│   ├── schema.dbml                <-- Complete relational DBML schema with all foreign keys
-│   ├── schema.sql                 <-- PostgreSQL executable DDL with constraints & indexes
-│   └── seed.sql                   <-- Realistic enterprise seed data for master tables
-├── .agents/                       <-- 5-AGENT SYNCHRONIZED TEAMWORK (English):
-│   ├── 01_TECH_LEAD.md            <-- Tech Lead governance & orchestration
-│   ├── 02_DATABASE_BACKEND.md     <-- Backend services & database rules
-│   ├── 03_FRONTEND_UI.md          <-- Frontend components & UI/UX rules
-│   ├── 04_SECURITY_AUTH.md        <-- Security, RBAC & tenant isolation
-│   └── 05_QA_TESTER.md            <-- QA testing & verification protocols
-├── AGENTS.md                      <-- Root Team Coordination Protocol
-└── README.md                      <-- Quickstart guide, environment variables & commands
-
-OUTPUT DELIVERY INSTRUCTION:
-- If running in Claude: Wrap all generated files into a Claude Artifact or Python script that writes '/mnt/data/project_bundle.zip' with a direct download link so the user can download the ZIP instantly.
-- Generate every file in complete, full, production-ready depth. Do not abbreviate.
-
-Execute now and build the full enterprise package!`;
+  return generateClaudeMasterPrompt({
+    projectName: config.projectName,
+    domain: config.domain,
+    techStack: config.techStack,
+    fullDbml,
+    fullWorkflows,
+    fullNotes,
+    customInstructions: config.customInstructions,
+  });
 }
 
 export function buildDefaultBundleFiles(config: MultiAgentProjectConfig): GeneratedBundleFile[] {
