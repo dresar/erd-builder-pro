@@ -166,19 +166,19 @@ export const ChatMessages = memo(function ChatMessages({
               <Sparkles className="size-6" />
             </div>
             <h3 className="text-base font-semibold tracking-tight text-foreground">
-              Asisten AI ERD Builder Pro
+              Asisten AI
             </h3>
             <p className="text-xs text-muted-foreground mt-1 max-w-md leading-relaxed">
-              Tanyakan apa saja tentang skema database, relasi tabel, flowchart alur logika, atau optimasi query SQL.
+              Tanya skema database, relasi tabel, atau diagram alur.
             </p>
 
             {/* Quick Starter Suggestions */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-6 w-full text-left">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-5 w-full text-left">
               {[
-                { title: 'Skema E-Commerce', desc: 'Rancang tabel pesanan, produk, pengguna, dan pembayaran dengan relasi foreign key.' },
-                { title: 'Flowchart Autentikasi', desc: 'Buat alur logika flowchart registrasi pengguna, verifikasi OTP, dan login.' },
-                { title: 'Analisis Relasi', desc: 'Jelaskan perbedaan relasi Many-to-Many vs One-to-Many berserta tabel pivot.' },
-                { title: 'Optimasi Query', desc: 'Bagaimana cara menentukan index komposit terbaik pada PostgreSQL?' },
+                { title: 'Skema Toko', desc: 'Rancang tabel pesanan, produk, dan transaksi dengan foreign key.' },
+                { title: 'Alur Login', desc: 'Buat diagram registrasi, verifikasi OTP, dan autentikasi.' },
+                { title: 'Analisis Relasi', desc: 'Perbedaan relasi Many-to-Many vs One-to-Many dan tabel pivot.' },
+                { title: 'Optimasi Indeks', desc: 'Panduan konfigurasi indeks komposit performa SQL.' },
               ].map((item, idx) => (
                 <button
                   key={idx}

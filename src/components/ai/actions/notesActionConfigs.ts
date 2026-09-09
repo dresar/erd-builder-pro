@@ -3,8 +3,8 @@ import { AIAction } from './types';
 export const notesActions: AIAction[] = [
   {
     id: 'notes-summarize',
-    label: 'Summarize',
-    description: 'Concise summary of the note (default 3 sentences)',
+    label: 'Ringkas',
+    description: 'Ringkasan poin utama catatan.',
     icon: 'Summary',
     buildPrompt: (ctx) => {
       const content = ctx.content || '';
@@ -14,8 +14,8 @@ export const notesActions: AIAction[] = [
   },
   {
     id: 'notes-improve-grammar',
-    label: 'Improve Grammar',
-    description: 'Polish grammar and writing',
+    label: 'Tata Bahasa',
+    description: 'Perbaiki ejaan dan tata bahasa.',
     icon: 'Polish',
     buildPrompt: (ctx) => {
       const content = ctx.content || '';
@@ -24,8 +24,8 @@ export const notesActions: AIAction[] = [
   },
   {
     id: 'notes-generate-docs',
-    label: 'Generate Docs',
-    description: 'Format as technical documentation',
+    label: 'Dokumentasi',
+    description: 'Format dokumentasi teknis rapi.',
     icon: 'Docs',
     buildPrompt: (ctx) => {
       const content = ctx.content || '';

@@ -2,8 +2,8 @@ import type { AIAction } from './types';
 
 export const grillMeAction: AIAction = {
   id: 'grill-me',
-  label: 'Plan',
-  description: 'Build a precise product and technical plan',
+  label: 'Rencana',
+  description: 'Wawancara perencanaan bertahap.',
   icon: 'Interview',
   persistent: true,
   requiresEntityContext: false,

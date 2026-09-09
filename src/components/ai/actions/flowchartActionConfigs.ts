@@ -124,8 +124,8 @@ function flowchartSymbolDetail(context: Record<string, any>): string {
 export const flowchartActions: AIAction[] = [
   {
     id: 'flowchart-generate',
-    label: 'Generate Flowchart',
-    description: 'Create flowchart from text description',
+    label: 'Buat Alur',
+    description: 'Rancang diagram dari deskripsi teks.',
     icon: 'Plus',
     buildPrompt: (ctx) => {
       const symbols = flowchartSymbolDetail(ctx);
@@ -171,8 +171,8 @@ After the JSON block, add a brief message: "Klik tombol **Append** untuk menamba
   },
   {
     id: 'flowchart-explain',
-    label: 'Explain Flow',
-    description: 'Natural language description of the flow',
+    label: 'Jelaskan Alur',
+    description: 'Uraian langkah proses diagram.',
     icon: 'Explain',
     buildPrompt: (ctx) => {
       const symbols = flowchartSymbolDetail(ctx);
@@ -181,8 +181,8 @@ After the JSON block, add a brief message: "Klik tombol **Append** untuk menamba
   },
   {
     id: 'flowchart-pseudocode',
-    label: 'Generate Pseudocode',
-    description: 'Pseudocode from the flowchart',
+    label: 'Pseudocode',
+    description: 'Konversi logika ke pseudocode.',
     icon: 'Code',
     buildPrompt: (ctx) => {
       const symbols = flowchartSymbolDetail(ctx);
@@ -191,8 +191,8 @@ After the JSON block, add a brief message: "Klik tombol **Append** untuk menamba
   },
   {
     id: 'flowchart-insert',
-    label: 'Insert Symbol',
-    description: 'Add a symbol between two existing symbols',
+    label: 'Sisip Simbol',
+    description: 'Tambah node di antara dua simbol.',
     icon: 'Between',
     buildPrompt: (ctx) => {
       const symbols = flowchartSymbolDetail(ctx);
@@ -233,8 +233,8 @@ Example:
   },
   {
     id: 'flowchart-import',
-    label: 'Import from Description',
-    description: 'Generate entire flowchart from a text description, replacing current',
+    label: 'Import Alur',
+    description: 'Buat diagram penuh dari teks proses.',
     icon: 'Import',
     buildPrompt: (ctx) => {
       return `You are a flowchart generator. The user will describe a process or workflow, and you will generate a complete flowchart.

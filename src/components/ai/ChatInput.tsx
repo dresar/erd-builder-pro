@@ -76,28 +76,28 @@ function getActionIcon(actionId: string) {
   }
 }
 
-function getPlaceholder(actionId: string | null | undefined, hasProject: boolean): string {
+function getPlaceholder(actionId: string | null | undefined, _hasProject: boolean): string {
   switch (actionId) {
-    case 'notes-summarize':       return 'Ringkas catatan...';
-    case 'notes-improve-grammar': return 'Perbaiki tata bahasa...';
-    case 'notes-generate-docs':   return 'Buat format dokumentasi teknis...';
-    case 'erd-generate-sql':      return 'Deskripsikan tabel/skema ERD yang ingin dibuat...';
-    case 'erd-edit-column':       return 'Tentukan kolom yang ingin ditambah atau diubah...';
-    case 'erd-explain-table':     return 'Tanyakan penjelasan tabel atau relasi...';
-    case 'erd-suggest-indexes':   return 'Minta rekomendasi index tabel...';
-    case 'erd-seed-data':         return 'Minta contoh data dummy...';
-    case 'flowchart-generate':    return 'Deskripsikan alur flowchart yang ingin dibuat...';
-    case 'flowchart-explain':     return 'Minta penjelasan langkah-langkah alur flowchart...';
-    case 'flowchart-pseudocode':  return 'Minta pseudocode dari flowchart ini...';
-    case 'flowchart-insert':      return 'Tentukan simbol baru yang ingin disisipkan...';
-    case 'flowchart-import':      return 'Masukkan proses alur untuk diubah ke diagram...';
-    case 'db-client-explain-table': return 'Jelaskan struktur tabel live ini...';
-    case 'db-client-analyze-query': return 'Analisis performa & validitas kueri SQL ini...';
-    case 'db-client-generate-query': return 'Deskripsikan kueri SQL yang ingin dibuat...';
-    case 'db-client-suggest-indexes': return 'Minta rekomendasi index untuk kueri SQL ini...';
-    case 'db-client-schema-issues': return 'Analisis risiko dan inkonsistensi skema DB...';
-    case 'grill-me':               return 'Jelaskan apa yang ingin Anda rencanakan...';
-    default:                      return hasProject ? 'Tanya apa saja... Ketik @ untuk menyebut file' : 'Tanya apa saja ke AI...';
+    case 'notes-summarize':       return 'Ringkas';
+    case 'notes-improve-grammar': return 'Perbaiki';
+    case 'notes-generate-docs':   return 'Dokumentasi';
+    case 'erd-generate-sql':      return 'Skema';
+    case 'erd-edit-column':       return 'Kolom';
+    case 'erd-explain-table':     return 'Tabel';
+    case 'erd-suggest-indexes':   return 'Indeks';
+    case 'erd-seed-data':         return 'Data';
+    case 'flowchart-generate':    return 'Alur';
+    case 'flowchart-explain':     return 'Penjelasan';
+    case 'flowchart-pseudocode':  return 'Pseudocode';
+    case 'flowchart-insert':      return 'Simbol';
+    case 'flowchart-import':      return 'Proses';
+    case 'db-client-explain-table': return 'Tabel';
+    case 'db-client-analyze-query': return 'Kueri';
+    case 'db-client-generate-query': return 'Kueri';
+    case 'db-client-suggest-indexes': return 'Indeks';
+    case 'db-client-schema-issues': return 'Risiko';
+    case 'grill-me':               return 'Rencana';
+    default:                      return 'Pesan';
   }
 }
 
@@ -413,10 +413,10 @@ export const ChatInput = memo(function ChatInput({
                   : 'border-border/70 bg-background/50 hover:bg-muted text-foreground'
               }`}
               onClick={() => onSelectAction(flowchartAction)}
-              title="Buat alur flowchart"
+              title="Buat diagram alur"
             >
               <Wand2 className="size-3.5 mr-1 text-violet-500" />
-              Flowchart
+              Alur
             </Button>
           )}
 
@@ -464,7 +464,7 @@ export const ChatInput = memo(function ChatInput({
                 <div className="flex items-center justify-between px-2 py-1 border-b border-border/50">
                   <div className="flex items-center gap-1.5">
                     <SlidersHorizontal className="size-3.5 text-primary" />
-                    <span className="text-xs font-semibold text-foreground">Koleksi Alat AI ({actions.length})</span>
+                    <span className="text-xs font-semibold text-foreground">Alat AI ({actions.length})</span>
                   </div>
                   {activeAction && (
                     <button
@@ -472,7 +472,7 @@ export const ChatInput = memo(function ChatInput({
                         onClearAction();
                         setToolsOpen(false);
                       }}
-                      className="text-[10px] font-medium text-destructive hover:underline flex items-center gap-1"
+                      className="text-[10px] font-medium text-destructive hover:underline flex items-center gap-1 cursor-pointer"
                     >
                       <X className="size-3" />
                       Reset
@@ -492,8 +492,8 @@ export const ChatInput = memo(function ChatInput({
                 >
                   <SlidersHorizontal className="mt-0.5 size-3.5 text-muted-foreground" />
                   <span className="min-w-0 flex-1">
-                    <span className="block text-xs font-medium text-foreground">Percakapan Bebas (Tanpa Alat)</span>
-                    <span className="block text-[10px] text-muted-foreground">Tanya jawab umum dengan konteks penuh</span>
+                    <span className="block text-xs font-medium text-foreground">Percakapan Bebas</span>
+                    <span className="block text-[10px] text-muted-foreground">Tanya jawab umum tanpa mode.</span>
                   </span>
                   {!activeAction && <Check className="size-3.5 text-primary shrink-0 mt-0.5" />}
                 </button>

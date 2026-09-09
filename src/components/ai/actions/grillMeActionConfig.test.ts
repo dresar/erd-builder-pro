@@ -5,7 +5,7 @@ describe('Plan AI action', () => {
   it('asks one question at a time and gathers the core planning decisions before concluding', () => {
     expect(grillMeAction.persistent).toBe(true);
     expect(grillMeAction.requiresEntityContext).toBe(false);
-    expect(grillMeAction.label).toBe('Plan');
+    expect(grillMeAction.label).toBe('Rencana');
     expect(grillMeAction.buildPrompt({})).toContain('ask exactly one highest-impact question');
     const followUpPrompt = grillMeAction.buildPrompt({ planPhase: 'follow-up' });
     expect(followUpPrompt).toContain('The user has answered the previous question');

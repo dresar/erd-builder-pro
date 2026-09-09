@@ -36,8 +36,8 @@ function erdRelationships(context: Record<string, any>): string {
 export const erdActions: AIAction[] = [
   {
     id: 'erd-generate-sql',
-    label: 'Generate DBML',
-    description: 'Create or extend ERD schema with DBML',
+    label: 'Skema DBML',
+    description: 'Rancang atau perbarui skema ERD.',
     icon: 'Database',
     buildPrompt: (ctx) => {
       const tables = erdTableList(ctx);
@@ -76,8 +76,8 @@ After the DBML block, add one short sentence telling the user they can click App
   },
   {
     id: 'erd-edit-column',
-    label: 'Edit Columns',
-    description: 'Add/edit/delete columns via chat',
+    label: 'Ubah Kolom',
+    description: 'Kelola kolom tabel via chat.',
     icon: 'Columns',
     buildPrompt: (ctx) => {
       const selectedNode = ctx.selectedNode;
@@ -135,8 +135,8 @@ If the user does NOT specify any column changes, ask them what columns they want
   },
   {
     id: 'erd-explain-table',
-    label: 'Explain Table',
-    description: 'Natural language description of selected table',
+    label: 'Jelaskan Tabel',
+    description: 'Struktur kolom dan relasi tabel.',
     icon: 'Explain',
     buildPrompt: (ctx) => {
       const selectedNode = ctx.selectedNode;
@@ -152,8 +152,8 @@ If the user does NOT specify any column changes, ask them what columns they want
   },
   {
     id: 'erd-suggest-indexes',
-    label: 'Suggest Indexes',
-    description: 'Analyze columns and recommend indexes',
+    label: 'Saran Indeks',
+    description: 'Rekomendasi indeks performa.',
     icon: 'Index',
     buildPrompt: (ctx) => {
       const tables = erdTableList(ctx);
@@ -162,8 +162,8 @@ If the user does NOT specify any column changes, ask them what columns they want
   },
   {
     id: 'erd-seed-data',
-    label: 'Seed Data',
-    description: 'Generate INSERT statements with sample data',
+    label: 'Data Dummy',
+    description: 'Generate contoh data tabel.',
     icon: 'Data',
     buildPrompt: (ctx) => {
       const tables = erdTableList(ctx);
