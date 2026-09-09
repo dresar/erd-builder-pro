@@ -74,6 +74,8 @@ export function ExternalAIPromptTab({
   diagrams,
 }: ExternalAIPromptTabProps) {
   const isChainingStrategy = selectedStrategy === 'notes_to_erd' || selectedStrategy === 'notes_to_flowchart';
+  const lineCount = generatedPrompt ? generatedPrompt.split('\n').length : 0;
+  const charCount = generatedPrompt ? generatedPrompt.length : 0;
 
   const handleSelectExistingNote = (uid: string) => {
     const target = notes.find((n) => String(n.uid ?? n.id) === String(uid));
@@ -299,29 +301,35 @@ export function ExternalAIPromptTab({
         </div>
       )}
 
-      <div className="space-y-1.5 pt-1">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-1.5">
+      <div className="space-y-2 pt-1">
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <div className="flex items-center gap-2">
             <FieldLabel className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/70 px-1">
               Prompt Siap Pakai
             </FieldLabel>
-            <Badge variant="secondary" className="text-[10px] font-mono">Claude / ChatGPT</Badge>
+            <Badge variant="secondary" className="text-[10px] font-mono">
+              Claude / ChatGPT
+            </Badge>
+            <Badge variant="outline" className="text-[10px] font-mono text-muted-foreground border-border/60">
+              {lineCount} baris · {charCount.toLocaleString('id-ID')} karakter
+            </Badge>
           </div>
           <Button 
             onClick={onCopyPrompt} 
             size="sm" 
-            className="h-7 gap-1 px-3 text-xs bg-indigo-600 hover:bg-indigo-700 text-white cursor-pointer"
+            className="h-7.5 gap-1.5 px-3 text-xs bg-indigo-600 hover:bg-indigo-700 text-white cursor-pointer rounded-lg shadow-sm"
           >
             {copied ? <Check className="size-3.5" /> : <Copy className="size-3.5" />}
-            {copied ? '✓ Disalin' : 'Salin'}
+            <span>{copied ? '✓ Disalin' : 'Salin Prompt'}</span>
           </Button>
         </div>
 
         <textarea 
           readOnly
           value={generatedPrompt}
-          rows={6}
-          className="w-full p-2.5 font-mono text-xs rounded-lg bg-muted/20 border border-border/40 resize-none text-muted-foreground outline-none focus:ring-1 focus:ring-indigo-500/30 leading-relaxed"
+          rows={16}
+          aria-label="Canvas Prompting Siap Pakai"
+          className="w-full min-h-[380px] lg:min-h-[460px] p-3.5 sm:p-4 font-mono text-xs sm:text-[12.5px] rounded-xl bg-card/40 dark:bg-black/40 border border-border/60 resize-y text-foreground/90 outline-none focus:border-indigo-500/50 focus:ring-1 focus:ring-indigo-500/20 leading-relaxed custom-scrollbar selection:bg-indigo-500/30"
         />
       </div>
     </div>
