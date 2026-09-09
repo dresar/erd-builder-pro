@@ -29,7 +29,8 @@ export async function listSessions(params: {
     where.entityType = entityType;
     where.entityUid = entityUid;
   } else {
-    return [];
+    where.entityType = null;
+    where.entityUid = null;
   }
 
   return (await prisma?.aiChatSession.findMany({

@@ -39,7 +39,7 @@ export function AIChatRoute() {
       const match = projects.find((p: any) => String(p.uid) === String(selectedWorkspaceUid));
       if (match) return match.id;
     }
-    return workspaceActiveProjectId ?? null;
+    return workspaceActiveProjectId ?? (projects.length > 0 ? projects[0].id : null);
   }, [projectParam, selectedWorkspaceUid, projects, workspaceActiveProjectId]);
 
   const entityTypeParam = searchParams.get('entityType');

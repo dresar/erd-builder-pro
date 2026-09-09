@@ -41,7 +41,7 @@ interface UseAIChatReturn {
   isStreaming: boolean;
 
   listSessions: () => Promise<void>;
-  createSession: () => Promise<string | null>;
+  createSession: (initialTitle?: string) => Promise<AIChatSession | null>;
   selectSession: (sessionUid: string) => Promise<void>;
   deleteSession: (sessionUid: string) => Promise<void>;
   clearSessions: () => void;
@@ -133,6 +133,8 @@ export function useAIChat(
   const outboxSyncRef = useRef(false);
   const sessionsRef = useRef<AIChatSession[]>(sessions);
   sessionsRef.current = sessions;
+  const currentSessionRef = useRef<AIChatSession | null>(currentSession);
+  useEffect(() => { currentSessionRef.current = currentSession; }, [currentSession]);
 
   // Stable refs (break dependency chains)
   const isGuestRef = useRef(auth.isGuest);
@@ -191,14 +193,15 @@ export function useAIChat(
     }
   }, [projectId, entityContext?.entityType, entityContext?.entityUid]);
 
-  const createSession = useCallback(async (): Promise<string | null> => {
+  const createSession = useCallback(async (initialTitle?: string): Promise<AIChatSession | null> => {
+    const sessionTitle = initialTitle?.trim() || 'Chat Baru';
     if (isGuestCheck()) {
       const sessionUid = crypto.randomUUID();
       const newSession: AIChatSession = {
         id: sessionUid,
         uid: sessionUid,
         user_id: 'guest',
-        title: 'New Conversation',
+        title: sessionTitle,
         entity_type: entityContext?.entityType ?? null,
         entity_uid: entityContext?.entityUid ?? null,
         created_at: new Date().toISOString(),
@@ -207,14 +210,17 @@ export function useAIChat(
       try {
         await localPersistence.saveResource({ ...newSession, messages: [], type: 'ai_chat_session' });
       } catch {}
-      setSessions(prev => [newSession, ...prev]);
+      sessionsRef.current = [newSession, ...sessionsRef.current.filter(s => s.uid !== sessionUid)];
+      currentSessionRef.current = newSession;
+      setSessions(prev => [newSession, ...prev.filter(s => s.uid !== sessionUid)]);
       setCurrentSession(newSession);
       setMessages([]);
-      return sessionUid;
+      messagesCacheMapRef.current.set(sessionUid, []);
+      return newSession;
     }
 
     try {
-      const payload: any = { title: 'New Conversation' };
+      const payload: any = { title: sessionTitle };
       if (entityContext) { payload.entity_type = entityContext.entityType; payload.entity_uid = entityContext.entityUid; }
       if (projectId) payload.project_id = projectId;
 
@@ -226,11 +232,13 @@ export function useAIChat(
       if (!res.ok) throw new Error('Failed to create session');
       const newSession = await res.json() as AIChatSession;
 
-      setSessions(prev => [newSession, ...prev]);
+      sessionsRef.current = [newSession, ...sessionsRef.current.filter(s => s.uid !== newSession.uid)];
+      currentSessionRef.current = newSession;
+      setSessions(prev => [newSession, ...prev.filter(s => s.uid !== newSession.uid)]);
       setCurrentSession(newSession);
       setMessages([]);
       messagesCacheMapRef.current.set(newSession.uid, []);
-      return newSession.uid;
+      return newSession;
     } catch {
       toast.error('Failed to create chat session');
       return null;
@@ -244,6 +252,7 @@ export function useAIChat(
       const session = sessionsRef.current.find(s => s.uid === sessionUid) ?? null;
       if (session) {
         setCurrentSession(session);
+        currentSessionRef.current = session;
         try {
           const stored = await localPersistence.getResource(sessionUid);
           const allMessages = await mergePlanOutbox(sessionUid, ((stored?.messages as AIChatMessage[]) || []).map(normalizeMessage));
@@ -267,6 +276,7 @@ export function useAIChat(
       if (!session) throw new Error('Session not found');
 
       setCurrentSession(session);
+      currentSessionRef.current = session;
 
       // Check cache first — skip fetch if already loaded this session
       let allMessages = messagesCacheMapRef.current.get(sessionUid);
@@ -320,7 +330,12 @@ export function useAIChat(
     if (isGuestCheck()) {
       try { await localPersistence.deleteResource(sessionUid); } catch {}
       setSessions(prev => prev.filter(s => s.uid !== sessionUid));
-      if (currentSession?.uid === sessionUid) { setCurrentSession(null); setMessages([]); messagesCacheMapRef.current.delete(sessionUid); }
+      if (currentSession?.uid === sessionUid) {
+        setCurrentSession(null);
+        currentSessionRef.current = null;
+        setMessages([]);
+        messagesCacheMapRef.current.delete(sessionUid);
+      }
       return;
     }
 
@@ -328,7 +343,12 @@ export function useAIChat(
       const res = await apiFetch(`/api/ai/chat/sessions/${sessionUid}`, { method: 'DELETE' });
       if (!res.ok) throw new Error('Failed to delete session');
       setSessions(prev => prev.filter(s => s.uid !== sessionUid));
-      if (currentSession?.uid === sessionUid) { setCurrentSession(null); setMessages([]); messagesCacheMapRef.current.delete(sessionUid); }
+      if (currentSession?.uid === sessionUid) {
+        setCurrentSession(null);
+        currentSessionRef.current = null;
+        setMessages([]);
+        messagesCacheMapRef.current.delete(sessionUid);
+      }
     } catch {
       toast.error('Failed to delete session');
     }
@@ -337,6 +357,7 @@ export function useAIChat(
   const clearSessions = useCallback(() => {
     setSessions([]);
     setCurrentSession(null);
+    currentSessionRef.current = null;
     setMessages([]);
     messagesCacheMapRef.current.clear();
   }, []);
@@ -347,7 +368,10 @@ export function useAIChat(
 
   const autoTitleSession = useCallback(async (sessionUid: string, title: string, isGuest: boolean) => {
     setCurrentSession(prev => prev ? { ...prev, title } : prev);
-    setSessions(prev => prev.map(s => s.uid === sessionUid ? { ...s, title } : s));
+    if (currentSessionRef.current && (currentSessionRef.current.uid === sessionUid || String(currentSessionRef.current.id) === sessionUid)) {
+      currentSessionRef.current = { ...currentSessionRef.current, title };
+    }
+    setSessions(prev => prev.map(s => (s.uid === sessionUid || String(s.id) === sessionUid) ? { ...s, title } : s));
 
     if (isGuest) {
       await persistGuestTitle(sessionUid, title);
@@ -365,15 +389,14 @@ export function useAIChat(
   const sendMessage = useCallback(async (content: string, selectionText?: string | null, requestContext?: AIRequestContext) => {
     if (!content.trim()) return;
 
-    let activeSession = currentSession;
-    if (!activeSession) {
-      const newUid = await createSession();
-      if (!newUid) return;
-      activeSession = sessionsRef.current.find(s => s.uid === newUid) ?? null;
-      if (!activeSession) return;
-    }
-
     const trimmed = content.trim();
+    let activeSession = currentSessionRef.current || currentSession;
+    if (!activeSession) {
+      const initialTitle = trimmed.length > 50 ? trimmed.slice(0, 47) + '...' : trimmed;
+      const created = await createSession(initialTitle);
+      if (!created) return;
+      activeSession = created;
+    }
     const isGuest = isGuestCheck();
     const isPlanRequest = requestContext?.planMode === true;
     const sessionUid = String(activeSession.uid ?? activeSession.id);
@@ -458,7 +481,7 @@ export function useAIChat(
     // Guest mode: persist user message immediately + auto-title
     if (isGuest && !resumeExisting) {
       const updatedCache = messagesCacheMapRef.current.get(sessionUid) ?? [];
-      const persisted = await persistGuestMessages(currentSession.uid, updatedCache);
+      const persisted = await persistGuestMessages(activeSession.uid, updatedCache);
       if (!persisted) {
         setMessages(previous => previous.filter(message => message.id !== 'streaming'));
         setIsStreaming(false);
@@ -503,7 +526,7 @@ export function useAIChat(
         const isFirstMessage = (messagesCacheMapRef.current.get(sessionUid) ?? []).filter(m => m.role === 'user').length === 1;
         if (isFirstMessage) {
           const title = trimmed.length > 60 ? trimmed.slice(0, 57) + '...' : trimmed;
-          autoTitleSession(currentSession.uid, title, false);
+          autoTitleSession(activeSession.uid, title, false);
         }
       } catch {
         setMessages(prev => prev.filter(message => message.id !== 'streaming'));
