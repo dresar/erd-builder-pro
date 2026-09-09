@@ -4,6 +4,7 @@ import { getUiArchitecturalBehaviorsSection } from './uiArchitecturalBehaviorsSe
 import { getAgentTeamworkSection } from './agentTeamworkSection';
 import { getClaudeZipExecutionSection } from './claudeZipExecutionSection';
 import { getApiEndpointsSection } from './apiEndpointsSection';
+import { getExecutionDirectiveSection } from './executionDirectiveSection';
 
 export interface ClaudePromptContext {
   projectName: string;
@@ -20,7 +21,8 @@ export function generateClaudeMasterPrompt(context: ClaudePromptContext): string
   const domain = context.domain.trim() || 'SaaS Multi-Tenant';
   const techStack = context.techStack.trim() || 'Next.js 15 + Neon PostgreSQL (Prisma) + Express + Tailwind CSS';
 
-  return `# =======================================================================
+  return `${getExecutionDirectiveSection(proj, domain, techStack)}
+# =======================================================================
 # MEGA ORCHESTRATOR PROMPT: COMPLETE MULTI-AGENT PROJECT GENERATOR
 # TARGET SYSTEM: "${proj}" | DOMAIN: "${domain}"
 # =======================================================================

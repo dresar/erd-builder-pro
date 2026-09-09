@@ -1,3 +1,6 @@
+import { getBundleReadmeDoc } from './bundleReadmeDoc';
+import { getBundleAgentsDoc } from './bundleAgentsDoc';
+
 export interface GeneratedBundleFile {
   path: string;
   title: string;
@@ -25,35 +28,14 @@ export function generateDefaultBundleFiles(config: BundleConfig): GeneratedBundl
       title: 'Master Overview',
       role: 'Project',
       language: 'markdown',
-      content: `# ${proj} — Dokumentasi Master Proyek
-
-## 1. Ikhtisar Sistem
-${proj} adalah platform kelas enterprise untuk domain **${domain}** yang dibangun dengan arsitektur modern berkinerja tinggi.
-
-## 2. Stack Teknologi Utama
-- **Backend & Database**: ${techStack}
-- **Infrastruktur Basis Data**: Neon Serverless PostgreSQL dengan koneksi pooler
-- **Frontend & Desain**: Tailwind CSS v4 dengan sistem /precision-card-button-ui dan /button-presisi
-
-## 3. Tata Kelola Arsitektur & Manajemen Folder
-- **Batas Baris Kode**: Maksimal 1.000 baris per berkas kode. Dianjurkan refaktor pada 300–400 baris.
-- **Batas Berkas per Folder**: Maksimal 10 berkas kode (.ts, .tsx, .py) per direktori.
-- **Standar Nol Komentar**: 100% bebas komentar inline (/nokomen). Seluruh kode self-documenting.
-- **Dokumentasi Folder**: Setiap folder wajib memiliki README.md penjelas fungsi.`,
+      content: getBundleReadmeDoc(proj, domain, techStack),
     },
     {
       path: 'AGENTS.md',
       title: 'Protokol Tim Agen AI',
       role: 'Orchestration',
       language: 'markdown',
-      content: `# Multi-Agent Synchronization Protocol
-
-Protokol kerja tim 5 agen AI yang terkoordinasi secara otonom:
-1. **Tech Lead** (.agents/01_TECH_LEAD.md): Tata kelola arsitektur dan pemisahan modul.
-2. **Database & Backend** (.agents/02_DATABASE_BACKEND.md): Skema relasional dan service API.
-3. **Frontend & UI** (.agents/03_FRONTEND_UI.md): Komponen presisi, bottom-sheet, mobile 2-grid.
-4. **Security & Auth** (.agents/04_SECURITY_AUTH.md): Autentikasi sesi dan isolasi data tenant.
-5. **QA & Tester** (.agents/05_QA_TESTER.md): Verifikasi build dan pengujian otomatis.`,
+      content: getBundleAgentsDoc(proj, domain, techStack),
     },
     {
       path: 'docs/README.md',

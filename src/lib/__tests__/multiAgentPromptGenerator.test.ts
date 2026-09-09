@@ -13,6 +13,13 @@ describe('multiAgentPromptGenerator', () => {
       techStack: 'Next.js 15 + PostgreSQL + Tailwind CSS',
     });
 
+    // Check Autonomous Execution Directive & Permanent Rules
+    expect(prompt).toContain('AUTONOMOUS IMMEDIATE EXECUTION PROTOCOL');
+    expect(prompt).toContain('ABSOLUTE PROHIBITION OF PASSIVITY, WAITING, & CHATTING');
+    expect(prompt).toContain('5-PHASE DETERMINISTIC AUTONOMOUS ROADMAP');
+    expect(prompt).toContain('HUNDREDS OF PERMANENT ENGINEERING RULES & INVARIANTS');
+    expect(prompt).toContain('Executing Phase 1: Repository Scaffolding');
+
     // Check English prompt instructions for Claude
     expect(prompt).toContain('# MEGA ORCHESTRATOR PROMPT: COMPLETE MULTI-AGENT PROJECT GENERATOR');
     expect(prompt).toContain('You are a Principal Software Architect, Lead Multi-Agent Systems Engineer');
@@ -67,6 +74,15 @@ describe('multiAgentPromptGenerator', () => {
     const prd = files.find((f) => f.path === 'docs/01_PRD.md');
     expect(prd?.content).toContain('Dokumen Spesifikasi Kebutuhan Produk (PRD)');
     expect(prd?.content).toContain('Matriks Hak Akses (RBAC)');
+
+    const agentsMd = files.find((f) => f.path === 'AGENTS.md');
+    expect(agentsMd?.content).toContain('Multi-Agent Synchronization Protocol');
+    expect(agentsMd?.content).toContain('Larangan Pasivitas & Basa-Basi untuk AI Assistant');
+    expect(agentsMd?.content).toContain('Roadmap Eksekusi Otonom 5 Fase');
+
+    const readmeMd = files.find((f) => f.path === 'README.md');
+    expect(readmeMd?.content).toContain('Dokumentasi Master Proyek');
+    expect(readmeMd?.content).toContain('Roadmap Eksekusi Otonom 5 Fase');
   });
 
   it('verifies 5 agent team list', () => {
