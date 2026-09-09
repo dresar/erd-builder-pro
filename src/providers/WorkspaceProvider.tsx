@@ -66,11 +66,12 @@ function deriveViewFromPath(pathname: string): AppView {
     const match = pathname.match(/^\/table\/([^/]+)$/);
     if (match) {
       if (match[1] === 'db-client') return 'erd';
-      const valid = ['erd', 'notes', 'drawings', 'flowchart'];
+      const valid = ['erd', 'notes', 'prd', 'drawings', 'flowchart'];
       if (valid.includes(match[1])) return match[1] as AppView;
     }
   }
   if (pathname.startsWith('/notes/')) return 'notes';
+  if (pathname.startsWith('/prd/')) return 'prd';
   if (pathname.startsWith('/diagrams/')) return 'erd';
   if (pathname.startsWith('/drawings/')) return 'drawings';
   if (pathname.startsWith('/flowcharts/')) return 'flowchart';
@@ -117,7 +118,7 @@ export function WorkspaceProvider({
     return saved || 'notes';
   });
   const sidebarView = useMemo(() => {
-    const sidebarFeatures: AppView[] = ['erd', 'notes', 'drawings', 'flowchart'];
+    const sidebarFeatures: AppView[] = ['erd', 'notes', 'prd', 'drawings', 'flowchart'];
     if (sidebarFeatures.includes(view)) {
       localStorage.setItem('erd-builder-last-sidebar-view', view);
       return view;
@@ -1006,12 +1007,20 @@ export function WorkspaceProvider({
     trashData,
   });
 
-  // ── Pagination handle ──
   const handleWorkspaceFilter = useCallback((uid: string | null) => {
+    const isTableRoute = location.pathname.startsWith('/table/');
+    if (!isTableRoute) {
+      const targetFeature = sidebarView || 'erd';
+      const targetUrl = uid
+        ? `/table/${targetFeature}?workspace=${encodeURIComponent(uid)}`
+        : `/table/${targetFeature}`;
+      navigate(targetUrl);
+      return;
+    }
+
     setTableSearchParams((prev: URLSearchParams) => {
       const next = new URLSearchParams(prev);
       if (uid) {
-        next.set('view', 'table');
         next.set('workspace', uid);
       } else {
         next.delete('workspace');
@@ -1019,7 +1028,18 @@ export function WorkspaceProvider({
       next.delete('page');
       return next;
     }, { replace: true });
-  }, [setTableSearchParams]);
+  }, [location.pathname, sidebarView, navigate, setTableSearchParams]);
+
+  useEffect(() => {
+    if (location.pathname === '/' && tableSearchParams.get('view') === 'table') {
+      const targetFeature = tableSearchParams.get('feature') || sidebarView || 'erd';
+      const ws = tableSearchParams.get('workspace');
+      const targetUrl = ws
+        ? `/table/${targetFeature}?workspace=${encodeURIComponent(ws)}`
+        : `/table/${targetFeature}`;
+      navigate(targetUrl, { replace: true });
+    }
+  }, [location.pathname, tableSearchParams, sidebarView, navigate]);
 
   const tablePage = parseInt(tableSearchParams.get('page') || '1', 10);
 

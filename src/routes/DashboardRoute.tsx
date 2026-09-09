@@ -186,25 +186,39 @@ export function DashboardRoute() {
     return () => { cancelled = true; };
   }, [ctx.isGuest, user]);
 
-  // 10 most recently edited items across all types
+  const selectedWorkspace = ctx.selectedWorkspaceUid;
+  const activeWorkspace = useMemo(() => {
+    if (!selectedWorkspace) return null;
+    return (ctx.projects || []).find((p: any) => 
+      String(p.uid) === String(selectedWorkspace) || String(p.id) === String(selectedWorkspace)
+    ) || null;
+  }, [ctx.projects, selectedWorkspace]);
+
   const recentDocs = useMemo(() => {
     if (serverRecentDocs) {
-      return serverRecentDocs.map((doc: any) => ({
+      let docs = serverRecentDocs.map((doc: any) => ({
         ...doc,
         _type: doc.type,
         _group: doc.group,
         _workspace: doc.workspace?.name || doc.project?.name || '—',
         updated_at: doc.updated_at ?? doc.updatedAt,
       }));
+      if (activeWorkspace) {
+        docs = docs.filter((doc: any) => {
+          const pid = doc.project_id ?? doc.projectId ?? doc.workspace?.id ?? doc.workspace?.uid ?? doc.project?.id ?? doc.project?.uid;
+          return String(pid) === String(activeWorkspace.id) || String(pid) === String(activeWorkspace.uid);
+        });
+      }
+      return docs;
     }
 
     const projectMap = new Map(
       (ctx.projects || []).map((p: any) => [String(p.id), p.name])
-    )
+    );
     const getWorkspace = (doc: any) => {
-      const pid = doc.project_id ?? doc.projectId
-      return doc.projects?.name || doc.project?.name || (pid ? projectMap.get(String(pid)) : null) || '—'
-    }
+      const pid = doc.project_id ?? doc.projectId;
+      return doc.projects?.name || doc.project?.name || (pid ? projectMap.get(String(pid)) : null) || '—';
+    };
     const all = [
       ...(ctx.diagrams || []).filter((d: any) => !isDbClientDiagram(d)).map((d: any) => ({
         ...d,
@@ -220,12 +234,18 @@ export function DashboardRoute() {
       })),
       ...(ctx.drawings || []).map((d: any) => ({ ...d, _type: 'drawings' as const, _group: 'drawings', _workspace: getWorkspace(d) })),
       ...(ctx.flowcharts || []).map((f: any) => ({ ...f, _type: 'flowcharts' as const, _group: 'flowcharts', _workspace: getWorkspace(f) })),
-    ]
-    return all
-      .filter((d) => !d.is_deleted)
+    ];
+    let list = all.filter((d) => !d.is_deleted);
+    if (activeWorkspace) {
+      list = list.filter((d: any) => {
+        const pid = d.project_id ?? d.projectId ?? d.project?.id ?? d.project?.uid;
+        return String(pid) === String(activeWorkspace.id) || String(pid) === String(activeWorkspace.uid);
+      });
+    }
+    return list
       .sort((a, b) => new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime())
       .slice(0, 10);
-  }, [ctx.diagrams, ctx.notes, ctx.drawings, ctx.flowcharts, ctx.projects, serverRecentDocs]);
+  }, [ctx.diagrams, ctx.notes, ctx.drawings, ctx.flowcharts, ctx.projects, serverRecentDocs, activeWorkspace]);
 
   const [recentQuery, setRecentQuery] = useState('');
   const [recentFilter, setRecentFilter] = useState('all');
@@ -323,7 +343,9 @@ export function DashboardRoute() {
           <div>
             <p className="text-sm font-medium text-muted-foreground">{getGreeting()},</p>
             <h1 className="mt-0.5 text-xl font-semibold tracking-tight">{userName}</h1>
-            <p className="mt-0.5 text-xs text-muted-foreground">Lanjutkan pekerjaan Anda.</p>
+            <p className="mt-0.5 text-xs text-muted-foreground">
+              {activeWorkspace ? `Ruang Kerja: ${activeWorkspace.name}` : 'Lanjutkan pekerjaan Anda.'}
+            </p>
           </div>
           {!isEmpty && (
             <button
