@@ -2,8 +2,6 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { Diagram, Project } from '@/types';
 import {
   Table,
-  TableBody,
-  TableCell,
   TableHead,
   TableHeader,
   TableRow,
@@ -13,13 +11,14 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuTrigger,
-  DropdownMenuItem,
   DropdownMenuCheckboxItem,
-  DropdownMenuSeparator,
 } from '@/components/ui/dropdown-menu';
-import { Plus, Columns3, MoreHorizontal, Pencil, Trash2, ChevronLeft, ChevronRight, Cable, Database, Search } from 'lucide-react';
+import { Plus, Columns3, Cable, Search, LayoutGrid, List } from 'lucide-react';
 import { DBConnectPanel } from '@/components/db-connect/DBConnectPanel';
 import { Input } from '@/components/ui/input';
+import { DocumentGridCard } from './DocumentGridCard';
+import { ErdTableRows, DEFAULT_COLUMNS, loadColumnVisibility, formatSourceType } from './ErdTableRows';
+import { TablePagination } from './TablePagination';
 
 interface ErdTableViewProps {
   mode?: 'erd' | 'db-client';
@@ -43,48 +42,11 @@ interface ErdTableViewProps {
 const ITEMS_PER_PAGE = 10;
 const STORAGE_KEY = 'erd-table-column-visibility';
 
-interface ColumnDef {
-  id: string;
-  label: string;
-  defaultVisible: boolean;
-  hideable: boolean;
-  width: string;
-}
-
-const DEFAULT_COLUMNS: ColumnDef[] = [
-  { id: 'name', label: 'Nama', defaultVisible: true, hideable: false, width: 'w-[22%]' },
-  { id: 'workspace', label: 'Ruang Kerja', defaultVisible: true, hideable: false, width: 'w-[15%]' },
-  { id: 'source', label: 'Sumber', defaultVisible: true, hideable: true, width: 'w-[12%]' },
-  { id: 'updated', label: 'Diperbarui', defaultVisible: false, hideable: true, width: 'w-[12%]' },
-  { id: 'status', label: 'Status', defaultVisible: true, hideable: true, width: 'w-[8%]' },
-  { id: 'created', label: 'Dibuat', defaultVisible: true, hideable: true, width: 'w-[11%]' },
-  { id: 'expires', label: 'Kedaluwarsa', defaultVisible: false, hideable: true, width: 'w-[12%]' },
-  { id: 'actions', label: 'Aksi', defaultVisible: true, hideable: false, width: 'w-[8%]' },
-];
-
-const loadColumnVisibility = (storageKey = STORAGE_KEY): Record<string, boolean> => {
-  try {
-    const saved = localStorage.getItem(storageKey);
-    if (saved) {
-      const parsed = JSON.parse(saved);
-      return { ...parsed };
-    }
-  } catch {}
-  // Fallback to defaults
-  return Object.fromEntries(DEFAULT_COLUMNS.map(c => [c.id, c.defaultVisible]));
-};
-
-const formatSourceType = (st?: string): string => {
-  if (!st) return '—';
-  if (st === 'production_db') return 'DB Connect';
-  return st.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
-};
-
 export const ErdTableView = React.memo(function ErdTableView({
   mode = 'erd',
   diagrams,
   projects,
-  selectedWorkspace,
+  selectedWorkspace: _selectedWorkspace,
   page,
   totalDiagrams,
   isLoading,
@@ -99,6 +61,16 @@ export const ErdTableView = React.memo(function ErdTableView({
   searchRef,
 }: ErdTableViewProps) {
   const isDbClient = mode === 'db-client';
+  const layoutStorageKey = isDbClient ? 'db-client-view-layout' : 'erd-view-layout';
+  const [layoutMode, setLayoutMode] = useState<'grid' | 'table'>(() => {
+    return (localStorage.getItem(layoutStorageKey) as 'grid' | 'table') || 'grid';
+  });
+
+  const handleLayoutChange = (newLayout: 'grid' | 'table') => {
+    setLayoutMode(newLayout);
+    localStorage.setItem(layoutStorageKey, newLayout);
+  };
+
   const totalPages = Math.max(1, Math.ceil(totalDiagrams / ITEMS_PER_PAGE));
   const [dbConnectOpen, setDbConnectOpen] = useState(false);
   const showDbConnect = typeof window !== 'undefined' && (
@@ -106,7 +78,6 @@ export const ErdTableView = React.memo(function ErdTableView({
     (window as any).ERD_INSTALL_MODE === 'cli'
   );
 
-  // Filter out 'source' column in web mode — DB Connect is desktop-only
   const columns = isDbClient
     ? DEFAULT_COLUMNS.filter(column => column.id !== 'status' && column.id !== 'expires')
     : showDbConnect ? DEFAULT_COLUMNS : DEFAULT_COLUMNS.filter(c => c.id !== 'source');
@@ -128,7 +99,7 @@ export const ErdTableView = React.memo(function ErdTableView({
     const col = columns.find(c => c.id === colId);
     if (!col || !col.hideable) return true;
     return visibleColumns[colId] ?? col.defaultVisible;
-  }, [visibleColumns]);
+  }, [columns, visibleColumns]);
 
   const getProjectById = (projectId: number | string | null | undefined) => {
     if (projectId === null || projectId === undefined) return null;
@@ -189,7 +160,7 @@ export const ErdTableView = React.memo(function ErdTableView({
             ({totalDiagrams} {isDbClient ? 'koneksi' : 'diagram'})
           </span>
         </div>
-        <div className="flex items-center justify-between gap-2">
+        <div className="flex flex-wrap items-center justify-between gap-2">
           <div className="relative flex items-center max-w-64 w-full">
             <Search className="pointer-events-none absolute left-2.5 top-1/2 size-3.5 -translate-y-1/2 select-none text-muted-foreground" />
             <Input
@@ -201,243 +172,165 @@ export const ErdTableView = React.memo(function ErdTableView({
               className="h-8 pl-8 text-xs"
             />
           </div>
-          <div className="flex items-center gap-2">
-            {/* Columns Toggle */}
-            <DropdownMenu>
-              <DropdownMenuTrigger render={
-                <Button variant="outline" size="icon-sm" aria-label="Kolom" title="Kolom">
-                  <Columns3 className="w-4 h-4" />
-                </Button>
-              } />
-              <DropdownMenuContent align="end" className="w-44">
-                {columns.filter(c => c.hideable).map(col => (
-                  <DropdownMenuCheckboxItem
-                    key={col.id}
-                    checked={isColVisible(col.id)}
-                    onCheckedChange={() => toggleColumn(col.id)}
-                  >
-                    {col.label}
-                  </DropdownMenuCheckboxItem>
-                ))}
-              </DropdownMenuContent>
-            </DropdownMenu>
+          <div className="flex items-center gap-1.5">
+            <div className="flex items-center rounded-lg border border-border/70 p-0.5 bg-muted/40">
+              <Button
+                variant={layoutMode === 'grid' ? 'secondary' : 'ghost'}
+                size="icon-xs"
+                onClick={() => handleLayoutChange('grid')}
+                title="Grid"
+                className="h-7 w-7 rounded-md cursor-pointer"
+              >
+                <LayoutGrid className="size-3.5" />
+              </Button>
+              <Button
+                variant={layoutMode === 'table' ? 'secondary' : 'ghost'}
+                size="icon-xs"
+                onClick={() => handleLayoutChange('table')}
+                title="Tabel"
+                className="h-7 w-7 rounded-md cursor-pointer"
+              >
+                <List className="size-3.5" />
+              </Button>
+            </div>
 
-            {!isDbClient && <Button size="sm" onClick={onCreateDiagram}>
-              <Plus className="w-4 h-4 sm:mr-1.5" />
-              <span className="hidden sm:inline">Buat ERD</span>
-            </Button>}
+            {layoutMode === 'table' && (
+              <DropdownMenu>
+                <DropdownMenuTrigger render={
+                  <Button variant="outline" size="icon-sm" aria-label="Kolom" title="Kolom">
+                    <Columns3 className="w-4 h-4" />
+                  </Button>
+                } />
+                <DropdownMenuContent align="end" className="w-44">
+                  {columns.filter(c => c.hideable).map(col => (
+                    <DropdownMenuCheckboxItem
+                      key={col.id}
+                      checked={isColVisible(col.id)}
+                      onCheckedChange={() => toggleColumn(col.id)}
+                    >
+                      {col.label}
+                    </DropdownMenuCheckboxItem>
+                  ))}
+                </DropdownMenuContent>
+              </DropdownMenu>
+            )}
+
+            {!isDbClient && (
+              <Button size="sm" onClick={onCreateDiagram} className="h-8 gap-1.5 px-3 text-xs bg-emerald-600 hover:bg-emerald-700 text-white cursor-pointer font-medium">
+                <Plus className="size-3.5" />
+                <span>Buat ERD</span>
+              </Button>
+            )}
             {showDbConnect && isDbClient && (
-              <Button size="sm" variant="outline" onClick={() => setDbConnectOpen(true)}>
-                <Cable className="w-4 h-4 sm:mr-1.5" />
-                <span className="hidden sm:inline">Koneksi DB</span>
+              <Button size="sm" variant="outline" onClick={() => setDbConnectOpen(true)} className="h-8 gap-1.5 px-3 text-xs cursor-pointer font-medium">
+                <Cable className="size-3.5" />
+                <span>Koneksi DB</span>
               </Button>
             )}
           </div>
         </div>
       </div>
 
-      {/* Table */}
-      <div className="overflow-auto rounded-xl border">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              {columns.filter(c => visibleCols.some(v => v.id === c.id)).map(col => (
-                <TableHead key={col.id} className={col.width}>
-                  {col.label}
-                </TableHead>
-              ))}
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {isLoading && visibleDiagrams.length === 0 ? (
-              <TableRow>
-                <TableCell colSpan={visibleCols.length} className="h-32 text-center text-muted-foreground">
-                  <span className="inline-flex items-center gap-2 text-xs">
-                    <span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-primary/30 border-t-primary" />
-                    Memuat...
-                  </span>
-                </TableCell>
-              </TableRow>
-            ) : visibleDiagrams.length === 0 ? (
-              <TableRow>
-                <TableCell colSpan={visibleCols.length} className="h-32 text-center text-muted-foreground">
-                  {totalDiagrams === 0
-                    ? (isDbClient ? 'Belum ada koneksi.' : 'Belum ada diagram.')
-                    : (isDbClient ? 'Tidak ada koneksi.' : 'Tidak ada diagram.')}
-                </TableCell>
-              </TableRow>
-            ) : (
-              visibleDiagrams.map(d => {
-                const uid = d.uid ?? String(d.id);
-                const currentProjectUid = getProjectUid(d);
-                return (
-                  <TableRow
-                    key={uid}
-                    className="cursor-pointer group"
-                    onClick={() => onSelectDiagram(uid)}
-                  >
-                    {visibleCols.map(col => {
-                      if (col.id === 'name') {
-                        return (
-                          <TableCell key="name" className="font-medium">
-                            <span className="truncate block max-w-70">
-                              {d.name || '(Tanpa Nama)'}
-                            </span>
-                          </TableCell>
-                        );
-                      }
-                      if (col.id === 'workspace') {
-                        return (
-                          <TableCell key="workspace">
-                            <span
-                              className="inline-flex items-center gap-1 text-xs bg-muted px-2 py-0.5 rounded-full cursor-pointer hover:bg-accent transition-colors"
-                              onClick={e => {
-                                e.stopPropagation();
-                                onWorkspaceClick(currentProjectUid);
-                              }}
-                            >
-                              {getProjectName(d)}
-                            </span>
-                          </TableCell>
-                        );
-                      }
-                      if (col.id === 'source') {
-                        return (
-                          <TableCell key="source" className="text-muted-foreground text-xs">
-                            {isDbClient ? (
-                              <span className="inline-flex items-center gap-1 rounded-full bg-blue-500/10 px-2 py-0.5 text-xs text-blue-500">
-                                <Database className="size-3" />
-                                {(d as any).catalog?.account?.type || (d as any).catalog?.database_name || 'Database'}
-                              </span>
-                            ) : (d.source_type && d.source_type !== 'scratch') ? (
-                              <span className="inline-flex items-center gap-1 text-xs bg-blue-500/10 text-blue-500 px-2 py-0.5 rounded-full">
-                                <Database className="w-3 h-3" />
-                                {formatSourceType(d.source_type)}
-                              </span>
-                            ) : (
-                              <span className="text-muted-foreground/50">Scratch</span>
-                            )}
-                          </TableCell>
-                        );
-                      }
-                      if (col.id === 'updated') {
-                        return (
-                          <TableCell key="updated" className="text-muted-foreground text-xs">
-                            {formatDate(d.updated_at)}
-                          </TableCell>
-                        );
-                      }
-                      if (col.id === 'status') {
-                        return (
-                          <TableCell key="status">
-                            <span className={`inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full ${d.is_public ? 'bg-green-500/10 text-green-500' : 'bg-muted text-muted-foreground'}`}>
-                              {d.is_public ? 'Publik' : 'Privat'}
-                            </span>
-                          </TableCell>
-                        );
-                      }
-                      if (col.id === 'created') {
-                        return (
-                          <TableCell key="created" className="text-muted-foreground text-xs">
-                            {formatDate(d.created_at)}
-                          </TableCell>
-                        );
-                      }
-                      if (col.id === 'expires') {
-                        return (
-                          <TableCell key="expires" className={`text-muted-foreground text-xs ${isExpired(d.expiry_date) ? 'text-red-500 font-medium' : ''}`}>
-                            {formatDateOnly(d.expiry_date)}
-                          </TableCell>
-                        );
-                      }
-                      if (col.id === 'actions') {
-                        return (
-                          <TableCell key="actions" className="text-right" onClick={e => e.stopPropagation()}>
-                            <DropdownMenu>
-                              <DropdownMenuTrigger render={
-                                <Button
-                                  variant="ghost"
-                                  size="icon"
-                                  className="h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity"
-                                >
-                                  <MoreHorizontal className="h-4 w-4" />
-                                </Button>
-                              } />
-                              <DropdownMenuContent align="end" className="w-44">
-                                <DropdownMenuItem onClick={() => onOpenEditDocument(uid)}>
-                                  <Pencil className="h-4 w-4 mr-2" />
-                                  Edit Dokumen
-                                </DropdownMenuItem>
-                                <DropdownMenuSeparator />
-                                <DropdownMenuItem onClick={() => onDeleteDiagram(uid)} className="text-destructive focus:text-destructive">
-                                  <Trash2 className="h-4 w-4 mr-2" />
-                                  Hapus
-                                </DropdownMenuItem>
-                              </DropdownMenuContent>
-                            </DropdownMenu>
-                          </TableCell>
-                        );
-                      }
-                      return null;
-                    })}
-                  </TableRow>
-                );
-              })
-            )}
-          </TableBody>
-        </Table>
-      </div>
-
-      {/* Pagination */}
-      {totalPages > 1 && (
-        <div className="flex items-center justify-between border-x border-b bg-background px-4 py-2 shrink-0 rounded-b-xl">
-          <span className="text-xs text-muted-foreground">
-            Halaman {page} dari {totalPages}
-          </span>
-          <div className="flex items-center gap-1">
-            <Button
-              variant="outline"
-              size="icon-xs"
-              disabled={page <= 1}
-              onClick={() => onPageChange(page - 1)}
-            >
-              <ChevronLeft className="h-4 w-4" />
-            </Button>
-            {Array.from({ length: totalPages }, (_, i) => i + 1)
-              .filter(p => p === 1 || p === totalPages || Math.abs(p - page) <= 2)
-              .reduce<(number | 'ellipsis')[]>((acc, p, idx, arr) => {
-                if (idx > 0 && p - arr[idx - 1] > 1) acc.push('ellipsis');
-                acc.push(p);
-                return acc;
-              }, [])
-              .map((item) =>
-                item === 'ellipsis' ? (
-                  <span key={`e-${item}`} className="px-1 text-xs text-muted-foreground">
-                    ...
-                  </span>
-                ) : (
-                  <Button
-                    key={item}
-                    variant={item === page ? 'default' : 'outline'}
-                    size="icon-xs"
-                    onClick={() => onPageChange(item as number)}
-                    className={item === page ? '' : 'text-muted-foreground'}
-                  >
-                    {item}
-                  </Button>
-                )
-              )}
-            <Button
-              variant="outline"
-              size="icon-xs"
-              disabled={page >= totalPages}
-              onClick={() => onPageChange(page + 1)}
-            >
-              <ChevronRight className="w-4 h-4" />
-            </Button>
+      {layoutMode === 'grid' ? (
+        isLoading && visibleDiagrams.length === 0 && projects.length > 0 ? (
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 p-0.5">
+            {[1, 2, 3, 4].map(idx => (
+              <div key={idx} className="rounded-xl border border-border/60 bg-card/60 p-4 space-y-3 animate-pulse">
+                <div className="flex items-center gap-2.5">
+                  <div className="size-8 rounded-lg bg-muted" />
+                  <div className="space-y-1 flex-1">
+                    <div className="h-3 w-24 bg-muted rounded" />
+                    <div className="h-2.5 w-16 bg-muted/60 rounded" />
+                  </div>
+                </div>
+                <div className="h-2 bg-muted/40 rounded w-full" />
+                <div className="h-7 bg-muted/60 rounded-md" />
+              </div>
+            ))}
           </div>
+        ) : visibleDiagrams.length === 0 ? (
+          <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-border/80 bg-card/40 p-8 sm:p-14 text-center mt-1 space-y-3">
+            <div className="size-10 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400">
+              <Columns3 className="size-5" />
+            </div>
+            <div className="space-y-1 max-w-sm">
+              <h3 className="text-xs font-semibold text-foreground">
+                {searchQuery.trim()
+                  ? (isDbClient ? 'Koneksi Tidak Ditemukan' : 'Diagram Tidak Ditemukan')
+                  : (isDbClient ? 'Belum Ada Koneksi' : 'Belum Ada Diagram')}
+              </h3>
+              <p className="text-[11px] text-muted-foreground leading-relaxed">
+                {searchQuery.trim()
+                  ? 'Tidak ada data yang cocok dengan kata kunci pencarian.'
+                  : (isDbClient ? 'Sambungkan database lokal atau remote Anda.' : 'Mulai rancang skema relasi basis data visual Anda.')}
+              </p>
+            </div>
+            {!searchQuery.trim() && !isDbClient && (
+              <Button
+                size="sm"
+                onClick={onCreateDiagram}
+                className="mt-1 h-7.5 gap-1.5 px-3 text-xs bg-emerald-600 hover:bg-emerald-700 text-white cursor-pointer font-medium"
+              >
+                <Plus className="size-3.5" />
+                <span>Buat ERD</span>
+              </Button>
+            )}
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 overflow-y-auto custom-scrollbar p-0.5">
+            {visibleDiagrams.map(d => {
+              const uid = d.uid ?? String(d.id);
+              return (
+                <DocumentGridCard
+                  key={uid}
+                  type="erd"
+                  title={d.name || '(Tanpa Nama)'}
+                  projectName={getProjectName(d)}
+                  projectUid={getProjectUid(d)}
+                  formattedDate={formatDate(d.updated_at || (d as any).updatedAt)}
+                  onSelect={() => onSelectDiagram(uid)}
+                  onEdit={() => onOpenEditDocument(uid)}
+                  onDelete={() => onDeleteDiagram(uid)}
+                  onWorkspaceClick={onWorkspaceClick}
+                />
+              );
+            })}
+          </div>
+        )
+      ) : (
+        <div className="overflow-auto rounded-xl border">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                {columns.filter(c => visibleCols.some(v => v.id === c.id)).map(col => (
+                  <TableHead key={col.id} className={col.width}>
+                    {col.label}
+                  </TableHead>
+                ))}
+              </TableRow>
+            </TableHeader>
+            <ErdTableRows
+              visibleCols={visibleCols}
+              isLoading={isLoading}
+              visibleDiagrams={visibleDiagrams}
+              totalDiagrams={totalDiagrams}
+              isDbClient={isDbClient}
+              onSelectDiagram={onSelectDiagram}
+              onOpenEditDocument={onOpenEditDocument}
+              onDeleteDiagram={onDeleteDiagram}
+              onWorkspaceClick={onWorkspaceClick}
+              getProjectName={getProjectName}
+              getProjectUid={getProjectUid}
+              formatDate={formatDate}
+              formatDateOnly={formatDateOnly}
+              isExpired={isExpired}
+              formatSourceType={formatSourceType}
+            />
+          </Table>
         </div>
       )}
+
+      <TablePagination page={page} totalPages={totalPages} onPageChange={onPageChange} />
 
       {showDbConnect && (
         <DBConnectPanel

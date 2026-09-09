@@ -264,7 +264,7 @@ export const FlowchartView = React.memo(({
     if (!trimmed) return true;
     const duplicate = nodes.some(n =>
       n.id !== selectedNodeId &&
-      n.data.section?.toLowerCase() === trimmed.toLowerCase()
+      n?.data?.section?.toLowerCase() === trimmed.toLowerCase()
     );
     if (duplicate) {
       toast.error('Group title already exists', {
@@ -299,12 +299,12 @@ export const FlowchartView = React.memo(({
 
   const deleteGroup = () => {
     const node = nodes.find(n => n.id === selectedNodeId);
-    if (!node || !node.data.section) return;
+    if (!node || !node?.data?.section) return;
     takeSnapshot(nodesRef.current, edgesRef.current);
     const section = node.data.section;
 
     // Find all Start nodes with this section title
-    const startIds = nodes.filter(n => n.data.section === section).map(n => n.id);
+    const startIds = nodes.filter(n => n?.data?.section === section).map(n => n.id);
     if (startIds.length === 0) return;
 
     // BFS to collect all descendants reachable from any Start node
@@ -427,7 +427,7 @@ export const FlowchartView = React.memo(({
 
   const handleExportSVGGroup = useCallback((group: string) => {
     const groupNodeIds = new Set(
-      nodesRef.current.filter(n => n.data.section === group).map(n => n.id)
+      nodesRef.current.filter(n => n?.data?.section === group).map(n => n.id)
     );
     if (groupNodeIds.size === 0) { toast.error(`No nodes found in group "${group}"`); return; }
 
@@ -453,7 +453,7 @@ export const FlowchartView = React.memo(({
 
   const canvasGroups = useMemo(() => {
     return nodes
-      .map(n => n.data.section)
+      .map(n => n?.data?.section)
       .filter((s): s is string => !!s)
       .filter((s, i, arr) => arr.indexOf(s) === i);
   }, [nodes]);
@@ -471,7 +471,7 @@ export const FlowchartView = React.memo(({
 
   const selectedGroupNodeIds = useMemo(() => {
     if (!selectedGroup) return emptySetRef.current;
-    const startIds = nodes.filter(n => n.data.section === selectedGroup).map(n => n.id);
+    const startIds = nodes.filter(n => n?.data?.section === selectedGroup).map(n => n.id);
     if (startIds.length === 0) return emptySetRef.current;
     const connectedIds = new Set<string>(startIds);
     const queue = [...startIds];
@@ -684,7 +684,7 @@ export const FlowchartView = React.memo(({
 
     if (replaceGroupSection) {
       // Replace only the specified group
-      const startIds = nodesRef.current.filter(n => n.data.section === replaceGroupSection).map(n => n.id);
+      const startIds = nodesRef.current.filter(n => n?.data?.section === replaceGroupSection).map(n => n.id);
       const connectedIds = new Set<string>(startIds);
       const queue = [...startIds];
       while (queue.length > 0) {
@@ -909,7 +909,7 @@ export const FlowchartView = React.memo(({
           onConfirm={handleConfirmAppend}
           onCancel={() => { setPendingPreview(null); pendingContentRef.current = null; }}
           confirmLabel={pendingApplyModeRef.current === 'insert' ? 'Konfirmasi Sisip' : pendingApplyModeRef.current === 'replace' ? 'Konfirmasi Ganti' : 'Konfirmasi Tambah'}
-          canvasGroups={pendingApplyModeRef.current === 'replace' ? nodes.map(n => n.data.section).filter((s): s is string => !!s).filter((s, i, arr) => arr.indexOf(s) === i) : []}
+          canvasGroups={pendingApplyModeRef.current === 'replace' ? nodes.map(n => n?.data?.section).filter((s): s is string => !!s).filter((s, i, arr) => arr.indexOf(s) === i) : []}
         />
       )}
 

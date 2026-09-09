@@ -231,7 +231,7 @@ export function useDrawings(isGuest: boolean = false) {
       const drawing = drawingsRef.current.find(d => matchesDrawingId(d, uid));
       const identifier = drawing?.uid || uid;
       const res = await apiFetch(`/api/drawings/${identifier}`, { method: 'DELETE' });
-      if (res.ok) {
+      if (res.ok || res.status === 404) {
         setDrawings(prev => prev.filter(d => !matchesDrawingId(d, uid)));
         setDrawingsTotal(prev => Math.max(0, prev - 1));
         if (activeDrawingUid === uid) setActiveDrawingUid(null);

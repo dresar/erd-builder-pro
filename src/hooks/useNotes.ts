@@ -243,7 +243,7 @@ export function useNotes(isGuest: boolean = false) {
       const note = notesRef.current.find(n => String(n.id) === String(uid) || String(n.uid) === String(uid));
       const identifier = note?.uid || uid;
       const res = await apiFetch(`/api/notes/${identifier}`, { method: 'DELETE' });
-      if (res.ok) {
+      if (res.ok || res.status === 404) {
         setNotes(prev => prev.filter(n => String(n.id) !== String(uid) && String(n.uid) !== String(uid)));
         setNotesTotal(prev => Math.max(0, prev - 1));
         if (activeNoteUid === uid) setActiveNoteUid(null);

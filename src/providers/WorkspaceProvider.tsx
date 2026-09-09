@@ -67,6 +67,7 @@ function deriveViewFromPath(pathname: string): AppView {
     const match = pathname.match(/^\/table\/([^/]+)$/);
     if (match) {
       if (match[1] === 'db-client') return 'erd';
+      if (match[1] === 'flowcharts' || match[1] === 'flowchart') return 'flowchart';
       const valid = ['erd', 'notes', 'prd', 'drawings', 'flowchart'];
       if (valid.includes(match[1])) return match[1] as AppView;
     }

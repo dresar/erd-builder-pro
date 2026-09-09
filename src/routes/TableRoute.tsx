@@ -50,11 +50,12 @@ export function TableRoute() {
     setTableSearchParams(params, { replace: true });
   };
 
-  const makeDeleteHandler = (items: any[] | undefined | null) => (uid: string) => {
+  const makeDeleteHandler = (items: any[] | undefined | null, docType?: string) => (uid: string) => {
     const item = items?.find((n: any) => n.uid === uid || String(n.id) === uid || n.key === uid);
     if (!item) return;
-    setItemToDelete({ id: item.id || item.uid, type: item.type, uid: item.uid });
-    setTableDeleteDoc(item);
+    const resolvedType = docType || item.type;
+    setItemToDelete({ id: item.id || item.uid, type: resolvedType, uid: item.uid });
+    setTableDeleteDoc({ ...item, type: resolvedType, _itemType: resolvedType });
     setIsMoveToTrashAlertOpen(true);
   };
 
@@ -138,7 +139,7 @@ export function TableRoute() {
           onPageChange={handlePageChange}
           onWorkspaceClick={handleWorkspaceClick}
           onOpenEditDocument={(uid: string) => handleOpenEditDocument(uid)}
-          onDeleteNote={makeDeleteHandler(notes)}
+          onDeleteNote={makeDeleteHandler(notes, 'notes')}
           searchQuery={fileSearchQuery}
           onSearchChange={setFileSearchQuery}
           searchRef={fileSearchRef}
@@ -158,7 +159,7 @@ export function TableRoute() {
           onPageChange={handlePageChange}
           onWorkspaceClick={handleWorkspaceClick}
           onOpenEditDocument={(uid: string) => handleOpenEditDocument(uid)}
-          onDeletePrd={makeDeleteHandler(notes)}
+          onDeletePrd={makeDeleteHandler(prdNotes, 'prd')}
           searchQuery={fileSearchQuery}
           onSearchChange={setFileSearchQuery}
           searchRef={fileSearchRef}
@@ -178,7 +179,7 @@ export function TableRoute() {
           onPageChange={handlePageChange}
           onWorkspaceClick={handleWorkspaceClick}
           onOpenEditDocument={(uid: string) => handleOpenEditDocument(uid)}
-          onDeleteDiagram={makeDeleteHandler(diagrams)}
+          onDeleteDiagram={makeDeleteHandler(diagrams, 'erd')}
           searchQuery={fileSearchQuery}
           onSearchChange={setFileSearchQuery}
           searchRef={fileSearchRef}
@@ -200,7 +201,7 @@ export function TableRoute() {
           onPageChange={handlePageChange}
           onWorkspaceClick={handleWorkspaceClick}
           onOpenEditDocument={(uid: string) => handleOpenEditDocument(uid)}
-          onDeleteDrawing={makeDeleteHandler(drawings)}
+          onDeleteDrawing={makeDeleteHandler(drawings, 'drawings')}
           searchQuery={fileSearchQuery}
           onSearchChange={setFileSearchQuery}
           searchRef={fileSearchRef}
@@ -221,7 +222,7 @@ export function TableRoute() {
           onPageChange={handlePageChange}
           onWorkspaceClick={handleWorkspaceClick}
           onOpenEditDocument={(uid: string) => handleOpenEditDocument(uid)}
-          onDeleteFlowchart={makeDeleteHandler(flowcharts)}
+          onDeleteFlowchart={makeDeleteHandler(flowcharts, 'flowchart')}
           searchQuery={fileSearchQuery}
           onSearchChange={setFileSearchQuery}
           searchRef={fileSearchRef}

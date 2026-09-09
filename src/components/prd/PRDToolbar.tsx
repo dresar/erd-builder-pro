@@ -2,13 +2,12 @@ import {
   Eye, 
   Edit3, 
   Columns, 
-  Download, 
-  Printer, 
   Database, 
   Network, 
   ExternalLink,
   PanelLeftClose,
   PanelLeft,
+  ArrowLeft,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
@@ -24,10 +23,11 @@ interface PRDToolbarProps {
   onViewModeChange: (mode: PrdViewMode) => void;
   onSynthesizeErd: () => void;
   onSynthesizeFlowchart: () => void;
-  onExportHtml: () => void;
-  onExportMarkdown: () => void;
-  onPrint: () => void;
+  onExportHtml?: () => void;
+  onExportMarkdown?: () => void;
+  onPrint?: () => void;
   onOpenNewTab?: () => void;
+  onBack?: () => void;
   showMenu?: boolean;
   onToggleMenu?: () => void;
   isSaving?: boolean;
@@ -53,19 +53,33 @@ export function PRDToolbar({
   onExportMarkdown,
   onPrint,
   onOpenNewTab,
+  onBack,
   showMenu = true,
   onToggleMenu,
   isSaving,
 }: PRDToolbarProps) {
   return (
-    <div className="h-11 border-b border-border/40 bg-background/95 backdrop-blur px-4 flex items-center justify-between gap-3 shrink-0">
-      <div className="flex items-center gap-2.5 min-w-0">
+    <div className="h-11 border-b border-border/40 bg-background/95 backdrop-blur px-3 sm:px-4 flex items-center justify-between gap-2.5 shrink-0">
+      <div className="flex items-center gap-2 min-w-0">
+        {onBack && (
+          <Button
+            onClick={onBack}
+            variant="outline"
+            size="sm"
+            className="h-7 px-2 text-xs gap-1 cursor-pointer border-border/70 shrink-0"
+            title="Kembali ke daftar PRD"
+          >
+            <ArrowLeft className="size-3.5" />
+            <span className="hidden sm:inline">Kembali</span>
+          </Button>
+        )}
+
         <input
           type="text"
           value={title}
           onChange={(e) => onTitleChange(e.target.value)}
           placeholder="Judul"
-          className="h-7 text-xs font-semibold bg-transparent border-transparent hover:border-border/60 focus:border-border rounded px-1.5 text-foreground focus:bg-background outline-none transition-all truncate max-w-56 sm:max-w-xs"
+          className="h-7 text-xs font-semibold bg-transparent border-transparent hover:border-border/60 focus:border-border rounded px-1.5 text-foreground focus:bg-background outline-none transition-all truncate max-w-44 sm:max-w-xs"
         />
 
         <select
@@ -159,28 +173,6 @@ export function PRDToolbar({
         <div className="h-4 w-px bg-border/40 mx-1 hidden sm:block" />
 
         <div className="flex items-center gap-1">
-          <Button
-            onClick={onExportHtml}
-            variant="outline"
-            size="sm"
-            className="h-7 px-2 text-xs gap-1 cursor-pointer"
-            title="Unduh berkas HTML mandiri"
-          >
-            <Download className="size-3 text-emerald-400" />
-            <span className="hidden lg:inline">HTML</span>
-          </Button>
-
-          <Button
-            onClick={onPrint}
-            variant="ghost"
-            size="sm"
-            className="h-7 px-2 text-xs gap-1 cursor-pointer"
-            title="Cetak atau simpan ke PDF"
-          >
-            <Printer className="size-3 text-muted-foreground" />
-            <span className="hidden lg:inline">Cetak</span>
-          </Button>
-
           {onOpenNewTab && (
             <Button
               onClick={onOpenNewTab}

@@ -300,7 +300,7 @@ export function useDiagrams(isAuthenticated: boolean | null, view: 'erd' | 'diag
       const diagram = diagramsRef.current.find(d => String(d.id) === String(id) || String(d.uid) === String(id));
       const identifier = diagram?.uid || id;
       const res = await apiFetch(`/api/diagrams/${identifier}`, { method: 'DELETE' });
-      if (res.ok) {
+      if (res.ok || res.status === 404) {
         setDiagrams(prev => prev.filter(f => String(f.id) !== String(id) && String(f.uid) !== String(id)));
         setDiagramsTotal(prev => Math.max(0, prev - 1));
         if (String(activeDiagramId) === String(id)) setActiveDiagramId(null);

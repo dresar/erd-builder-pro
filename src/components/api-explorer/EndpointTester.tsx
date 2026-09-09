@@ -21,7 +21,7 @@ const METHOD_BADGES: Record<HttpMethod, string> = {
 export function EndpointTester({ endpoint }: EndpointTesterProps) {
   const [activeReqTab, setActiveReqTab] = useState<'params' | 'headers' | 'body'>('body');
   const [activeResTab, setActiveResTab] = useState<'body' | 'headers'>('body');
-  const [serverMode, setServerMode] = useState<'live' | 'sandbox'>('live');
+  const [serverMode, setServerMode] = useState<'live' | 'sandbox'>('sandbox');
   const [baseUrl, setBaseUrl] = useState<string>(() => {
     return localStorage.getItem('prd_pro_api_base_url') || 'http://localhost:3000';
   });

@@ -234,7 +234,7 @@ export function useFlowcharts(isGuest: boolean = false) {
       const flowchart = flowchartsRef.current.find(f => matchesFlowchartId(f, uid));
       const identifier = flowchart?.uid || uid;
       const res = await apiFetch(`/api/flowcharts/${identifier}`, { method: 'DELETE' });
-      if (res.ok) {
+      if (res.ok || res.status === 404) {
         setFlowcharts(prev => prev.filter(f => matchesFlowchartId(f, uid)));
         setFlowchartsTotal(prev => Math.max(0, prev - 1));
         if (activeFlowchartId !== null) {

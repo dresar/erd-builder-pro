@@ -84,11 +84,20 @@ export const MoveToTrashAlert: React.FC<MoveToTrashAlertProps> = ({
       const currentId = activeDocument?.uid ?? activeDocument?.id ?? (activeDocument as any)?.id;
       if (!currentId) return;
 
-      if (view === 'erd') await deleteDiagram?.(currentId);
-      else if (view === 'notes' || view === 'prd') await deleteNote?.(String(currentId));
+      const targetType = itemType
+        || (activeDocument as any)?._itemType
+        || (activeDocument as any)?.type
+        || view;
+
+      if (targetType === 'erd') await deleteDiagram?.(currentId);
+      else if (targetType === 'notes' || targetType === 'prd') await deleteNote?.(String(currentId));
+      else if (targetType === 'drawings') await deleteDrawing?.(currentId);
+      else if (targetType === 'flowchart' || targetType === 'flowcharts') await deleteFlowchart?.(currentId);
+      else if (targetType === 'project') await deleteProject?.(currentId);
+      else if (view === 'erd') await deleteDiagram?.(currentId);
       else if (view === 'drawings') await deleteDrawing?.(currentId);
-      else if (view === 'flowchart') await deleteFlowchart?.(currentId);
-      else if (view === 'project') await deleteProject?.(currentId);
+      else if (view === 'flowchart' || view === 'flowcharts') await deleteFlowchart?.(currentId);
+      else await deleteNote?.(String(currentId));
 
       fetchTrash?.();
       onOpenChange(false);
@@ -99,11 +108,16 @@ export const MoveToTrashAlert: React.FC<MoveToTrashAlertProps> = ({
     }
   };
 
-  const itemLabel = itemType === 'erd' ? 'ERD'
-    : itemType === 'notes' ? 'catatan'
-    : itemType === 'drawings' ? 'gambar'
-    : itemType === 'flowchart' ? 'flowchart'
-    : itemType === 'project' ? 'ruang kerja'
+  const resolvedType = itemType
+    || (activeDocument as any)?._itemType
+    || (activeDocument as any)?.type
+    || view;
+
+  const itemLabel = resolvedType === 'erd' ? 'ERD'
+    : (resolvedType === 'notes' || resolvedType === 'prd') ? 'catatan'
+    : resolvedType === 'drawings' ? 'gambar'
+    : (resolvedType === 'flowchart' || resolvedType === 'flowcharts') ? 'flowchart'
+    : resolvedType === 'project' ? 'ruang kerja'
     : 'item';
 
   if (mode === 'permanent-delete') {

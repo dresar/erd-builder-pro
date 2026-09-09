@@ -180,6 +180,7 @@ export function PRDView({
         onExportMarkdown={handleExportMarkdown}
         onPrint={handlePrint}
         onOpenNewTab={handleOpenInNewTab}
+        onBack={() => navigate('/table/prd')}
         showMenu={showMenu}
         onToggleMenu={() => setShowMenu((prev) => !prev)}
         isSaving={isSaving}
