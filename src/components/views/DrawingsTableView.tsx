@@ -124,17 +124,6 @@ export const DrawingsTableView = React.memo(function DrawingsTableView({
         <div className="flex items-center gap-2">
           <PenTool className="w-5 h-5 text-fuchsia-400" />
           <h2 className="text-lg font-semibold">Gambar</h2>
-          {selectedWorkspace && (
-            <>
-              <span className="text-muted-foreground">/</span>
-              <button
-                onClick={() => onWorkspaceClick(null)}
-                className="text-sm text-muted-foreground hover:text-foreground transition-colors"
-              >
-                {projects.find(p => p.uid === selectedWorkspace)?.name || 'Ruang Kerja'}
-              </button>
-            </>
-          )}
           <span className="text-xs text-muted-foreground ml-2">
             ({totalDrawings} gambar)
           </span>

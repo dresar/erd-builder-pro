@@ -1,6 +1,5 @@
 import React from 'react';
 import { FieldLabel } from '@/components/ui/field';
-import { InfoTip } from './InfoTip';
 
 export type DeploymentMethod = 'vercel' | 'ai_choice' | 'local' | 'vps' | 'cloudflare' | 'aws' | 'other';
 
@@ -11,14 +10,14 @@ interface ExternalAIDeploymentSectionProps {
   setCustomDeployment: (v: string) => void;
 }
 
-const DEPLOYMENT_OPTIONS: Array<{ id: DeploymentMethod; label: string; tip: string; isRecommended?: boolean }> = [
-  { id: 'vercel', label: 'Vercel', tip: 'Serverless Functions & Edge (Rekomendasi)', isRecommended: true },
-  { id: 'ai_choice', label: 'AI Pilih', tip: 'Otomatis pilih Serverless Vercel' },
-  { id: 'local', label: 'Lokal', tip: 'Pengembangan lokal' },
-  { id: 'vps', label: 'VPS', tip: 'Docker / VPS Linux' },
-  { id: 'cloudflare', label: 'Cloudflare', tip: 'Cloudflare Pages & Workers' },
-  { id: 'aws', label: 'AWS', tip: 'AWS Cloud Enterprise' },
-  { id: 'other', label: 'Lainnya', tip: 'Infrastruktur khusus' },
+const DEPLOYMENT_OPTIONS: Array<{ id: DeploymentMethod; label: string }> = [
+  { id: 'vercel', label: 'Vercel' },
+  { id: 'ai_choice', label: 'AI Pilih' },
+  { id: 'local', label: 'Lokal' },
+  { id: 'vps', label: 'VPS' },
+  { id: 'cloudflare', label: 'Cloudflare' },
+  { id: 'aws', label: 'AWS' },
+  { id: 'other', label: 'Lainnya' },
 ];
 
 export function ExternalAIDeploymentSection({
@@ -28,35 +27,27 @@ export function ExternalAIDeploymentSection({
   setCustomDeployment,
 }: ExternalAIDeploymentSectionProps) {
   return (
-    <div className="space-y-2">
-      <div className="flex items-center gap-1.5">
-        <FieldLabel className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/70 px-1">
-          Deployment
-        </FieldLabel>
-        <InfoTip text="Pilih metode deployment sistem. Disarankan Vercel Serverless untuk performa produksi website modern." />
-      </div>
+    <div className="space-y-1.5">
+      <FieldLabel className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/70 px-1">
+        Deployment
+      </FieldLabel>
 
       <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-7 gap-1.5">
         {DEPLOYMENT_OPTIONS.map((opt) => {
           const isSelected = deploymentMethod === opt.id;
           return (
-            <div
+            <button
               key={opt.id}
-              className={`flex items-center justify-between gap-1 p-2 rounded-lg border text-left transition-all ${
+              type="button"
+              onClick={() => setDeploymentMethod(opt.id)}
+              className={`p-2 rounded-lg border text-xs font-medium truncate text-center transition-all cursor-pointer ${
                 isSelected
                   ? 'bg-primary/10 border-primary/40 text-foreground font-semibold ring-1 ring-primary/20'
                   : 'bg-muted/10 border-border/40 text-muted-foreground hover:bg-muted/20'
               }`}
             >
-              <button
-                type="button"
-                onClick={() => setDeploymentMethod(opt.id)}
-                className="flex-1 text-xs truncate cursor-pointer text-left"
-              >
-                {opt.label}
-              </button>
-              <InfoTip text={opt.tip} />
-            </div>
+              {opt.label}
+            </button>
           );
         })}
       </div>

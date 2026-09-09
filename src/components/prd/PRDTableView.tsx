@@ -1,19 +1,24 @@
 import React, { useMemo } from 'react';
-import { 
-  FileText, 
-  Plus, 
-  Search, 
-  Trash2, 
-  Edit3, 
-  Eye, 
-  Calendar, 
-  FolderKanban, 
-  MoreHorizontal,
-  Download
-} from 'lucide-react';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { InfoTip } from '@/components/ai/InfoTip';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+  DropdownMenuCheckboxItem,
+} from '@/components/ui/dropdown-menu';
+import { Plus, FileText, MoreHorizontal, Pencil, Trash2, ChevronLeft, ChevronRight, Columns3, Search } from 'lucide-react';
+import { useColumnVisibility, ColumnDef } from '@/hooks/useColumnVisibility';
+import { Input } from '@/components/ui/input';
 import { parsePrdMetadata } from './prdTemplate';
 
 interface PRDTableViewProps {
@@ -34,7 +39,19 @@ interface PRDTableViewProps {
   searchRef?: React.RefObject<HTMLInputElement | null>;
 }
 
-export function PRDTableView({
+const ITEMS_PER_PAGE = 10;
+const STORAGE_KEY = 'prd-table-column-visibility';
+
+const COLUMNS: ColumnDef[] = [
+  { id: 'name', label: 'Nama', defaultVisible: true, hideable: false, width: 'w-[30%]' },
+  { id: 'workspace', label: 'Ruang Kerja', defaultVisible: true, hideable: false, width: 'w-[20%]' },
+  { id: 'updated', label: 'Diperbarui', defaultVisible: true, hideable: true, width: 'w-[14%]' },
+  { id: 'status', label: 'Status', defaultVisible: true, hideable: true, width: 'w-[10%]' },
+  { id: 'created', label: 'Dibuat', defaultVisible: false, hideable: true, width: 'w-[14%]' },
+  { id: 'actions', label: 'Aksi', defaultVisible: true, hideable: false, width: 'w-[8%]' },
+];
+
+export const PRDTableView = React.memo(function PRDTableView({
   prds,
   projects,
   selectedWorkspace,
@@ -51,6 +68,35 @@ export function PRDTableView({
   onSearchChange,
   searchRef,
 }: PRDTableViewProps) {
+  const totalPages = Math.max(1, Math.ceil(totalPrds / ITEMS_PER_PAGE));
+  const { toggle, visibleCols } = useColumnVisibility(STORAGE_KEY, COLUMNS);
+  const cols = visibleCols();
+
+  const getProjectById = (projectId: number | string | null | undefined) => {
+    if (projectId === null || projectId === undefined) return null;
+    return projects.find(p => String(p.id) === String(projectId) || String(p.uid) === String(projectId)) || null;
+  };
+
+  const getProjectName = (item: any): string => {
+    return item.projects?.name || item.project?.name || getProjectById(item.project_id)?.name || '—';
+  };
+
+  const getProjectUid = (item: any): string | null => {
+    return item.projects?.uid || item.project?.uid || getProjectById(item.project_id)?.uid || null;
+  };
+
+  const formatDate = (dateStr?: string) => {
+    if (!dateStr) return '—';
+    try {
+      return new Intl.DateTimeFormat('id-ID', {
+        dateStyle: 'medium',
+        timeStyle: 'short',
+      }).format(new Date(dateStr));
+    } catch {
+      return dateStr.slice(0, 10);
+    }
+  };
+
   const filteredPrds = useMemo(() => {
     let list = prds || [];
     if (selectedWorkspace) {
@@ -64,150 +110,224 @@ export function PRDTableView({
   }, [prds, selectedWorkspace, searchQuery]);
 
   return (
-    <div className="flex-1 flex flex-col h-full overflow-hidden bg-background">
-      <div className="p-4 sm:p-6 border-b border-border/40 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shrink-0">
-        <div>
-          <div className="flex items-center gap-2">
-            <h1 className="text-lg font-bold tracking-tight text-foreground">PRD</h1>
-            <InfoTip text="Product Requirements Document: spesifikasi arsitektur & persyaratan produk dengan Tampilan Cantik HTML." />
-          </div>
-          <p className="text-xs text-muted-foreground mt-0.5">
-            Kelola spesifikasi produk dan arsitektur sistem.
-          </p>
+    <div className="flex-1 flex flex-col gap-4 overflow-hidden">
+      <div className="flex flex-col gap-3 shrink-0">
+        <div className="flex items-center gap-2">
+          <FileText className="w-5 h-5 text-indigo-400" />
+          <h2 className="text-lg font-semibold">PRD</h2>
+          <span className="text-xs text-muted-foreground ml-2">
+            ({totalPrds} prd)
+          </span>
         </div>
-
-        <div className="flex items-center gap-2.5 w-full sm:w-auto">
-          <div className="relative flex-1 sm:w-64">
-            <Search className="absolute left-2.5 top-2.5 size-3.5 text-muted-foreground" />
-            <input
+        <div className="flex items-center justify-between gap-2">
+          <div className="relative flex items-center max-w-64 w-full">
+            <Search className="pointer-events-none absolute left-2.5 top-1/2 size-3.5 -translate-y-1/2 select-none text-muted-foreground" />
+            <Input
               ref={searchRef}
               type="text"
               placeholder="Cari"
               value={searchQuery}
               onChange={(e) => onSearchChange(e.target.value)}
-              className="h-8.5 w-full pl-8 pr-3 rounded-lg border border-border/50 bg-muted/15 text-xs text-foreground placeholder:text-muted-foreground outline-none focus:border-indigo-500/50"
+              className="h-8 pl-8 text-xs"
             />
           </div>
-
-          <Button
-            onClick={onCreatePrd}
-            size="sm"
-            className="h-8.5 px-3.5 text-xs gap-1.5 font-semibold bg-indigo-600 hover:bg-indigo-700 text-white cursor-pointer shrink-0"
-          >
-            <Plus className="size-3.5" />
-            Buat PRD
-          </Button>
+          <div className="flex items-center gap-2">
+            <DropdownMenu>
+              <DropdownMenuTrigger render={
+                <Button variant="outline" size="icon-sm" aria-label="Kolom" title="Kolom">
+                  <Columns3 className="w-4 h-4" />
+                </Button>
+              } />
+              <DropdownMenuContent align="end" className="w-44">
+                {COLUMNS.filter(c => c.hideable).map(col => (
+                  <DropdownMenuCheckboxItem
+                    key={col.id}
+                    checked={cols.some(v => v.id === col.id)}
+                    onCheckedChange={() => toggle(col.id)}
+                  >
+                    {col.label}
+                  </DropdownMenuCheckboxItem>
+                ))}
+              </DropdownMenuContent>
+            </DropdownMenu>
+            <Button size="sm" onClick={onCreatePrd}>
+              <Plus className="w-4 h-4 sm:mr-1.5" />
+              <span className="hidden sm:inline">Buat PRD</span>
+            </Button>
+          </div>
         </div>
       </div>
 
-      <div className="flex-1 overflow-y-auto custom-scrollbar p-4 sm:p-6">
-        {filteredPrds.length === 0 ? (
-          <div className="h-64 flex flex-col items-center justify-center text-center p-6 rounded-xl border border-dashed border-border/60 bg-muted/5">
-            <div className="p-3 rounded-full bg-indigo-500/10 text-indigo-400 mb-3">
-              <FileText className="size-6" />
-            </div>
-            <p className="text-sm font-semibold text-foreground">Belum ada dokumen PRD</p>
-            <p className="text-xs text-muted-foreground max-w-sm mt-1 mb-4">
-              Mulai buat dokumen spesifikasi persyaratan produk atau impor hasil AI.
-            </p>
-            <Button onClick={onCreatePrd} size="sm" className="h-8 px-4 text-xs font-semibold bg-indigo-600 text-white">
-              <Plus className="size-3.5 mr-1" />
-              Buat PRD
+      <div className="overflow-auto rounded-xl border">
+        <Table>
+          <TableHeader>
+            <TableRow>
+              {cols.map(col => (
+                <TableHead key={col.id} className={col.width}>{col.label}</TableHead>
+              ))}
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {isLoading && filteredPrds.length === 0 ? (
+              <TableRow>
+                <TableCell colSpan={cols.length} className="h-32 text-center text-muted-foreground">
+                  <span className="inline-flex items-center gap-2 text-xs">
+                    <span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-primary/30 border-t-primary" />
+                    Memuat...
+                  </span>
+                </TableCell>
+              </TableRow>
+            ) : filteredPrds.length === 0 ? (
+              <TableRow>
+                <TableCell colSpan={cols.length} className="h-32 text-center text-muted-foreground text-xs">
+                  {totalPrds === 0 ? 'Belum ada dokumen PRD.' : 'Tidak ada dokumen PRD pada pencarian ini.'}
+                </TableCell>
+              </TableRow>
+            ) : (
+              filteredPrds.map(doc => {
+                const uid = doc.uid ?? String(doc.id);
+                const currentProjectUid = getProjectUid(doc);
+                const cleanTitle = doc.title?.replace(/^\[PRD\]\s*/, '') || 'Spesifikasi PRD';
+                const meta = parsePrdMetadata(doc.content || '', cleanTitle);
+                const statusLabel = meta.status === 'production' ? 'Produksi' : meta.status === 'approved' ? 'Disetujui' : meta.status === 'in_review' ? 'Review' : 'Draft';
+                const statusColor = meta.status === 'production'
+                  ? 'bg-emerald-500/10 text-emerald-400'
+                  : meta.status === 'approved'
+                    ? 'bg-indigo-500/10 text-indigo-400'
+                    : meta.status === 'in_review'
+                      ? 'bg-amber-500/10 text-amber-500'
+                      : 'bg-muted text-muted-foreground';
+
+                return (
+                  <TableRow
+                    key={uid}
+                    className="cursor-pointer group"
+                    onClick={() => onSelectPrd(uid)}
+                  >
+                    {cols.map(col => {
+                      if (col.id === 'name') {
+                        return (
+                          <TableCell key="name" className="font-medium">
+                            <span className="truncate block max-w-70">{cleanTitle}</span>
+                          </TableCell>
+                        );
+                      }
+                      if (col.id === 'workspace') {
+                        return (
+                          <TableCell key="workspace">
+                            <span
+                              className="inline-flex items-center gap-1 text-xs bg-muted px-2 py-0.5 rounded-full cursor-pointer hover:bg-accent transition-colors"
+                              onClick={e => { e.stopPropagation(); onWorkspaceClick(currentProjectUid); }}
+                            >
+                              {getProjectName(doc)}
+                            </span>
+                          </TableCell>
+                        );
+                      }
+                      if (col.id === 'updated') {
+                        return (
+                          <TableCell key="updated" className="text-muted-foreground text-xs">
+                            {formatDate(doc.updated_at || doc.updatedAt)}
+                          </TableCell>
+                        );
+                      }
+                      if (col.id === 'status') {
+                        return (
+                          <TableCell key="status">
+                            <span className={`inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full ${statusColor}`}>
+                              {statusLabel}
+                            </span>
+                          </TableCell>
+                        );
+                      }
+                      if (col.id === 'created') {
+                        return (
+                          <TableCell key="created" className="text-muted-foreground text-xs">
+                            {formatDate(doc.created_at || doc.createdAt)}
+                          </TableCell>
+                        );
+                      }
+                      if (col.id === 'actions') {
+                        return (
+                          <TableCell key="actions" className="text-right" onClick={e => e.stopPropagation()}>
+                            <DropdownMenu>
+                              <DropdownMenuTrigger render={
+                                <Button variant="ghost" size="icon-xs" className="opacity-0 group-hover:opacity-100 transition-opacity">
+                                  <MoreHorizontal className="h-4 w-4" />
+                                </Button>
+                              } />
+                              <DropdownMenuContent align="end">
+                                <DropdownMenuItem onClick={() => onOpenEditDocument(uid)}>
+                                  <Pencil className="h-4 w-4 mr-2" />
+                                  Edit Dokumen
+                                </DropdownMenuItem>
+                                <DropdownMenuSeparator />
+                                <DropdownMenuItem onClick={() => onDeletePrd(uid)} className="text-destructive">
+                                  <Trash2 className="h-4 w-4 mr-2" />
+                                  Hapus
+                                </DropdownMenuItem>
+                              </DropdownMenuContent>
+                            </DropdownMenu>
+                          </TableCell>
+                        );
+                      }
+                      return null;
+                    })}
+                  </TableRow>
+                );
+              })
+            )}
+          </TableBody>
+        </Table>
+      </div>
+
+      {totalPages > 1 && (
+        <div className="flex items-center justify-between border-x border-b bg-background px-4 py-2 shrink-0 rounded-b-xl">
+          <span className="text-xs text-muted-foreground">
+            Halaman {page} dari {totalPages}
+          </span>
+          <div className="flex items-center gap-1">
+            <Button
+              variant="outline"
+              size="icon-xs"
+              disabled={page <= 1}
+              onClick={() => onPageChange(page - 1)}
+            >
+              <ChevronLeft className="h-4 w-4" />
+            </Button>
+            {Array.from({ length: totalPages }, (_, i) => i + 1)
+              .filter(p => p === 1 || p === totalPages || Math.abs(p - page) <= 2)
+              .reduce<(number | 'ellipsis')[]>((acc, p, idx, arr) => {
+                if (idx > 0 && p - arr[idx - 1] > 1) acc.push('ellipsis');
+                acc.push(p);
+                return acc;
+              }, [])
+              .map((item) =>
+                item === 'ellipsis' ? (
+                  <span key={`e-${item}`} className="px-1 text-xs text-muted-foreground">...</span>
+                ) : (
+                  <Button
+                    key={item}
+                    variant={item === page ? 'default' : 'outline'}
+                    size="icon-xs"
+                    onClick={() => onPageChange(item as number)}
+                    className={item === page ? '' : 'text-muted-foreground'}
+                  >
+                    {item}
+                  </Button>
+                )
+              )}
+            <Button
+              variant="outline"
+              size="icon-xs"
+              disabled={page >= totalPages}
+              onClick={() => onPageChange(page + 1)}
+            >
+              <ChevronRight className="h-4 w-4" />
             </Button>
           </div>
-        ) : (
-          <div className="rounded-xl border border-border/40 overflow-hidden bg-background">
-            <table className="w-full text-left border-collapse text-xs">
-              <thead>
-                <tr className="border-b border-border/40 bg-muted/20 text-muted-foreground uppercase text-[10px] font-bold tracking-wider">
-                  <th className="py-2.5 px-4">Nama PRD</th>
-                  <th className="py-2.5 px-3 hidden sm:table-cell">Status</th>
-                  <th className="py-2.5 px-3 hidden md:table-cell">Ruang Kerja</th>
-                  <th className="py-2.5 px-3 hidden lg:table-cell">Diperbarui</th>
-                  <th className="py-2.5 px-4 text-right">Aksi</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-border/30">
-                {filteredPrds.map((doc) => {
-                  const uid = doc.uid || doc.id;
-                  const cleanTitle = doc.title?.replace(/^\[PRD\]\s*/, '') || 'Spesifikasi PRD';
-                  const projectName = doc.projects?.name || doc.project?.name || 'Tanpa Proyek';
-                  const updatedStr = doc.updated_at || doc.updatedAt;
-                  const meta = parsePrdMetadata(doc.content || '', cleanTitle);
-                  const statusLabel = meta.status === 'production' ? 'Produksi' : meta.status === 'approved' ? 'Disetujui' : meta.status === 'in_review' ? 'Review' : 'Draft';
-                  const statusColor = meta.status === 'production' 
-                    ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30' 
-                    : meta.status === 'approved' 
-                      ? 'bg-indigo-500/10 text-indigo-400 border-indigo-500/30' 
-                      : meta.status === 'in_review' 
-                        ? 'bg-amber-500/10 text-amber-500 border-amber-500/30' 
-                        : 'bg-muted text-muted-foreground border-border/40';
-
-                  return (
-                    <tr
-                      key={uid}
-                      onClick={() => onSelectPrd(uid)}
-                      className="hover:bg-muted/15 transition-colors cursor-pointer group"
-                    >
-                      <td className="py-3 px-4 font-semibold text-foreground flex items-center gap-2.5">
-                        <div className="p-1.5 rounded-md bg-indigo-500/10 text-indigo-400 group-hover:bg-indigo-500/20 transition-colors">
-                          <FileText className="size-4" />
-                        </div>
-                        <span className="truncate max-w-xs sm:max-w-md">{cleanTitle}</span>
-                      </td>
-
-                      <td className="py-3 px-3 hidden sm:table-cell">
-                        <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider border ${statusColor}`}>
-                          {statusLabel}
-                        </span>
-                      </td>
-
-                      <td className="py-3 px-3 hidden md:table-cell text-muted-foreground truncate max-w-36">
-                        {projectName}
-                      </td>
-
-                      <td className="py-3 px-3 hidden lg:table-cell text-muted-foreground text-[11px]">
-                        {updatedStr ? new Date(updatedStr).toLocaleDateString('id-ID') : '–'}
-                      </td>
-
-                      <td className="py-3 px-4 text-right" onClick={(e) => e.stopPropagation()}>
-                        <div className="flex items-center justify-end gap-1">
-                          <button
-                            type="button"
-                            onClick={() => onSelectPrd(uid)}
-                            title="Buka PRD"
-                            className="p-1.5 rounded hover:bg-muted/50 text-muted-foreground hover:text-foreground cursor-pointer"
-                          >
-                            <Eye className="size-3.5" />
-                          </button>
-
-                          <button
-                            type="button"
-                            onClick={() => onOpenEditDocument(uid)}
-                            title="Ubah Nama"
-                            className="p-1.5 rounded hover:bg-muted/50 text-muted-foreground hover:text-foreground cursor-pointer"
-                          >
-                            <Edit3 className="size-3.5" />
-                          </button>
-
-                          <button
-                            type="button"
-                            onClick={() => onDeletePrd(uid)}
-                            title="Hapus"
-                            className="p-1.5 rounded hover:bg-destructive/10 text-muted-foreground hover:text-destructive cursor-pointer"
-                          >
-                            <Trash2 className="size-3.5" />
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
-        )}
-      </div>
+        </div>
+      )}
     </div>
   );
-}
+});

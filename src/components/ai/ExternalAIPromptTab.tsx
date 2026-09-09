@@ -3,7 +3,6 @@ import { Copy, Check, FileText, Database } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { FieldLabel } from '@/components/ui/field';
 import { Badge } from '@/components/ui/badge';
-import { InfoTip } from './InfoTip';
 import {
   PromptStrategy,
   STRATEGY_PRESETS,
@@ -89,49 +88,38 @@ export function ExternalAIPromptTab({
 
   return (
     <div className="space-y-4">
-      {/* 1. Strategi Prompting */}
       <div className="space-y-1.5">
-        <div className="flex items-center gap-1.5">
-          <FieldLabel className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/70 px-1">
-            Strategi
-          </FieldLabel>
-          <InfoTip text="Pilih paket all-in-one untuk hasil instan, atau strategi bertahap untuk merantai PRD ke ERD dan Flowchart." />
-        </div>
+        <FieldLabel className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/70 px-1">
+          Strategi
+        </FieldLabel>
 
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
           {STRATEGY_PRESETS.map((strat) => {
             const isSelected = selectedStrategy === strat.id;
             return (
-              <div
+              <button
                 key={strat.id}
-                className={`flex items-center justify-between gap-1 p-2 rounded-lg border text-left transition-all ${
+                type="button"
+                onClick={() => setSelectedStrategy(strat.id)}
+                className={`p-2 rounded-lg border text-xs font-medium truncate text-center transition-all cursor-pointer ${
                   isSelected
                     ? 'bg-indigo-500/10 border-indigo-500/40 text-foreground font-semibold ring-1 ring-indigo-500/20'
                     : 'bg-muted/10 border-border/40 text-muted-foreground hover:bg-muted/20'
                 }`}
               >
-                <button
-                  type="button"
-                  onClick={() => setSelectedStrategy(strat.id)}
-                  className="flex-1 text-xs truncate cursor-pointer text-left"
-                >
-                  {strat.label}
-                </button>
-                <InfoTip text={strat.description} />
-              </div>
+                {strat.label}
+              </button>
             );
           })}
         </div>
       </div>
 
-      {/* 2. Context Chaining Box (bila strategi bertahap dipilih) */}
       {isChainingStrategy && (
         <div className="rounded-xl border border-indigo-500/30 bg-indigo-500/5 p-3 space-y-2.5">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-1.5">
               <FileText className="size-3.5 text-indigo-400" />
               <span className="text-xs font-semibold text-foreground">Konteks PRD</span>
-              <InfoTip text="Pilih catatan proyek atau tempel ringkasan PRD agar ERD/Flowchart sesuai kebutuhan." />
             </div>
             {notes.length > 0 && (
               <select
@@ -164,7 +152,6 @@ export function ExternalAIPromptTab({
                 <div className="flex items-center gap-1.5">
                   <Database className="size-3.5 text-indigo-400" />
                   <span className="text-xs font-semibold text-foreground">Konteks ERD</span>
-                  <InfoTip text="Pilih diagram ERD untuk menyelaraskan entitas tabel pada flowchart." />
                 </div>
                 {diagrams.length > 0 && (
                   <select
@@ -194,15 +181,11 @@ export function ExternalAIPromptTab({
         </div>
       )}
 
-      {/* 3. Parameter Sistem (Nama Proyek & Skala Tabel) */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         <div>
-          <div className="flex items-center gap-1.5 mb-1">
-            <FieldLabel className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/70 px-1">
-              Nama Proyek
-            </FieldLabel>
-            <InfoTip text="Nama sistem yang langsung disuntikkan ke dalam prompt AI." />
-          </div>
+          <FieldLabel className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/70 px-1 mb-1 block">
+            Nama Proyek
+          </FieldLabel>
           <input
             type="text"
             placeholder="Nama"
@@ -213,68 +196,51 @@ export function ExternalAIPromptTab({
         </div>
 
         <div>
-          <div className="flex items-center gap-1.5 mb-1">
-            <FieldLabel className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/70 px-1">
-              Skala Tabel
-            </FieldLabel>
-            <InfoTip text="Target jumlah tabel relasional pada skema DBML." />
-          </div>
+          <FieldLabel className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/70 px-1 mb-1 block">
+            Skala Tabel
+          </FieldLabel>
           <div className="grid grid-cols-3 gap-1.5">
             {SCALE_PRESETS.map((scale) => {
               const isSelected = selectedScale === scale.id;
               return (
-                <div
+                <button
                   key={scale.id}
-                  className={`flex items-center justify-between gap-1 p-1.5 rounded-lg border text-left transition-all ${
+                  type="button"
+                  onClick={() => setSelectedScale(scale.id as any)}
+                  className={`p-1.5 rounded-lg border text-xs font-medium truncate text-center transition-all cursor-pointer ${
                     isSelected
                       ? 'bg-indigo-500/10 border-indigo-500/40 text-foreground font-semibold ring-1 ring-indigo-500/20'
                       : 'bg-muted/10 border-border/40 text-muted-foreground hover:bg-muted/20'
                   }`}
                 >
-                  <button
-                    type="button"
-                    onClick={() => setSelectedScale(scale.id as any)}
-                    className="flex-1 text-xs truncate cursor-pointer text-left"
-                  >
-                    {scale.label}
-                  </button>
-                  <InfoTip text={scale.description} />
-                </div>
+                  {scale.label}
+                </button>
               );
             })}
           </div>
         </div>
       </div>
 
-      {/* 4. Domain Bisnis */}
       <div className="space-y-1.5">
-        <div className="flex items-center gap-1.5">
-          <FieldLabel className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/70 px-1">
-            Domain Bisnis
-          </FieldLabel>
-          <InfoTip text="Pilih domain untuk penyesuaian modul dan entitas data spesifik." />
-        </div>
+        <FieldLabel className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/70 px-1">
+          Domain Bisnis
+        </FieldLabel>
         <div className="grid grid-cols-3 sm:grid-cols-6 gap-1.5">
           {DOMAIN_PRESETS.map((domain) => {
             const isSelected = selectedDomain === domain.id;
             return (
-              <div
+              <button
                 key={domain.id}
-                className={`flex items-center justify-between gap-1 p-1.5 rounded-lg border text-left transition-all ${
+                type="button"
+                onClick={() => setSelectedDomain(domain.id)}
+                className={`p-1.5 rounded-lg border text-xs font-medium truncate text-center transition-all cursor-pointer ${
                   isSelected
                     ? 'bg-indigo-500/10 border-indigo-500/40 text-foreground font-semibold ring-1 ring-indigo-500/20'
                     : 'bg-muted/10 border-border/40 text-muted-foreground hover:bg-muted/20'
                 }`}
               >
-                <button
-                  type="button"
-                  onClick={() => setSelectedDomain(domain.id)}
-                  className="flex-1 text-xs truncate cursor-pointer text-left"
-                >
-                  {domain.label}
-                </button>
-                <InfoTip text={domain.description} />
-              </div>
+                {domain.label}
+              </button>
             );
           })}
         </div>
@@ -291,7 +257,6 @@ export function ExternalAIPromptTab({
         )}
       </div>
 
-      {/* 5. Metode Deployment */}
       <ExternalAIDeploymentSection
         deploymentMethod={deploymentMethod}
         setDeploymentMethod={setDeploymentMethod}
@@ -299,14 +264,10 @@ export function ExternalAIPromptTab({
         setCustomDeployment={setCustomDeployment}
       />
 
-      {/* 6. Kepatuhan & Keamanan */}
       <div className="space-y-1.5">
-        <div className="flex items-center gap-1.5">
-          <FieldLabel className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/70 px-1">
-            Keamanan
-          </FieldLabel>
-          <InfoTip text="Standar tata kelola data enterprise dan kontrol akses." />
-        </div>
+        <FieldLabel className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/70 px-1">
+          Keamanan
+        </FieldLabel>
         <div className="flex flex-wrap gap-1.5">
           {[
             'Audit Trail',
@@ -335,7 +296,6 @@ export function ExternalAIPromptTab({
         </div>
       </div>
 
-      {/* 7. Output Prompt */}
       <div className="space-y-1.5 pt-1">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-1.5">
@@ -343,7 +303,6 @@ export function ExternalAIPromptTab({
               Prompt Siap Pakai
             </FieldLabel>
             <Badge variant="secondary" className="text-[10px] font-mono">Claude / ChatGPT</Badge>
-            <InfoTip text="Salin prompt ini ke Claude atau ChatGPT, lalu tempelkan hasilnya di tab Impor." />
           </div>
           <Button 
             onClick={onCopyPrompt} 

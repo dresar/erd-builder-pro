@@ -5,7 +5,7 @@ import { edgeToRelationship } from '@/lib/diagram-payload';
 import { apiFetch } from '@/lib/api';
 import { localPersistence } from '@/lib/localPersistence';
 import { DraftType } from '@/types';
-import type { ParsedExternalBundle } from './ExternalAIGeneratorDialog';
+import type { ParsedExternalBundle } from './externalBundleTypes';
 
 export interface ApplyExternalBundleParams {
   parsedData: ParsedExternalBundle;

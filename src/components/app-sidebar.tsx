@@ -18,7 +18,7 @@ import {
   Loader2,
   Bot,
 } from "lucide-react"
-import { useNavigate } from "react-router-dom"
+import { useNavigate, useLocation } from "react-router-dom"
 
 import { NavMain } from "@/components/nav-main"
 import { NavUser } from "@/components/nav-user"
@@ -127,6 +127,7 @@ export const AppSidebar = React.memo(({
 }: AppSidebarProps) => {
   const { state } = useSidebar();
   const navigate = useNavigate();
+  const location = useLocation();
   const isCollapsed = state === "collapsed";
   const searchInputRef = useRef<HTMLInputElement>(null);
   const [searchShortcutLabel] = useState(getSearchShortcutLabel);
@@ -228,10 +229,10 @@ export const AppSidebar = React.memo(({
     },
     {
       title: "AI Eksternal",
-      url: "#",
+      url: "/ai-generator",
       icon: Bot,
-      isActive: false,
-      onClick: () => onOpenExternalAI?.(),
+      isActive: location.pathname === '/ai-generator',
+      onClick: () => navigate('/ai-generator'),
     },
   ];
 
