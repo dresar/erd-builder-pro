@@ -39,9 +39,9 @@ Sasaran Strategis:
 Arsitektur menerapkan pola Modular Monolith dengan batas domain (bounded context) yang tegas.
 - Frontend: Next.js 15 (App Router) + React 19 + Tailwind CSS v4 + Lucide Icons.
 - Backend: RESTful API Layer (Express / Next Serverless Routes) dengan arsitektur controller-service-repository.
-- Basis Data: PostgreSQL (Neon / Supabase) dengan connection pooling (PgBouncer) dan skema relasional tertata.
+- Basis Data: Neon Serverless PostgreSQL (Prisma ORM) dengan pooling koneksi bawaan dan skema relasional 3NF.
 - Penyimpanan Berkas: Object Storage S3-Compatible (Cloudflare R2) dengan presigned URL berbatas waktu.
-- Keamanan: Row Level Security (RLS) berbasis tenant_id/campus_id, JWT dengan refresh token rotasi berkala.
+- Keamanan: Isolasi data multi-tenant berbasis tenant_id/campus_id terindeks, JWT dengan refresh token rotasi berkala.
 
 ## 3. Dekomposisi Modul Fungsional (Domain-Driven Design)
 1. Modul Manajemen Identitas, Autentikasi & RBAC:
@@ -65,17 +65,17 @@ Arsitektur menerapkan pola Modular Monolith dengan batas domain (bounded context
 ## 5. Standar Kontrak API & Komunikasi
 - Pola RESTful standar dengan awalan /api/v1.
 - Format respon JSON konsisten: { success: boolean, data?: any, error?: { code: string, message: string } }.
-- Pagination standar berbasis query param limit & page/offset.
+- Pagination seragam: query params page=1, limit=20, sort_by=created_at, order=desc.
 - Wajib header otorisasi Bearer Token dan tenant identifier pada seluruh endpoint privat.
 
-## 6. Kebijakan Keamanan & Kepatuhan
-- Enkripsi at-rest untuk kolom sensitif (AES-256).
-- Enkripsi in-transit (TLS 1.3 wajib pada seluruh komunikasi jaringan).
-- Pola soft-delete pada seluruh tabel transaksional untuk integritas referensial.
+## 6. Kebijakan Keamanan & Kepatuhan Basis Data
+- Enkripsi at-rest untuk kolom sensitif (AES-256) dan in-transit (TLS 1.3).
+- Larangan Physical Delete: Penghapusan entitas domain dilarang keras secara fisik. Wajib soft-delete (deleted_at) dengan ON DELETE RESTRICT.
+- ON DELETE CASCADE hanya diizinkan untuk data teknis turunan sementara (misal: token verifikasi sementara).
 - Rate limiting ketat per IP dan per sesi pengguna untuk mencegah brute-force dan DoS.
 
 ## 7. Service Level Agreement (SLA) & Target Performa
-- Ketersediaan Sistem: 99.9% uptime per bulan kalender.
+- Ketersediaan Sistem: 99.9% uptime SLA per bulan kalender.
 - Response Time: API p95 < 200ms, Server-side rendered pages < 500ms.
 - Target RTO (Recovery Time Objective) < 1 jam, RPO (Recovery Point Objective) < 15 menit.
 `;

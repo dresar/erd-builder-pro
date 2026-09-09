@@ -16,41 +16,46 @@ export function getApiEndpointsSection(projectName: string, dbmlSource: string):
 
   const crudDoc = endpointList.map((t, idx) => {
     const title = t.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
-    return `### ${idx + 1}. MODUL ENDPOINT: /api/v1/${t} (${title})
+    return `### ${idx + 1}. MODUL ENTITAS: /api/v1/${t} (${title})
 - GET /api/v1/${t}
-  * Summary: Mengambil kumpulan data ${title} terpaginasi.
-  * Query Params: page=1, limit=10, sort_by=created_at, order=desc, q=kata_kunci.
-  * Status: 200 OK -> { success: true, meta: { page: 1, limit: 10, total: 42, total_pages: 5 }, data: [...] }
+  * Deskripsi: Mengambil koleksi data ${title} terpaginasi.
+  * Query Params Standar: page=1, limit=20, sort_by=created_at, order=desc, q=kata_kunci.
+  * Status: 200 OK -> { success: true, meta: { page: 1, limit: 20, total: 42, total_pages: 3 }, data: [...] }
 - GET /api/v1/${t}/:id
-  * Summary: Detail tunggal ${title} berdasarkan UUID / ID.
+  * Deskripsi: Detail tunggal ${title} berdasarkan UUID / ID.
   * Status: 200 OK -> { success: true, data: { ... } } | 404 Not Found
 - POST /api/v1/${t}
-  * Summary: Membuat rekaman ${title} baru. Wajib validasi skema DTO dan otorisasi RBAC.
+  * Deskripsi: Membuat rekaman ${title} baru. Validasi ketat skema Zod dan verifikasi RBAC.
   * Status: 201 Created -> { success: true, message: "${title} berhasil dibuat", data: { ... } } | 422 Unprocessable Entity
 - PUT /api/v1/${t}/:id
-  * Summary: Memperbarui data ${title}. Merekam audit trail secara otomatis.
-  * Status: 200 OK -> { success: true, message: "${title} berhasil diperbarui", data: { ... } } | 404 Not Found
+  * Deskripsi: Penggantian data penuh (Full Replacement). Seluruh field wajib dikirimkan.
+  * Status: 200 OK -> { success: true, message: "${title} berhasil diperbarui (penuh)", data: { ... } } | 404 Not Found
+- PATCH /api/v1/${t}/:id
+  * Deskripsi: Pembaruan sebagian data (Partial Update). Hanya field yang dimodifikasi yang dikirimkan.
+  * Status: 200 OK -> { success: true, message: "${title} berhasil diperbarui (parsial)", data: { ... } } | 404 Not Found
 - DELETE /api/v1/${t}/:id
-  * Summary: Menghapus rekaman ${title} dengan mekanisme soft-delete (deleted_at).
+  * Deskripsi: Penghapusan logis (Soft-Delete) dengan mengisi timestamp deleted_at. Dilarang physical DELETE.
   * Status: 200 OK -> { success: true, message: "${title} berhasil dihapus" } | 404 Not Found`;
   }).join('\n\n');
 
   return `=======================================================================
-[SECTION 8: SPESIFIKASI KONTRAK REST API & ENDPOINTS CRUD PENUH]
+[SECTION 8: CANONICAL API REGISTRY & REST SPECIFICATION]
 =======================================================================
-Sistem "${projectName}" WAJIB menyediakan implementasi RESTful API terstandarisasi untuk seluruh modul entitas basis data:
+Sistem "${projectName}" WAJIB mengimplementasikan Canonical API Registry terpadu tanpa endpoint terfragmentasi:
 
-1. STANDAR PROTOKOL & FORMAT UMUM:
+1. STANDAR PROTOKOL, RESPONSE ENVELOPE & PAGINASI:
 - Base Path: /api/v1
 - Format Payload: application/json; charset=utf-8
-- Skema Sukses Standar:
+- Standar Paginasi Universal:
+  Query Parameters: page=1, limit=20, sort_by=created_at, order=desc|asc
+- Skema Sukses Terstandarisasi:
   {
     "success": true,
     "message"?: string,
     "meta"?: { "page": number, "limit": number, "total": number, "total_pages": number },
     "data": any
   }
-- Skema Kegagalan Standar:
+- Skema Kegagalan Terstandarisasi:
   {
     "success": false,
     "error": {
@@ -60,20 +65,26 @@ Sistem "${projectName}" WAJIB menyediakan implementasi RESTful API terstandarisa
     }
   }
 
-2. ATURAN HEADERS WAJIB:
-- Authorization: Bearer <jwt_access_token> (Wajib pada seluruh private route)
+2. ATURAN HEADERS & KEAMANAN:
+- Authorization: Bearer <jwt_access_token> (Wajib pada seluruh endpoint privat)
 - X-Tenant-Id: <uuid> (Wajib untuk isolasi multi-tenant)
+- Idempotency-Key: <uuid> (Wajib pada seluruh transaksi pembayaran dan alur status krusial)
 - Content-Type: application/json
-- Idempotency-Key: <uuid> (Wajib pada transaksi finansial / mutasi data)
 
-3. INVENTARIS ENDPOINTS CRUD LENGKAP TIAP TABEL:
+3. CANONICAL AUTHENTICATION & SESSION REGISTRY:
+- POST /api/v1/auth/login -> Autentikasi email/password, emit access token (15m) + secure refresh cookie (7d).
+- POST /api/v1/auth/refresh -> Rotasi token akses menggunakan refresh token.
+- GET  /api/v1/auth/me -> Mengambil profil pengguna dan matriks peran RBAC saat ini.
+- POST /api/v1/auth/logout -> Invalidasi sesi dan pembersihan cookie aman.
+
+4. CANONICAL DOMAIN ENTITY CRUD REGISTRY:
 ${crudDoc}
 
-4. ENDPOINTS ALUR TRANSAKSI & WORKFLOW ENGINE (SIMULASI SISTEM):
-- POST /api/v1/auth/login -> Autentikasi sesi & penerbitan token akses.
-- POST /api/v1/${primaryEntity}/submit -> Validasi dan pembuatan data entitas utama.
-- POST /api/v1/payments/generate-va -> Pembuatan transaksi payment gateway otomatis.
-- POST /api/v1/webhooks/payment-gateway -> Callback settlement pembayaran.
-- PUT /api/v1/${primaryEntity}/activate -> Aktivasi status aktif entitas.
+5. CANONICAL BUSINESS WORKFLOW, PAYMENTS & OBSERVABILITY REGISTRY:
+- POST /api/v1/${primaryEntity}/submit -> Validasi form dan inisialisasi status entitas awal.
+- POST /api/v1/payments/generate-va -> Penerbitan virtual account payment gateway otomatis.
+- POST /api/v1/webhooks/payment-gateway -> Callback settlement payment gateway dengan validasi tanda tangan HMAC-SHA256.
+- PATCH /api/v1/${primaryEntity}/:id/transition -> Eksekusi transisi status state machine berdasar aturan RBAC.
+- GET  /api/v1/health -> Healthcheck observabilitas (status database Neon, uptime sistem, memory usage).
 `;
 }

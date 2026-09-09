@@ -88,8 +88,8 @@ The generated application MUST implement the following behavioral specifications
   * Keep backend code in the same repository under /server or Next.js /app/api routes.
   * Serverless architecture: Stateless execution, connection pooling, edge-compatible handlers.
 - Default Database:
-  * Default to Neon Serverless PostgreSQL with pgvector and pooled connection string.
-  * Ensure full compatibility with Supabase PostgreSQL as an alternative provider.
+  * Neon Serverless PostgreSQL with Prisma ORM and pooled connection string.
+  * Dedicated connection pooling with @prisma/adapter-pg or @neondatabase/serverless.
 
 -----------------------------------------------------------------------
 8. CROSS-PLATFORM: WEB & MOBILE HYBRID READINESS

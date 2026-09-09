@@ -98,8 +98,8 @@ export function getExecutionDirectiveSection(projectName: string, domain: string
 
 # [SUBSECTION C.2: DATABASE & DATA INTEGRITY INVARIANTS]
 # - Rule 11: Third Normal Form (3NF): All tables normalized with clear primary and foreign key definitions.
-# - Rule 12: Primary Key Standards: Primary keys must be UUIDv7 or BigInt auto-increment.
-# - Rule 13: Referential Integrity: Every relation must define explicit ON DELETE CASCADE or ON DELETE RESTRICT.
+# - Rule 12: Primary Key Standards: Primary keys must be UUIDv7 or BigInt auto-increment. (gen_random_uuid() generates UUIDv4; use UUIDv7 or BigInt).
+# - Rule 13: Referential Integrity & Soft Delete: Physical DELETE is PROHIBITED for domain entities. Domain records MUST use soft-delete (deleted_at) with ON DELETE RESTRICT. ON DELETE CASCADE is restricted strictly to ephemeral technical child records.
 # - Rule 14: Mandatory Audit Timestamps: created_at TIMESTAMPTZ, updated_at TIMESTAMPTZ, deleted_at TIMESTAMPTZ (soft delete).
 # - Rule 15: Multi-Tenant Isolation: Every tenant-scoped entity must have tenant_id / campus_id with mandatory indexed filtering.
 # - Rule 16: Indexing Strategy: Explicit B-tree indexes on foreign keys, tenant IDs, status enums, and unique constraints.
@@ -112,8 +112,8 @@ export function getExecutionDirectiveSection(projectName: string, domain: string
 # - Rule 21: Uniform Response Envelope: Success { success: true, data: T }, Error { success: false, error: string, code: string }.
 # - Rule 22: Strict Zod Request Validation: Validate query, params, and body schemas before reaching controller logic.
 # - Rule 23: Standard HTTP Status Codes: 200 OK, 201 Created, 400 Bad Request, 401 Unauthorized, 403 Forbidden, 404 Not Found, 409 Conflict, 422 Unprocessable, 500 Server Error.
-# - Rule 24: Standard Pagination Query Contract: page (default 1), limit (default 20), total, totalPages.
-# - Rule 25: Standard Search & Sorting: q parameter for full-text search; sortBy and sortOrder (asc/desc) parameters.
+# - Rule 24: REST Mutation Semantics: PUT = Full Replacement (all fields required); PATCH = Partial Update (only changed fields).
+# - Rule 25: Standard Universal Pagination: page (default 1), limit (default 20), sort_by (created_at), order (desc/asc), q (search query).
 # - Rule 26: Safe Error Masking: Never leak raw database error messages or internal stack traces to API clients.
 # - Rule 27: Rate Limiting & Security Headers: Global 200/min, auth 10/min. Helmet with CSP, HSTS, X-Frame-Options: DENY.
 # - Rule 28: JWT Token Lifecycle: Access token (15m expiration) + Refresh token (7d expiration, HTTP-only, secure, SameSite).

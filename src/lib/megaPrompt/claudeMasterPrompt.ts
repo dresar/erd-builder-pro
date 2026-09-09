@@ -5,6 +5,7 @@ import { getAgentTeamworkSection } from './agentTeamworkSection';
 import { getClaudeZipExecutionSection } from './claudeZipExecutionSection';
 import { getApiEndpointsSection } from './apiEndpointsSection';
 import { getExecutionDirectiveSection } from './executionDirectiveSection';
+import { getAiEngineeringControlPlaneSection } from './aiEngineeringControlPlane';
 
 export interface ClaudePromptContext {
   projectName: string;
@@ -77,6 +78,8 @@ ${context.customInstructions ? `================================================
 =======================================================================
 ${context.customInstructions}
 ` : ''}
+${getAiEngineeringControlPlaneSection(proj, domain, techStack)}
+
 ${getSkillsStandardsSection()}
 
 ${getUiArchitecturalBehaviorsSection()}
