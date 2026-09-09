@@ -236,6 +236,7 @@ function AppLayoutInner() {
     || location.pathname.startsWith('/db-client/')
     || (location.pathname.startsWith('/diagrams/') && searchParams.get('feature') === 'db-client');
   const isFeatureRoute = isDbClientRoute || /^\/(table\/(erd|notes|drawings|flowchart)|(notes|diagrams|drawings|flowcharts)\/)/.test(location.pathname);
+  const isFocusMode = searchParams.get('focus') === '1' || searchParams.get('fullscreen') === '1';
   const [globalSearchQuery, setGlobalSearchQuery] = useState('');
   const [globalSearchResults, setGlobalSearchResults] = useState<any[]>([]);
   const [isGlobalSearchLoading, setIsGlobalSearchLoading] = useState(false);
@@ -666,7 +667,7 @@ function AppLayoutInner() {
     <>
       {!isOnline && !isPublicView && <OfflineOverlay />}
 
-      {!isPublicView && (
+      {!isPublicView && !isFocusMode && (
         <AppSidebar
           view={sidebarView}
           activeFeatureView={isDbClientRoute ? 'db-client' : isFeatureRoute ? sidebarView : null}
@@ -696,44 +697,49 @@ function AppLayoutInner() {
       )}
 
       <SidebarInset className={cn(
-        isPublicView ? "w-full" : "",
+        (isPublicView || isFocusMode) ? "w-full" : "",
         rightPanelOpen && "mr-90 transition-[margin] duration-200"
       )}>
-        <MainHeader
-          featureLabel={featureLabel}
-          activeProjectName={entityContext?.entityType === 'dbClient' ? activeDbClient?.project?.name : activeProjectName}
-          activeFileName={entityContext?.entityType === 'dbClient' ? breadcrumbLabel || '' : activeFileName}
-          view={view}
-          hasActiveItem={isPublicView ? true : hasActiveItem}
-          syncError={syncError}
-          isSyncing={isSyncing}
-          isLocalSaving={isLocalSaving}
-          isRefreshing={isRefreshing}
-          hasPendingSyncs={hasPendingSyncs}
-          onSave={syncDrafts}
-          activeFileUid={activeFileUid}
-          activeFileId={currentActiveId}
-          initialShareSettings={initialShareSettings}
-          isPublicView={isPublicView}
-          onSettingsSaved={handleHeaderSettingsSaved}
-          isOnline={isOnline}
-          updatedAt={activeDocument?.updated_at}
-          onDelete={handleHeaderDelete}
-          onRename={handleHeaderRename}
-          onExportAll={activeDiagramIsProductionDb ? undefined : () => setIsExportAllOpen(true)}
-          onExportSQL={handleHeaderExportSQL}
-          onExportImage={handleHeaderExportImage}
-          onExportMarkdown={handleExportMarkdown}
-          onCopyMarkdown={handleCopyMarkdown}
-          onImportMarkdown={handleImportMarkdown}
-          onDuplicate={handleDuplicate}
-          isGuest={isGuest}
-          breadcrumbLabel={breadcrumbLabel}
-          noteContent={activeNote?.content}
-          historyAvailable={Boolean(historyEntityType)}
-        />
+        {!isFocusMode && (
+          <MainHeader
+            featureLabel={featureLabel}
+            activeProjectName={entityContext?.entityType === 'dbClient' ? activeDbClient?.project?.name : activeProjectName}
+            activeFileName={entityContext?.entityType === 'dbClient' ? breadcrumbLabel || '' : activeFileName}
+            view={view}
+            hasActiveItem={isPublicView ? true : hasActiveItem}
+            syncError={syncError}
+            isSyncing={isSyncing}
+            isLocalSaving={isLocalSaving}
+            isRefreshing={isRefreshing}
+            hasPendingSyncs={hasPendingSyncs}
+            onSave={syncDrafts}
+            activeFileUid={activeFileUid}
+            activeFileId={currentActiveId}
+            initialShareSettings={initialShareSettings}
+            isPublicView={isPublicView}
+            onSettingsSaved={handleHeaderSettingsSaved}
+            isOnline={isOnline}
+            updatedAt={activeDocument?.updated_at}
+            onDelete={handleHeaderDelete}
+            onRename={handleHeaderRename}
+            onExportAll={activeDiagramIsProductionDb ? undefined : () => setIsExportAllOpen(true)}
+            onExportSQL={handleHeaderExportSQL}
+            onExportImage={handleHeaderExportImage}
+            onExportMarkdown={handleExportMarkdown}
+            onCopyMarkdown={handleCopyMarkdown}
+            onImportMarkdown={handleImportMarkdown}
+            onDuplicate={handleDuplicate}
+            isGuest={isGuest}
+            breadcrumbLabel={breadcrumbLabel}
+            noteContent={activeNote?.content}
+            historyAvailable={Boolean(historyEntityType)}
+          />
+        )}
 
-        <div className="flex flex-1 flex-col gap-4 p-4 pt-4 min-h-0 overflow-hidden" style={{ isolation: 'isolate' } as React.CSSProperties}>
+        <div className={cn(
+          "flex flex-1 flex-col min-h-0 overflow-hidden",
+          isFocusMode ? "p-0" : "gap-4 p-4 pt-4"
+        )} style={{ isolation: 'isolate' } as React.CSSProperties}>
           <Outlet />
         </div>
 

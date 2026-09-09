@@ -1,6 +1,6 @@
 import React, { Suspense, useEffect, useRef } from 'react';
 import { useWorkspace } from '@/providers/WorkspaceProvider';
-import { useParams } from 'react-router-dom';
+import { useParams, useSearchParams } from 'react-router-dom';
 import { FileQuestion } from 'lucide-react';
 import { ProjectFileTabs } from '@/components/ProjectFileTabs';
 
@@ -9,6 +9,8 @@ const PRDView = React.lazy(() => import('@/components/prd/PRDView').then(m => ({
 export function PrdEditorRoute() {
   const ctx = useWorkspace();
   const { id } = useParams<{ id: string }>();
+  const [searchParams] = useSearchParams();
+  const isFocusMode = searchParams.get('focus') === '1' || searchParams.get('fullscreen') === '1';
 
   const {
     activeNote, activeNoteUid, saveNote, handleNoteChange, deleteNote,
@@ -50,7 +52,7 @@ export function PrdEditorRoute() {
 
   return (
     <div className="flex-1 flex flex-col h-full overflow-hidden">
-      <ProjectFileTabs currentView="prd" currentFile={activeNote} />
+      {!isFocusMode && <ProjectFileTabs currentView="prd" currentFile={activeNote} />}
       <div className="flex-1 overflow-hidden">
         <Suspense fallback={<div className="flex-1 flex items-center justify-center text-xs text-muted-foreground">Memuat...</div>}>
           <PRDView

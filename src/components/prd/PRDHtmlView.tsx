@@ -116,49 +116,57 @@ export function PRDHtmlView({ content, metadata, showToc = true }: PRDHtmlViewPr
               </p>
             </div>
 
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 pt-2">
-              <div className="p-2.5 rounded-lg border border-border/40 bg-background/60">
-                <div className="flex items-center gap-1.5 text-emerald-400 mb-1">
-                  <Activity className="size-3.5" />
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-2">
+              <div className="p-3.5 rounded-xl border border-emerald-500/20 bg-emerald-500/5 backdrop-blur hover:border-emerald-500/40 transition-all">
+                <div className="flex items-center gap-1.5 text-emerald-400 mb-1.5">
+                  <Activity className="size-4" />
                   <span className="text-[10px] uppercase font-bold tracking-wider">Target SLA</span>
                 </div>
-                <p className="text-sm font-bold text-foreground truncate">{metadata.sla || '99.99%'}</p>
+                <p className="text-base font-extrabold text-foreground truncate">{metadata.sla || '99.99%'}</p>
+                <p className="text-[10px] text-muted-foreground mt-0.5">High Availability</p>
               </div>
 
-              <div className="p-2.5 rounded-lg border border-border/40 bg-background/60">
-                <div className="flex items-center gap-1.5 text-indigo-400 mb-1">
-                  <Zap className="size-3.5" />
+              <div className="p-3.5 rounded-xl border border-indigo-500/20 bg-indigo-500/5 backdrop-blur hover:border-indigo-500/40 transition-all">
+                <div className="flex items-center gap-1.5 text-indigo-400 mb-1.5">
+                  <Zap className="size-4" />
                   <span className="text-[10px] uppercase font-bold tracking-wider">Latensi P95</span>
                 </div>
-                <p className="text-sm font-bold text-foreground truncate">{metadata.latency || '< 200ms'}</p>
+                <p className="text-base font-extrabold text-foreground truncate">{metadata.latency || '< 200ms'}</p>
+                <p className="text-[10px] text-muted-foreground mt-0.5">Fast Response</p>
               </div>
 
-              <div className="p-2.5 rounded-lg border border-border/40 bg-background/60">
-                <div className="flex items-center gap-1.5 text-amber-400 mb-1">
-                  <ShieldCheck className="size-3.5" />
+              <div className="p-3.5 rounded-xl border border-amber-500/20 bg-amber-500/5 backdrop-blur hover:border-amber-500/40 transition-all">
+                <div className="flex items-center gap-1.5 text-amber-400 mb-1.5">
+                  <ShieldCheck className="size-4" />
                   <span className="text-[10px] uppercase font-bold tracking-wider">Keamanan</span>
                 </div>
-                <p className="text-sm font-bold text-foreground truncate">{metadata.security || 'RBAC & Audit'}</p>
+                <p className="text-base font-extrabold text-foreground truncate">{metadata.security || 'RBAC & Audit'}</p>
+                <p className="text-[10px] text-muted-foreground mt-0.5">Access Control</p>
               </div>
 
-              <div className="p-2.5 rounded-lg border border-border/40 bg-background/60">
-                <div className="flex items-center gap-1.5 text-violet-400 mb-1">
-                  <Layers className="size-3.5" />
+              <div className="p-3.5 rounded-xl border border-violet-500/20 bg-violet-500/5 backdrop-blur hover:border-violet-500/40 transition-all">
+                <div className="flex items-center gap-1.5 text-violet-400 mb-1.5">
+                  <Layers className="size-4" />
                   <span className="text-[10px] uppercase font-bold tracking-wider">Arsitektur</span>
                 </div>
-                <p className="text-sm font-bold text-foreground truncate">{metadata.architecture || 'Clean Arch'}</p>
+                <p className="text-base font-extrabold text-foreground truncate">{metadata.architecture || 'Clean Arch'}</p>
+                <p className="text-[10px] text-muted-foreground mt-0.5">Domain Driven</p>
               </div>
             </div>
           </div>
 
           <article 
             className="prose prose-sm dark:prose-invert max-w-none 
-              prose-headings:font-bold prose-headings:tracking-tight 
-              prose-h2:border-b prose-h2:border-border/40 prose-h2:pb-2 prose-h2:mt-8 
-              prose-table:border prose-table:border-border/60 prose-th:bg-muted/30 prose-th:p-2.5 prose-td:p-2.5 
-              prose-code:bg-muted/40 prose-code:px-1.5 prose-code:py-0.5 prose-code:rounded prose-code:text-xs 
-              prose-pre:bg-muted/20 prose-pre:border prose-pre:border-border/40 prose-pre:p-3.5 prose-pre:rounded-lg 
-              leading-relaxed"
+              prose-headings:font-extrabold prose-headings:tracking-tight prose-headings:text-foreground
+              prose-h2:border-b prose-h2:border-border/60 prose-h2:pb-2.5 prose-h2:mt-10 prose-h2:text-lg sm:prose-h2:text-xl
+              prose-h3:text-indigo-400 prose-h3:mt-6 prose-h3:text-sm sm:prose-h3:text-base
+              prose-p:leading-relaxed prose-p:text-muted-foreground
+              prose-blockquote:border-l-4 prose-blockquote:border-indigo-500 prose-blockquote:bg-indigo-500/5 prose-blockquote:py-2.5 prose-blockquote:px-4 prose-blockquote:rounded-r-lg prose-blockquote:not-italic
+              prose-table:border prose-table:border-border/60 prose-table:rounded-lg prose-table:overflow-hidden prose-table:shadow-xs
+              prose-th:bg-muted/40 prose-th:p-3 prose-th:text-xs prose-th:font-bold prose-th:text-foreground
+              prose-td:p-3 prose-td:text-xs prose-td:border-t prose-td:border-border/40
+              prose-code:bg-muted/40 prose-code:px-1.5 prose-code:py-0.5 prose-code:rounded prose-code:text-xs prose-code:text-indigo-300
+              prose-pre:bg-muted/20 prose-pre:border prose-pre:border-border/40 prose-pre:p-4 prose-pre:rounded-xl prose-pre:shadow-sm"
             dangerouslySetInnerHTML={{ __html: sanitizedHtml }}
           />
         </div>

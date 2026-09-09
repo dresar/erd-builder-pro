@@ -123,6 +123,10 @@ export function PRDView({
 
   const handleOpenInNewTab = () => {
     try {
+      if (activePrdUid) {
+        window.open(`/prd/${activePrdUid}?focus=1`, '_blank');
+        return;
+      }
       const rendered = marked.parse(content, { gfm: true, breaks: true }) as string;
       const htmlString = generateStandaloneHtml(title, rendered, metadata);
       const blob = new Blob([htmlString], { type: 'text/html;charset=utf-8' });

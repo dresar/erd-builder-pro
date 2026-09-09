@@ -155,7 +155,14 @@ ${hasErd ? `1. NO TOY OR SIMPLIFIED SCHEMAS: You MUST produce an exhaustive, rea
      > **Latensi Respon (P95)**: < 150ms
      > **Keamanan & Kepatuhan**: ${complianceList}
      > **Status**: Produksi | **Versi**: 1.0.0
-   - Include deep sections: Executive Summary & KPIs, Solution Topology, Domain Decomposition (DDD with at least 8 modules), RBAC Matrix Table, API Contracts, and SLA/Governance.
+   - MANDATORY SECTIONS TO COVER EXHAUSTIVELY:
+     1. Ringkasan Eksekutif & Metrik KPI Strategis (SLA, Latensi P95, RPO/RTO).
+     2. Topologi Solusi & Tech Stack (Tabel tools/teknologi lengkap: Frontend, Backend, Database, Caching, Auth, Object Storage, CI/CD, Observabilitas/Logging).
+     3. Dekomposisi Modul Domain Bisnis (DDD minimal 8-10 modul: entitas kunci, invariant aturan bisnis, dan relasi).
+     4. Alur Kerja Sistem & End-to-End User Journey (Langkah detail step-by-step dari registrasi/login, transaksi, approval, hingga settlement & audit logging).
+     5. Matriks Hak Akses & Keamanan (Tabel RBAC lengkap peran vs izin).
+     6. Kontrak Data & Spesifikasi REST API (Format envelope response, headers standar X-Tenant-ID & Idempotency-Key, serta alur simulasi CRUD).
+     7. Persyaratan Non-Fungsional, Skalabilitas, & Tata Kelola (High availability, multi-tenant data isolation, soft delete, audit trail).
    - Target depth: 2,500–4,000 words in formal Indonesian (Bahasa Indonesia baku kelas enterprise).\n` : ''}3. HOSTING & DEPLOYMENT: The application architecture must be optimized for ${resolvedDeployment}.
 ${hasFlowchart ? `4. FLOWCHART MUST BE DECISION-RICH: The flowchart must contain decision logic diamonds for validations, auth checks, status transitions, and error paths. Include at least 15–25 connected nodes.\n` : ''}${hasApi ? `5. REST API CRUD & WORKFLOW CONTRACT (MANDATORY 'api' OBJECT IN JSON): You MUST provide an explicit 'api' root object in the JSON containing full REST API endpoint specifications for every core domain entity (at least 20–35 endpoints). Every endpoint must define 'method' (GET/POST/PUT/DELETE), 'path', 'summary', 'tags', 'request' (query_params and/or body schema), and 'response' (HTTP status, description, and envelope).\n` : ''}6. STRICT JSON OUTPUT CONTRACT: You must respond ONLY with a single valid JSON object enclosed within \`\`\`json ... \`\`\` code fence. No conversational filler before or after the JSON.
 7. DOWNLOADABLE FILE REQUIREMENT (MANDATORY):
