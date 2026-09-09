@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import { Outlet, useLocation, useNavigate, useSearchParams } from 'react-router-dom';
+import { cn } from '@/lib/utils';
 import type { Node, Edge } from '@xyflow/react';
 import type { Entity } from '@/types';
 import { Database, PanelRightClose, Pencil } from 'lucide-react';
@@ -900,7 +901,7 @@ function AppLayoutInner() {
         )}
 
         {/* Right panel with tabs — sticky right sidebar */}
-        {rightPanelOpen && rightPanelMode !== 'closed' && (
+        {rightPanelOpen && (
           <RightChatSidebar>
             {rightPanelMode === 'repository' && entityContext?.entityType === 'diagram' ? (
               <RepositoryPanel

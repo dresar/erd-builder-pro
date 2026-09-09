@@ -390,8 +390,12 @@ export const AIChatPanel = ({
 
   const handleClearSelection = useCallback(() => setSelectionText(null), [setSelectionText]);
 
+  const hasActiveSession = !!currentSession;
+  const hasMessages = messages.length > 0;
+  const hasSessions = sessions.length > 0;
+
   return (
-    <Tooltip.Provider delayDuration={300}>
+    <Tooltip.Provider>
       <div
         ref={panelRef}
         style={{ display: minimized ? 'none' : undefined }}
