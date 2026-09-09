@@ -17,6 +17,7 @@ import {
   ArrowUpRight,
   Loader2,
   Bot,
+  Sparkles,
 } from "lucide-react"
 import { useNavigate, useLocation } from "react-router-dom"
 
@@ -226,6 +227,13 @@ export const AppSidebar = React.memo(({
       icon: PenTool,
       isActive: activeFeatureView === 'drawings',
       onClick: () => onViewChange('drawings', true),
+    },
+    {
+      title: "Chat AI",
+      url: "/ai-chat",
+      icon: Sparkles,
+      isActive: location.pathname === '/ai-chat',
+      onClick: () => navigate('/ai-chat'),
     },
     {
       title: "AI Eksternal",

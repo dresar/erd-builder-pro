@@ -2,6 +2,7 @@ import React from 'react';
 import { BubbleMenu } from '@tiptap/react/menus';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import * as DropdownMenu from '@radix-ui/react-dropdown-menu';
+import { useNavigate } from 'react-router-dom';
 import { useAIAction } from '@/contexts/AIActionContext';
 import { Bold, Italic, Underline as UnderlineIcon, Strikethrough, Code, Link, Palette, Check } from 'lucide-react';
 import * as LucideIcons from 'lucide-react';
@@ -15,14 +16,15 @@ interface TextBubbleMenuProps {
 }
 
 export function TextBubbleMenu({ editor, openLinkDialog, showSendToAIButton = false }: TextBubbleMenuProps) {
-  const { setSelectionText, setRightPanelMode } = useAIAction();
+  const navigate = useNavigate();
+  const { setSelectionText } = useAIAction();
 
   const handleSendSelectionToAI = () => {
     const { from, to, empty } = editor.state.selection;
     if (!empty) {
       const text = editor.state.doc.textBetween(from, to, ' ');
       setSelectionText(text);
-      setRightPanelMode('chat');
+      navigate('/ai-chat');
     }
   };
   return (

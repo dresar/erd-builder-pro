@@ -33,6 +33,7 @@ const DrawingEditorRoute = lazy(() => import('./routes/DrawingEditorRoute').then
 const FlowchartEditorRoute = lazy(() => import('./routes/FlowchartEditorRoute').then(module => ({ default: module.FlowchartEditorRoute })));
 const AdminRoute = lazy(() => import('./routes/AdminRoute').then(module => ({ default: module.AdminRoute })));
 const ExternalAIRoute = lazy(() => import('./routes/ExternalAIRoute').then(module => ({ default: module.ExternalAIRoute })));
+const AIChatRoute = lazy(() => import('./routes/AIChatRoute').then(module => ({ default: module.AIChatRoute })));
 
 function lazyRoute(element: ReactNode) {
   return <Suspense fallback={<div className="flex flex-1 items-center justify-center text-xs text-muted-foreground">Opening file…</div>}>{element}</Suspense>;
@@ -160,8 +161,9 @@ function AppContent() {
           {/* Admin pages */}
           <Route path="trash" element={lazyRoute(<AdminRoute />)} />
 
-          {/* AI Generator */}
+          {/* AI Pages */}
           <Route path="ai-generator" element={lazyRoute(<ExternalAIRoute />)} />
+          <Route path="ai-chat" element={lazyRoute(<AIChatRoute />)} />
 
           {/* Default: Dashboard */}
           <Route index element={<DashboardRoute />} />

@@ -13,6 +13,7 @@ import { ChatMessages } from './ChatMessages';
 import { PlanInterviewCard } from './PlanInterviewCard';
 import { apiFetch } from '@/lib/api';
 import { extractPlanQuestion } from './plan-question-utils';
+import { cn } from '@/lib/utils';
 import type { AIChatSession } from '@/types';
 
 interface MentionFile {
@@ -22,7 +23,8 @@ interface MentionFile {
 }
 
 interface AIChatPanelProps {
-  onClose: () => void;
+  onClose?: () => void;
+  layout?: 'panel' | 'page';
   entityType?: string | null;
   entityUid?: string | null;
   entityTitle?: string | null;
@@ -42,6 +44,8 @@ interface AIChatPanelProps {
 }
 
 export const AIChatPanel = ({
+  onClose,
+  layout = 'panel',
   entityType,
   entityUid,
   entityTitle,
@@ -59,6 +63,7 @@ export const AIChatPanel = ({
   activeNoteContent,
   onOpenExternalAI,
 }: AIChatPanelProps) => {
+  const isPage = layout === 'page';
   const entityContext: EntityContext | null =
     entityType && entityUid ? { entityType, entityUid } : null;
 
@@ -383,131 +388,156 @@ export const AIChatPanel = ({
     setPage('chat');
   }, [createSession]);
 
-  const handleClearSelection = useCallback(() => {
-    setSelectionText(null);
-  }, [setSelectionText]);
-
-  const hasActiveSession = !!currentSession;
-  const hasMessages = messages.length > 0;
-  const hasSessions = sessions.length > 0;
+  const handleClearSelection = useCallback(() => setSelectionText(null), [setSelectionText]);
 
   return (
-    <Tooltip.Provider>
+    <Tooltip.Provider delayDuration={300}>
       <div
         ref={panelRef}
         style={{ display: minimized ? 'none' : undefined }}
-        className="h-full flex flex-col bg-card text-card-foreground overflow-hidden"
+        className={cn(
+          "h-full flex text-card-foreground overflow-hidden",
+          isPage ? "flex-col md:flex-row bg-background" : "flex-col bg-card"
+        )}
       >
-        {page === 'list' ? (
-          <>
-            {/* ── List Header ────────────────────────── */}
-            <div className="shrink-0 flex items-center justify-between px-4 py-3 border-b bg-muted/20">
-              <div className="flex items-center gap-2.5">
-                <Sparkles className="size-4 text-primary" />
-                <h3 className="text-sm font-semibold tracking-tight">Asisten AI</h3>
-              </div>
-              <div className="flex items-center gap-1">
-                {onOpenExternalAI && (
-                  <Button variant="ghost" size="icon" className="size-8" onClick={onOpenExternalAI} title="AI Eksternal (Claude/ChatGPT)">
-                    <Bot className="size-4" />
-                  </Button>
-                )}
-                <Button variant="ghost" size="icon" className="size-8" onClick={handleNewSession} title="Chat Baru">
-                  <Plus className="size-4" />
-                </Button>
-              </div>
+        {/* ── Left Column: Session List ──────────────────── */}
+        <div
+          className={cn(
+            "flex flex-col h-full overflow-hidden border-border/60",
+            isPage ? "w-full md:w-72 lg:w-80 md:border-r bg-card/20 shrink-0" : "flex-1",
+            isPage && page === 'chat' && "hidden md:flex",
+            !isPage && page !== 'list' && "hidden"
+          )}
+        >
+          {/* ── List Header ────────────────────────── */}
+          <div className="shrink-0 flex items-center justify-between px-4 py-3 border-b border-border/60 bg-muted/20">
+            <div className="flex items-center gap-2.5">
+              <Sparkles className="size-4 text-primary" />
+              <h3 className="text-sm font-semibold tracking-tight">Asisten AI</h3>
             </div>
-
-            {/* ── Session List Page ──────────────────── */}
-            <div className="flex-1 overflow-y-auto custom-scrollbar p-3 space-y-1">
-              {/* Search — only when there are sessions */}
-              {hasSessions && (
-                <div className="relative">
-                  <Search className="absolute left-2 top-1/2 -translate-y-1/2 size-3 text-muted-foreground/40" />
-                  <input
-                    type="text"
-                    placeholder="Cari"
-                    value={sessionSearch}
-                    onChange={e => setSessionSearch(e.target.value)}
-                    className="w-full h-8 pl-7 pr-2 text-xs rounded-md border border-border bg-background/50 outline-none focus:border-primary/30 transition-colors"
-                  />
-                </div>
-              )}
-
-              {isSessionsLoading ? (
-                <div className="flex items-center justify-center py-16">
-                  <Loader2 className="size-6 animate-spin text-muted-foreground/40" />
-                </div>
-              ) : filteredSessions.length === 0 ? (
-                <div className="py-16 text-center">
-                  <p className="text-xs text-muted-foreground/50 font-medium">
-                    {sessionSearch ? 'Tidak ditemukan' : 'Belum ada percakapan'}
-                  </p>
-                </div>
-              ) : (
-                <>
-                  {paginatedSessions.map((session) => (
-                    <SessionItem
-                      key={session.uid ?? session.id}
-                      session={session}
-                      isActive={currentSession?.uid === session.uid}
-                      onClick={() => {
-                        selectSession(session.uid);
-                        setPage('chat');
-                      }}
-                      onDelete={() => setSessionToDelete(session)}
-                    />
-                  ))}
-
-                  {totalPages > 1 && (
-                    <div className="flex items-center justify-center gap-2 pt-2">
-                      <button
-                        onClick={() => setSessionPage(p => Math.max(1, p - 1))}
-                        disabled={sessionPage <= 1}
-                        className="size-6 flex items-center justify-center rounded hover:bg-muted/30 disabled:opacity-20 transition-colors"
-                      >
-                        <ChevronLeft className="size-3" />
-                      </button>
-                      <span className="text-xs text-muted-foreground/50 font-medium tabular-nums">
-                        {sessionPage}/{totalPages}
-                      </span>
-                      <button
-                        onClick={() => setSessionPage(p => Math.min(totalPages, p + 1))}
-                        disabled={sessionPage >= totalPages}
-                        className="size-6 flex items-center justify-center rounded hover:bg-muted/30 disabled:opacity-20 transition-colors"
-                      >
-                        <ChevronRight className="size-3" />
-                      </button>
-                    </div>
-                  )}
-                </>
-              )}
-            </div>
-          </>
-        ) : (
-          <>
-            {/* ── Chat Header ─────────────────────────── */}
-            <div className="shrink-0 flex items-center justify-between px-3 py-3 border-b bg-muted/20">
-              <div className="flex items-center gap-2 min-w-0">
-                <button
-                  onClick={() => setPage('list')}
-                  className="size-7 flex items-center justify-center rounded hover:bg-muted/30 shrink-0 transition-colors"
-                  title="Kembali"
-                >
-                  <ArrowLeft className="size-4" />
-                </button>
-                <span className="text-sm font-medium truncate">{currentSession?.title || 'Asisten AI'}</span>
-              </div>
+            <div className="flex items-center gap-1">
               {onOpenExternalAI && (
-                <div className="flex items-center gap-1 shrink-0">
-                  <Button variant="ghost" size="icon" className="size-7" onClick={onOpenExternalAI} title="AI Eksternal (Claude/ChatGPT)">
-                    <Bot className="size-3.5" />
-                  </Button>
-                </div>
+                <Button variant="ghost" size="icon" className="size-8" onClick={onOpenExternalAI} title="AI Eksternal (Claude/ChatGPT)">
+                  <Bot className="size-4" />
+                </Button>
+              )}
+              <Button variant="ghost" size="icon" className="size-8 cursor-pointer" onClick={handleNewSession} title="Chat Baru">
+                <Plus className="size-4" />
+              </Button>
+            </div>
+          </div>
+
+          {/* ── Session List Page ──────────────────── */}
+          <div className="flex-1 overflow-y-auto custom-scrollbar p-3 space-y-1">
+            {/* Search — only when there are sessions */}
+            {hasSessions && (
+              <div className="relative">
+                <Search className="absolute left-2 top-1/2 -translate-y-1/2 size-3 text-muted-foreground/40" />
+                <input
+                  type="text"
+                  placeholder="Cari percakapan..."
+                  value={sessionSearch}
+                  onChange={e => setSessionSearch(e.target.value)}
+                  className="w-full h-8 pl-7 pr-2 text-xs rounded-md border border-border bg-background/50 outline-none focus:border-primary/30 transition-colors"
+                />
+              </div>
+            )}
+
+            {isSessionsLoading ? (
+              <div className="flex items-center justify-center py-16">
+                <Loader2 className="size-6 animate-spin text-muted-foreground/40" />
+              </div>
+            ) : filteredSessions.length === 0 ? (
+              <div className="py-16 text-center">
+                <p className="text-xs text-muted-foreground/50 font-medium">
+                  {sessionSearch ? 'Tidak ditemukan' : 'Belum ada percakapan'}
+                </p>
+              </div>
+            ) : (
+              <>
+                {paginatedSessions.map((session) => (
+                  <SessionItem
+                    key={session.uid ?? session.id}
+                    session={session}
+                    isActive={currentSession?.uid === session.uid}
+                    onClick={() => {
+                      selectSession(session.uid);
+                      setPage('chat');
+                    }}
+                    onDelete={() => setSessionToDelete(session)}
+                  />
+                ))}
+
+                {totalPages > 1 && (
+                  <div className="flex items-center justify-center gap-2 pt-2">
+                    <button
+                      onClick={() => setSessionPage(p => Math.max(1, p - 1))}
+                      disabled={sessionPage <= 1}
+                      className="size-6 flex items-center justify-center rounded hover:bg-muted/30 disabled:opacity-20 transition-colors cursor-pointer"
+                    >
+                      <ChevronLeft className="size-3" />
+                    </button>
+                    <span className="text-xs text-muted-foreground/50 font-medium tabular-nums">
+                      {sessionPage}/{totalPages}
+                    </span>
+                    <button
+                      onClick={() => setSessionPage(p => Math.min(totalPages, p + 1))}
+                      disabled={sessionPage >= totalPages}
+                      className="size-6 flex items-center justify-center rounded hover:bg-muted/30 disabled:opacity-20 transition-colors cursor-pointer"
+                    >
+                      <ChevronRight className="size-3" />
+                    </button>
+                  </div>
+                )}
+              </>
+            )}
+          </div>
+        </div>
+
+        {/* ── Right Column: Chat Conversation ────────────── */}
+        <div
+          className={cn(
+            "flex-1 flex flex-col h-full min-w-0 bg-background",
+            isPage && page === 'list' && !currentSession && "hidden md:flex",
+            !isPage && page !== 'chat' && "hidden"
+          )}
+        >
+          {/* ── Chat Header ─────────────────────────── */}
+          <div className="shrink-0 flex items-center justify-between px-4 py-3 border-b border-border/60 bg-muted/20">
+            <div className="flex items-center gap-2 min-w-0">
+              <button
+                onClick={() => setPage('list')}
+                className={cn("size-7 flex items-center justify-center rounded hover:bg-muted/30 shrink-0 transition-colors cursor-pointer", isPage && "md:hidden")}
+                title="Daftar Percakapan"
+              >
+                <ArrowLeft className="size-4" />
+              </button>
+              <div className="flex items-center gap-2 min-w-0">
+                <span className="text-sm font-semibold truncate">{currentSession?.title || 'Asisten AI'}</span>
+                {entityTitle && (
+                  <span className="text-[11px] px-2 py-0.5 rounded-md bg-primary/10 text-primary border border-primary/20 font-medium truncate max-w-48 hidden sm:inline-block">
+                    {entityTitle}
+                  </span>
+                )}
+              </div>
+            </div>
+            <div className="flex items-center gap-1.5 shrink-0">
+              {onOpenExternalAI && (
+                <Button variant="ghost" size="icon" className="size-7" onClick={onOpenExternalAI} title="AI Eksternal (Claude/ChatGPT)">
+                  <Bot className="size-3.5" />
+                </Button>
+              )}
+              {isPage && (
+                <Button variant="outline" size="sm" className="h-7 text-xs gap-1 cursor-pointer" onClick={handleNewSession}>
+                  <Plus className="size-3.5" />
+                  <span>Chat Baru</span>
+                </Button>
               )}
             </div>
+          </div>
 
-            {/* ── Messages ────────────────────────────── */}
+          {/* ── Messages ────────────────────────────── */}
+          <div className={cn("flex-1 min-h-0 relative flex flex-col", isPage && "w-full max-w-4xl mx-auto")}>
             <ChatMessages
               hasActiveSession={hasActiveSession}
               hasSessions={hasSessions}
@@ -536,8 +566,10 @@ export const AIChatPanel = ({
               noteDefaultName={noteDefaultName}
               activeNoteContent={activeNoteContent}
             />
+          </div>
 
-            {currentSession && (
+          {currentSession && (
+            <div className={cn(isPage && "w-full max-w-4xl mx-auto px-4")}>
               <PlanInterviewCard
                 key={String(currentSession.uid ?? currentSession.id)}
                 sessionUid={String(currentSession.uid ?? currentSession.id)}
@@ -547,17 +579,21 @@ export const AIChatPanel = ({
                 onResume={handlePlanResume}
                 onVisibilityChange={setIsPlanInterviewVisible}
               />
-            )}
+            </div>
+          )}
 
-            {/* ── Selection Bar ────────────────────────── */}
+          {/* ── Selection Bar ────────────────────────── */}
+          <div className={cn(isPage && "w-full max-w-4xl mx-auto px-4")}>
             <SelectionBar
               hasActiveSession={hasActiveSession}
               selectionText={selectionText}
               onClear={handleClearSelection}
             />
+          </div>
 
-            {/* ── Input Area ───────────────────────────── */}
-            {!isPlanInterviewVisible && (
+          {/* ── Input Area ───────────────────────────── */}
+          {!isPlanInterviewVisible && (
+            <div className={cn("p-2", isPage && "w-full max-w-4xl mx-auto px-4 pb-4")}>
               <ChatInput
                 hasActiveSession={hasActiveSession}
                 isStreaming={isStreaming}
@@ -574,10 +610,11 @@ export const AIChatPanel = ({
                 hasProject={!!projectId}
                 mentionFiles={mentionFiles}
               />
-            )}
-          </>
-        )}
+            </div>
+          )}
+        </div>
       </div>
+
 
       <ConfirmModal
         isOpen={!!confirmOverwritePrompt}

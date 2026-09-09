@@ -1,9 +1,8 @@
 import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import { Outlet, useLocation, useNavigate, useSearchParams } from 'react-router-dom';
-import { cn } from '@/lib/utils';
 import type { Node, Edge } from '@xyflow/react';
 import type { Entity } from '@/types';
-import { Sparkles, Database, PanelRightClose, Pencil } from 'lucide-react';
+import { Database, PanelRightClose, Pencil } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 // Components
@@ -20,9 +19,6 @@ import { RelationshipPropertiesModal } from '@/components/modals/RelationshipPro
 import { ImportNoteModal } from '@/components/modals/ImportNoteModal';
 import { ExportNoteModal } from '@/components/modals/ExportNoteModal';
 import { NoteExporter } from '@/lib/exporters/note-exporter';
-import { getMarkdownFromHtml } from '@/lib/markdownUtils';
-import { buildEntityContextText } from '@/hooks/aiEntityContext';
-import { initialNodes as flowchartInitialNodes, initialEdges as flowchartInitialEdges } from '@/components/flowchart/flowchartConstants';
 import { OfflineOverlay } from '@/components/layout/OfflineOverlay';
 
 // UI
@@ -61,7 +57,6 @@ function remapCol(handle: string | null | undefined, colMap: Map<string, string>
 
 import { AIActionProvider, useAIAction } from '@/contexts/AIActionContext';
 import { RightChatSidebar } from '@/components/ai/RightChatSidebar';
-import { AIChatPanel } from '@/components/ai/AIChatPanel';
 import { DBMLEditorPanel } from '@/components/diagram/DBMLEditorPanel';
 import { ERDTableListPanel } from '@/components/diagram/ERDTableListPanel';
 import PropertiesPanel from '@/components/PropertiesPanel';
@@ -69,7 +64,6 @@ import { VersionHistoryPanel, type HistoryEntityType } from '@/components/histor
 import { RepositoryPanel } from '@/components/repository/RepositoryPanel';
 import { applyDBMLMetadata, dbmlToERD, erdToDBML, findMatchingCanvasEdge } from '@/lib/dbml-converter';
 import { closeRepositoryPreview, ERD_REPOSITORY_APPLIED_EVENT } from '@/lib/repository-preview';
-import { AIChatToggle } from '@/components/ai/AIChatToggle';
 import { getDbClientCache, setDbClientCache } from '@/hooks/useDataViewerHelpers';
 
 // ── Inner component that uses AIAction context ──
@@ -128,7 +122,7 @@ function AppLayoutInner() {
   const dbmlDraftDirtyRef = useRef(false);
   const dbmlSourceKeyRef = useRef<string | null>(null);
   const dbmlPersistTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const { rightPanelMode, setRightPanelMode, pendingPrompt, clearPrompt, pendingAction, clearPendingAction } = useAIAction();
+  const { rightPanelMode, setRightPanelMode } = useAIAction();
 
   const setLocalDbmlContent = useCallback((content: string) => {
     dbmlContentRef.current = content;
@@ -428,73 +422,7 @@ function AppLayoutInner() {
     }
   }, [rightPanelMode, isActiveDiagramContext, nodes, edges, dbmlContent, handleDBMLContentChange]);
 
-  // ─── Build entity context text from workspace data ───
-  const entityContextText = useMemo(() => {
-    const ctx = entityContext;
-    if (!ctx) return null;
-
-    switch (ctx.entityType) {
-      case 'note':
-        if (!activeNote) return null;
-        return buildEntityContextText('note', {
-          title: activeNote.title,
-          content: getMarkdownFromHtml(String(activeNote.content || '')),
-        });
-
-      case 'diagram':
-        if (!activeDiagram) return null;
-        const diagramContext = buildEntityContextText('diagram', {
-          title: activeDiagram.name,
-          nodes: nodes as any[],
-          edges: edges as any[],
-        });
-        if ((activeDiagram.source_type ?? activeDiagram.sourceType) !== 'production_db') return diagramContext;
-        return `[Current feature: DB Client]\nSource: live production database metadata\nCurrent tab: ${searchParams.get('tab') || 'data'}\n\n${diagramContext || ''}`;
-
-      case 'flowchart':
-        if (!activeFlowchart) return null;
-        let flowchartNodes: any[] = [];
-        let flowchartEdges: any[] = [];
-        try {
-          const parsed = JSON.parse(activeFlowchart.data || '{}');
-          flowchartNodes = (parsed.nodes && parsed.nodes.length > 0) ? parsed.nodes : flowchartInitialNodes;
-          flowchartEdges = (parsed.edges && parsed.edges.length > 0) ? parsed.edges : flowchartInitialEdges;
-        } catch {
-          flowchartNodes = flowchartInitialNodes;
-          flowchartEdges = flowchartInitialEdges;
-        }
-        return buildEntityContextText('flowchart', {
-          title: activeFlowchart.title,
-          nodes: flowchartNodes,
-          edges: flowchartEdges,
-        });
-
-      case 'drawing':
-        if (!activeDrawing) return null;
-        return buildEntityContextText('drawing', {
-          title: activeDrawing.title,
-        });
-
-      default:
-        return null;
-    }
-  }, [entityContext, activeNote, activeDiagram, activeFlowchart, activeDrawing, nodes, edges, searchParams]);
-
-  const isActiveDbClient = entityContext?.entityType === 'dbClient' || (isActiveDiagramContext
-    && (activeDiagram?.source_type ?? activeDiagram?.sourceType) === 'production_db');
-  const showAIChat = useMemo(() => {
-    if (entityContext === null || isPublicView || entityContext.entityType === 'drawing') return false;
-    if (isActiveDbClient) return true;
-    const resolvedTab = searchParams.get('tab') || 'erd';
-    return resolvedTab === 'erd';
-  }, [entityContext, isPublicView, isActiveDbClient, searchParams]);
   const showDBMLPanel = isActiveDiagramContext && (activeDiagram?.source_type ?? activeDiagram?.sourceType) !== 'production_db';
-
-  // Derive project_id from the active entity — used to populate ai_chat_sessions.project_id
-  const activeProjectId = useMemo<string | number | null>(() => {
-    const ent = entityContext?.entityType === 'dbClient' ? activeDbClient : activeNote || activeDiagram || activeFlowchart || activeDrawing;
-    return ent?.project_id ?? null;
-  }, [entityContext, activeDbClient, activeNote, activeDiagram, activeFlowchart, activeDrawing]);
 
   // ── Persist Tauri window size/position (handled by tauri-plugin-window-state) ──
 
@@ -694,10 +622,10 @@ function AppLayoutInner() {
 
   // ── Auto-close right panel when leaving file pages ──
   useEffect(() => {
-    if (!entityContext || (!showAIChat && rightPanelMode !== 'history' && rightPanelMode !== 'repository')) {
+    if (!entityContext || (rightPanelMode !== 'properties' && rightPanelMode !== 'dbml' && rightPanelMode !== 'history' && rightPanelMode !== 'repository')) {
       setRightPanelMode('closed');
     }
-  }, [entityContext, rightPanelMode, showAIChat, setRightPanelMode]);
+  }, [entityContext, rightPanelMode, setRightPanelMode]);
 
   // Table properties belong to the currently opened ERD file only.
   const previousEntityContextKeyRef = useRef<string | null>(null);
@@ -719,12 +647,12 @@ function AppLayoutInner() {
 
   // DBML is part of ERD Builder only. If the user navigates from an ERD to
   // Notes/Flowchart while the DBML tab is active, keep the panel usable by
-  // falling back to chat instead of showing a DBML tab for the wrong feature.
+  // falling back to closed instead of showing a DBML tab for the wrong feature.
   useEffect(() => {
     if (rightPanelMode === 'dbml' && !showDBMLPanel) {
-      setRightPanelMode(showAIChat ? 'chat' : 'closed');
+      setRightPanelMode('closed');
     }
-  }, [rightPanelMode, showDBMLPanel, showAIChat, setRightPanelMode]);
+  }, [rightPanelMode, showDBMLPanel, setRightPanelMode]);
 
   useEffect(() => {
     if (rightPanelMode === 'repository' && (!isActiveDiagramContext || activeDiagramIsProductionDb)) {
@@ -972,7 +900,7 @@ function AppLayoutInner() {
         )}
 
         {/* Right panel with tabs — sticky right sidebar */}
-        {rightPanelOpen && (showAIChat || rightPanelMode === 'history' || rightPanelMode === 'repository') && (
+        {rightPanelOpen && rightPanelMode !== 'closed' && (
           <RightChatSidebar>
             {rightPanelMode === 'repository' && entityContext?.entityType === 'diagram' ? (
               <RepositoryPanel
@@ -991,130 +919,88 @@ function AppLayoutInner() {
                 onClose={() => setRightPanelMode('closed')}
                 onRestored={refreshActiveDocument}
               />
-            ) : <div className="h-full flex flex-col">
-              {/* ── Tab bar ── */}
-              <div className="shrink-0 flex items-center border-b border-border bg-muted/20">
-                <div className="flex-1 flex">
-                  {isActiveDiagramContext && !isPublicView && !activeDiagramIsProductionDb && (
-                    <button
-                      onClick={() => setRightPanelMode('properties')}
-                      className={`flex items-center gap-1.5 px-4 py-2.5 text-xs font-medium border-b-2 -mb-px transition-colors ${
-                        rightPanelMode === 'properties'
-                          ? 'border-primary text-primary bg-background/50'
-                          : 'border-transparent text-muted-foreground hover:text-foreground hover:bg-muted/30'
-                      }`}
-                    >
-                      <Pencil className="size-3.5" />
-                      Properti
-                    </button>
-                  )}
-                  {showDBMLPanel && (
-                    <button
-                      onClick={openDBMLPanel}
-                      className={`flex items-center gap-1.5 px-4 py-2.5 text-xs font-medium border-b-2 -mb-px transition-colors ${
-                        rightPanelMode === 'dbml'
-                          ? 'border-primary text-primary bg-background/50'
-                          : 'border-transparent text-muted-foreground hover:text-foreground hover:bg-muted/30'
-                      }`}
-                    >
-                      <Database className="size-3.5" />
-                      DBML
-                    </button>
-                  )}
-                  <button
-                    onClick={() => setRightPanelMode('chat')}
-                    className={`flex items-center gap-1.5 px-4 py-2.5 text-xs font-medium border-b-2 -mb-px transition-colors ${
-                      rightPanelMode === 'chat'
-                        ? 'border-primary text-primary bg-background/50'
-                        : 'border-transparent text-muted-foreground hover:text-foreground hover:bg-muted/30'
-                    }`}
-                  >
-                    <Sparkles className="size-3.5" />
-                    Chat AI
-                  </button>
+            ) : (
+              <div className="h-full flex flex-col">
+                {/* ── Tab bar ── */}
+                <div className="shrink-0 flex items-center border-b border-border bg-muted/20">
+                  <div className="flex-1 flex">
+                    {isActiveDiagramContext && !isPublicView && !activeDiagramIsProductionDb && (
+                      <button
+                        onClick={() => setRightPanelMode('properties')}
+                        className={`flex items-center gap-1.5 px-4 py-2.5 text-xs font-medium border-b-2 -mb-px transition-colors ${
+                          rightPanelMode === 'properties'
+                            ? 'border-primary text-primary bg-background/50'
+                            : 'border-transparent text-muted-foreground hover:text-foreground hover:bg-muted/30'
+                        }`}
+                      >
+                        <Pencil className="size-3.5" />
+                        Properti
+                      </button>
+                    )}
+                    {showDBMLPanel && (
+                      <button
+                        onClick={openDBMLPanel}
+                        className={`flex items-center gap-1.5 px-4 py-2.5 text-xs font-medium border-b-2 -mb-px transition-colors ${
+                          rightPanelMode === 'dbml'
+                            ? 'border-primary text-primary bg-background/50'
+                            : 'border-transparent text-muted-foreground hover:text-foreground hover:bg-muted/30'
+                        }`}
+                      >
+                        <Database className="size-3.5" />
+                        DBML
+                      </button>
+                    )}
+                  </div>
+                  <Button variant="ghost" size="icon" className="size-8 mr-1" onClick={() => setRightPanelMode('closed')} title="Tutup panel">
+                    <PanelRightClose className="size-3.5" />
+                  </Button>
                 </div>
-                <Button variant="ghost" size="icon" className="size-8 mr-1" onClick={() => setRightPanelMode('closed')} title="Tutup panel">
-                  <PanelRightClose className="size-3.5" />
-                </Button>
-              </div>
 
-              {/* ── Tab content ── */}
-              <div className="flex-1 min-h-0">
-                <div className={cn('h-full', rightPanelMode !== 'chat' && 'hidden')}>
-                  <AIChatPanel
-                    onClose={() => setRightPanelMode('closed')}
-                    entityType={entityContext!.entityType}
-                    entityUid={entityContext!.entityUid}
-                    entityTitle={entityContext!.entityType === 'dbClient' ? activeDbClient?.name || breadcrumbLabel :
-                                 entityContext!.entityType === 'note' ? activeNote?.title : 
-                                 entityContext!.entityType === 'diagram' ? activeDiagram?.name : 
-                                 entityContext!.entityType === 'flowchart' ? activeFlowchart?.title : null}
-                    entityContextText={entityContextText}
-                    viewType={isActiveDbClient ? 'db-client' : undefined}
-                    projectId={activeProjectId}
-                    pendingPrompt={pendingPrompt}
-                    onPromptUsed={clearPrompt}
-                    pendingAction={pendingAction}
-                    onClearPendingAction={clearPendingAction}
-                    notes={notes}
-                    diagrams={diagrams}
-                    flowcharts={flowcharts}
-                    drawings={drawings}
-                    activeNoteContent={entityContext?.entityType === 'note' ? activeNote?.content : undefined}
-                    onOpenExternalAI={() => navigate('/ai-generator')}
-                  />
-                </div>
-                {rightPanelMode === 'dbml' && showDBMLPanel && (
-                  <DBMLEditorPanel
-                    value={dbmlContent}
-                    onChange={handleDBMLContentChange}
-                    onApply={handleDBMLApply}
-                    nodes={nodes}
-                    edges={edges}
-                    onSelectTable={(name) => {
-                      const node = nodes.find(n => n.data.name.toLowerCase() === name.toLowerCase());
-                      if (node) setSelectedNodeId(node.id);
-                    }}
-                  />
-                )}
-                {rightPanelMode === 'properties' && !activeDiagramIsProductionDb && (
-                  propertiesEntity ? (
-                    <PropertiesPanel
-                      key={propertiesEntity.id}
-                      selectedEntity={propertiesEntity}
-                      onUpdateEntity={handleEntityUpdate}
-                      onBackToTables={() => {
-                        setSelectedNodeId(null);
-                        setPropertiesEntityId(null);
-                      }}
-                      onDeleteEntity={(id) => {
-                        deleteEntity(id);
-                        setSelectedNodeId(null);
-                        setRightPanelMode('closed');
-                      }}
-                    />
-                  ) : (
-                    <ERDTableListPanel
+                {/* ── Tab content ── */}
+                <div className="flex-1 min-h-0">
+                  {rightPanelMode === 'dbml' && showDBMLPanel && (
+                    <DBMLEditorPanel
+                      value={dbmlContent}
+                      onChange={handleDBMLContentChange}
+                      onApply={handleDBMLApply}
                       nodes={nodes}
-                      onEdit={(id) => {
-                        setPropertiesEntityId(id);
-                        setSelectedNodeId(id);
+                      edges={edges}
+                      onSelectTable={(name) => {
+                        const node = nodes.find(n => n.data.name.toLowerCase() === name.toLowerCase());
+                        if (node) setSelectedNodeId(node.id);
                       }}
                     />
-                  )
-                )}
+                  )}
+                  {rightPanelMode === 'properties' && !activeDiagramIsProductionDb && (
+                    propertiesEntity ? (
+                      <PropertiesPanel
+                        key={propertiesEntity.id}
+                        selectedEntity={propertiesEntity}
+                        onUpdateEntity={handleEntityUpdate}
+                        onBackToTables={() => {
+                          setSelectedNodeId(null);
+                          setPropertiesEntityId(null);
+                        }}
+                        onDeleteEntity={(id) => {
+                          deleteEntity(id);
+                          setSelectedNodeId(null);
+                          setRightPanelMode('closed');
+                        }}
+                      />
+                    ) : (
+                      <ERDTableListPanel
+                        nodes={nodes}
+                        onEdit={(id) => {
+                          setPropertiesEntityId(id);
+                          setSelectedNodeId(id);
+                        }}
+                      />
+                    )
+                  )}
+                </div>
               </div>
-            </div>}
+            )}
           </RightChatSidebar>
-        )}
-
-        {/* Floating toggle button — visible when right panel is closed */}
-        {showAIChat && !rightPanelOpen && (
-          <AIChatToggle
-            isOpen={false}
-            raised={entityContext?.entityType === 'dbClient'}
-            onClick={() => setRightPanelMode('chat')}
-          />
         )}
       </SidebarInset>
     </>
