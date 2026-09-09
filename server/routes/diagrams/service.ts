@@ -80,11 +80,6 @@ export {
   insertRelationshipsBulk,
   insertTableConstraintsBulk,
   insertTableIndexesBulk,
-  upsertEntities,
-  upsertColumns,
-  upsertRelationships,
-  upsertTableConstraints,
-  upsertTableIndexes,
 } from "./save-helpers.js";
 
 export async function listDiagrams(
