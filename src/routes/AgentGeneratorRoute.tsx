@@ -122,12 +122,58 @@ export function AgentGeneratorRoute() {
     });
 
     if (customPrdContent) {
-      const prdFile = defaultFiles.find((f) => f.path === 'docs/PRD.md');
+      const prdFile = defaultFiles.find((f) => f.path === 'docs/01_PRD.md' || f.path === 'docs/PRD.md');
       if (prdFile) prdFile.content = customPrdContent;
     }
 
     return defaultFiles;
   }, [projectName, domain, techStack, filteredDiagrams, filteredFlowcharts, filteredNotes, customInstructions, customPrdContent]);
+
+  const currentPreviewContent = useMemo(() => {
+    if (activeTab === 'prompt') return masterPrompt;
+    if (activeTab === 'prd') {
+      return bundleFiles.find((f) => f.path === 'docs/01_PRD.md' || f.path === 'docs/PRD.md')?.content || '';
+    }
+    if (activeTab === 'schema') {
+      return bundleFiles.find((f) => f.path === 'database/schema.dbml')?.content || '';
+    }
+    if (activeTab === 'agents') {
+      return bundleFiles
+        .filter((f) => f.path.startsWith('.agents/'))
+        .map((f) => `### ${f.title} (${f.path})\n\n${f.content}`)
+        .join('\n\n---\n\n');
+    }
+    return `# ATURAN ARSITEKTUR & REKAYASA (BUILT-IN STANDARDS)
+
+1. /ui-ux-text:
+   - Placeholder: Tepat 1 kata ("Nama", "Domain", "Stack", "Cari").
+   - Button: 1-2 kata ("Simpan", "Salin", "Unduh ZIP").
+   - Judul singkat tanpa teks pengisi.
+
+2. /precision-card-button-ui & /button-presisi:
+   - Radius halus 6-8px (rounded-lg).
+   - DILARANG rounded-full untuk tombol utama.
+   - Tinggi compact 32px-38px, font 11-13px.
+
+3. /nokomen & Manajemen Berkas:
+   - Strict Zero-Comment Code pada seluruh file implementasi.
+   - Maksimal 1.000 baris kode per berkas.
+   - Maksimal 10 berkas kode (.ts, .tsx, .py) per folder.
+   - Setiap folder wajib memiliki README.md penjelas fungsi.
+   - Wajib 20+ berkas Markdown (.md) arsitektur lengkap.
+
+4. /master & /env-secrets-management:
+   - 8-Fase Engineering Lifecycle.
+   - Zero hardcoded secrets, wajib .env & .env.example.
+
+5. Aturan Antarmuka Khusus:
+   - Form Create: Kartu animasi naik dari bawah (Slide-up Bottom Sheet Card), bukan modal tengah standar.
+   - Delete Confirmation: Kartu custom, DILARANG window.confirm browser.
+   - Fixed Header & Sticky Sidebar: DILARANG bergerak saat konten di-scroll.
+   - Mode Tampilan Ganda: Toggle Grid & List view.
+   - Wajib Mobile 2-Grid: Tampilan grid mobile WAJIB 2 kolom (grid-cols-2), dilarang 1 kolom.
+   - Backend Terpadu: 1 root package.json, serverless API terintegrasi, default Neon PostgreSQL.`;
+  }, [activeTab, masterPrompt, bundleFiles]);
 
   const handleCopyPrompt = async () => {
     try {
@@ -296,52 +342,6 @@ export function AgentGeneratorRoute() {
       </div>
     );
   }
-
-  const currentPreviewContent = useMemo(() => {
-    if (activeTab === 'prompt') return masterPrompt;
-    if (activeTab === 'prd') {
-      return bundleFiles.find((f) => f.path === 'docs/01_PRD.md' || f.path === 'docs/PRD.md')?.content || '';
-    }
-    if (activeTab === 'schema') {
-      return bundleFiles.find((f) => f.path === 'database/schema.dbml')?.content || '';
-    }
-    if (activeTab === 'agents') {
-      return bundleFiles
-        .filter((f) => f.path.startsWith('.agents/'))
-        .map((f) => `### ${f.title} (${f.path})\n\n${f.content}`)
-        .join('\n\n---\n\n');
-    }
-    return `# ATURAN ARSITEKTUR & REKAYASA (BUILT-IN STANDARDS)
-
-1. /ui-ux-text:
-   - Placeholder: Tepat 1 kata ("Nama", "Domain", "Stack", "Cari").
-   - Button: 1-2 kata ("Simpan", "Salin", "Unduh ZIP").
-   - Judul singkat tanpa teks pengisi.
-
-2. /precision-card-button-ui & /button-presisi:
-   - Radius halus 6-8px (rounded-lg).
-   - DILARANG rounded-full untuk tombol utama.
-   - Tinggi compact 32px-38px, font 11-13px.
-
-3. /nokomen & Manajemen Berkas:
-   - Strict Zero-Comment Code pada seluruh file implementasi.
-   - Maksimal 1.000 baris kode per berkas.
-   - Maksimal 10 berkas kode (.ts, .tsx, .py) per folder.
-   - Setiap folder wajib memiliki README.md penjelas fungsi.
-   - Wajib 20+ berkas Markdown (.md) arsitektur lengkap.
-
-4. /master & /env-secrets-management:
-   - 8-Fase Engineering Lifecycle.
-   - Zero hardcoded secrets, wajib .env & .env.example.
-
-5. Aturan Antarmuka Khusus:
-   - Form Create: Kartu animasi naik dari bawah (Slide-up Bottom Sheet Card), bukan modal tengah standar.
-   - Delete Confirmation: Kartu custom, DILARANG window.confirm browser.
-   - Fixed Header & Sticky Sidebar: DILARANG bergerak saat konten di-scroll.
-   - Mode Tampilan Ganda: Toggle Grid & List view.
-   - Wajib Mobile 2-Grid: Tampilan grid mobile WAJIB 2 kolom (grid-cols-2), dilarang 1 kolom.
-   - Backend Terpadu: 1 root package.json, serverless API terintegrasi, default Neon PostgreSQL.`;
-  }, [activeTab, masterPrompt, bundleFiles]);
 
   return (
     <div className="flex-1 flex flex-col gap-3.5 overflow-hidden p-3.5 sm:p-5">
