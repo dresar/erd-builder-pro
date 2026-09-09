@@ -1,4 +1,4 @@
-const CACHE_NAME = 'prd-pro-cache-v2.2';
+const CACHE_NAME = 'prd-pro-cache-v2.3';
 const API_CACHE_NAME = 'prd-pro-api-v1.0';
 
 const SHELL_ASSETS = [
@@ -124,7 +124,14 @@ self.addEventListener('fetch', (event) => {
           }
           return res;
         })
-        .catch(() => cached || new Response('', { status: 408 }));
+        .catch(async () => {
+          if (cached) return cached;
+          if (event.request.headers.get('accept')?.includes('text/html') || event.request.mode === 'navigate') {
+            const indexHtml = (await caches.match('/index.html')) || (await caches.match('/'));
+            if (indexHtml) return indexHtml;
+          }
+          return new Response('Unavailable', { status: 503 });
+        });
       return cached || fetchPromise;
     })
   );

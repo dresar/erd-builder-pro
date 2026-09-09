@@ -1,4 +1,4 @@
-import { Routes, Route, useLocation, useNavigate } from 'react-router-dom';
+import { Routes, Route, Navigate, useLocation, useNavigate } from 'react-router-dom';
 import { lazy, Suspense, useRef, useEffect, useState, type ReactNode } from 'react';
 
 // Components
@@ -160,6 +160,14 @@ function AppContent() {
         <Route element={<AppLayout />}>
           {/* Table views */}
           <Route path="table/:feature" element={<TableRoute />} />
+
+          {/* Shortcuts to table views */}
+          <Route path="prd" element={<Navigate to="/table/prd" replace />} />
+          <Route path="notes" element={<Navigate to="/table/notes" replace />} />
+          <Route path="diagrams" element={<Navigate to="/table/erd" replace />} />
+          <Route path="drawings" element={<Navigate to="/table/drawings" replace />} />
+          <Route path="flowcharts" element={<Navigate to="/table/flowchart" replace />} />
+          <Route path="db-client" element={<Navigate to="/table/db-client" replace />} />
 
           {/* Document editors */}
           <Route path="notes/:id" element={lazyRoute(<NoteEditorRoute />)} />
