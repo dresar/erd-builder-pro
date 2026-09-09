@@ -84,7 +84,7 @@ export function PRDHtmlView({ content, metadata, showToc = true }: PRDHtmlViewPr
       )}
 
       <main className="flex-1 overflow-y-auto custom-scrollbar p-6 sm:p-8 lg:p-10">
-        <div className="max-w-4xl mx-auto space-y-6">
+        <div className={`mx-auto space-y-6 transition-all duration-300 ${showToc ? 'max-w-4xl' : 'max-w-5xl'}`}>
           <div className="rounded-xl border border-border/60 bg-gradient-to-b from-muted/20 to-muted/5 p-6 shadow-sm space-y-4">
             <div className="flex flex-wrap items-center justify-between gap-3">
               <div className="flex items-center gap-2">

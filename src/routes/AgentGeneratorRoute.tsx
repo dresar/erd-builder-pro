@@ -28,7 +28,13 @@ import {
 export function AgentGeneratorRoute() {
   const { projectSlug } = useParams<{ projectSlug?: string }>();
   const navigate = useNavigate();
-  const { projects = [], diagrams = [], flowcharts = [], notes = [] } = useWorkspace();
+  const { projects = [], diagrams = [], flowcharts = [], notes = [], fetchProjects } = useWorkspace();
+
+  useEffect(() => {
+    if (projects.length === 0 && typeof fetchProjects === 'function') {
+      fetchProjects(false, '');
+    }
+  }, [projects.length, fetchProjects]);
 
   const [copiedPrompt, setCopiedPrompt] = useState<boolean>(false);
   const [isZipping, setIsZipping] = useState<boolean>(false);

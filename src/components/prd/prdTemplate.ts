@@ -17,9 +17,17 @@ export interface PrdMetadata {
   architecture: string;
 }
 
+function isCleanMetric(str: string): boolean {
+  if (!str) return false;
+  if (/[<>/]|class=|div/i.test(str)) return false;
+  if (str.length > 60) return false;
+  return true;
+}
+
 function cleanVal(str: string): string {
   if (!str) return '';
-  return str
+  const noHtml = str.replace(/<[^>]+>/g, ' ').replace(/&[a-z0-9#]+;/gi, ' ');
+  return noHtml
     .replace(/^[*_`\s:>-]+/, '')
     .replace(/[*_`\s]+$/, '')
     .replace(/[*_`]/g, '')
@@ -182,27 +190,61 @@ export function parsePrdMetadata(markdown: string, defaultTitle: string = 'Spesi
   const targetMatch = markdown.match(/(?:[>“"*\s]*Target(?:\s+Deployment)?\*{0,2}[:\s]+|Deployment Target[:\s]+|Topologi[:\s]+)([^\n|”"]+)/i);
   const targetDeployment = targetMatch ? cleanVal(targetMatch[1]) : 'Serverless / Cloud';
 
-  const slaMatch = markdown.match(/(?:Target Ketersediaan|Ketersediaan \(SLA\)|SLA)[^:\n]*[:\s]+([^\n|”"]+)/i);
-  const sla = slaMatch ? cleanVal(slaMatch[1]) : '99.99%';
+  let sla = '';
+  const htmlSlaMatch = markdown.match(/Target SLA<\/span>\s*<p[^>]*>([^<]+)<\/p>/i);
+  if (htmlSlaMatch && isCleanMetric(cleanVal(htmlSlaMatch[1]))) {
+    sla = cleanVal(htmlSlaMatch[1]);
+  } else {
+    const slaMatch = markdown.match(/(?:Target Ketersediaan|Ketersediaan \(SLA\)|Target SLA|SLA)[^:\n<]*[:\s]+([^\n|”"<]+)/i);
+    if (slaMatch && isCleanMetric(cleanVal(slaMatch[1]))) {
+      sla = cleanVal(slaMatch[1]);
+    }
+  }
+  if (!sla) sla = '99.99%';
 
-  const latencyMatch = markdown.match(/(?:Latensi Respon|Latensi|Latency \(P95\)|P95)[^:\n]*[:\s]+([^\n|”"]+)/i);
-  const latency = latencyMatch ? cleanVal(latencyMatch[1]) : '< 200ms';
+  let latency = '';
+  const htmlLatMatch = markdown.match(/Latensi P95<\/span>\s*<p[^>]*>([^<]+)<\/p>/i);
+  if (htmlLatMatch && isCleanMetric(cleanVal(htmlLatMatch[1]))) {
+    latency = cleanVal(htmlLatMatch[1]);
+  } else {
+    const latencyMatch = markdown.match(/(?:Latensi Respon|Latensi P95|Latensi|Latency \(P95\)|P95)[^:\n<]*[:\s]+([^\n|”"<]+)/i);
+    if (latencyMatch && isCleanMetric(cleanVal(latencyMatch[1]))) {
+      latency = cleanVal(latencyMatch[1]);
+    }
+  }
+  if (!latency) latency = '< 200ms';
 
-  const secMatch = markdown.match(/(?:Security & Compliance|Keamanan & Kepatuhan|Keamanan|RBAC)[^:\n]*[:\s]+([^\n|”"]+)/i);
-  let security = secMatch ? cleanVal(secMatch[1]) : '';
+  let security = '';
+  const htmlSecMatch = markdown.match(/(?:Compliance|Keamanan)<\/span>\s*<p[^>]*>([^<]+)<\/p>/i);
+  if (htmlSecMatch && isCleanMetric(cleanVal(htmlSecMatch[1]))) {
+    security = cleanVal(htmlSecMatch[1]);
+  } else {
+    const secMatch = markdown.match(/(?:Security & Compliance|Keamanan & Kepatuhan|Keamanan|Compliance|RBAC)[^:\n<]*[:\s]+([^\n|”"<]+)/i);
+    if (secMatch && isCleanMetric(cleanVal(secMatch[1]))) {
+      security = cleanVal(secMatch[1]);
+    }
+  }
   if (!security) {
-    if (/RBAC/i.test(markdown)) security = 'RBAC & RLS';
+    if (/RBAC/i.test(markdown)) security = 'RBAC & Audit';
     else if (/Audit/i.test(markdown)) security = 'Audit Trail';
     else security = 'Enterprise Grade';
   }
 
-  const archMatch = markdown.match(/(?:Architecture Style|Arsitektur|Gaya Arsitektur)[^:\n]*[:\s]+([^\n]+)/i);
-  let architecture = archMatch ? cleanVal(archMatch[1]) : '';
+  let architecture = '';
+  const htmlArchMatch = markdown.match(/(?:Arsitektur|Architecture)<\/span>\s*<p[^>]*>([^<]+)<\/p>/i);
+  if (htmlArchMatch && isCleanMetric(cleanVal(htmlArchMatch[1]))) {
+    architecture = cleanVal(htmlArchMatch[1]);
+  } else {
+    const archMatch = markdown.match(/(?:Architecture Style|Pola Arsitektur|Gaya Arsitektur|Arsitektur)[^:\n<]*[:\s]+([^\n|”"<]+)/i);
+    if (archMatch && isCleanMetric(cleanVal(archMatch[1]))) {
+      architecture = cleanVal(archMatch[1]);
+    }
+  }
   if (!architecture) {
     if (/Serverless/i.test(markdown)) architecture = 'Serverless Edge';
     else if (/Microservices/i.test(markdown)) architecture = 'Microservices';
     else if (/Monolith/i.test(markdown)) architecture = 'Modular Monolith';
-    else architecture = 'Cloud Native';
+    else architecture = 'Clean Architecture';
   }
 
   let status: PrdMetadata['status'] = 'draft';

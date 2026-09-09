@@ -117,7 +117,7 @@ export function generateAllInOnePrompt(config: PromptConfig): string {
   ];
 
   if (hasPrd) {
-    jsonBlocks.push(`  "prd": {\n    "title": "Dokumen Spesifikasi Produk & Arsitektur (PRD)",\n    "content_markdown": "> **Proyek**: ${proj}\\n> **Domain**: ${config.domain}\\n> **Target Deployment**: ${resolvedDeployment}\\n> **Status**: Produksi\\n> **Versi**: 1.0.0\\n\\n<div class=\\"space-y-8\\">\\n  <div class=\\"grid grid-cols-1 md:grid-cols-3 gap-4\\">\\n    <div class=\\"p-5 rounded-xl border border-indigo-500/30 bg-indigo-500/5\\"><span class=\\"text-xs font-bold text-indigo-400 uppercase\\">Target SLA</span><p class=\\"text-2xl font-extrabold text-foreground mt-1\\">99.99%</p><p class=\\"text-xs text-muted-foreground mt-1\\">High Availability</p></div>\\n    <div class=\\"p-5 rounded-xl border border-emerald-500/30 bg-emerald-500/5\\"><span class=\\"text-xs font-bold text-emerald-400 uppercase\\">Latensi P95</span><p class=\\"text-2xl font-extrabold text-foreground mt-1\\">&lt; 150ms</p><p class=\\"text-xs text-muted-foreground mt-1\\">Edge Serverless</p></div>\\n    <div class=\\"p-5 rounded-xl border border-amber-500/30 bg-amber-500/5\\"><span class=\\"text-xs font-bold text-amber-400 uppercase\\">Compliance</span><p class=\\"text-2xl font-extrabold text-foreground mt-1\\">Enterprise</p><p class=\\"text-xs text-muted-foreground mt-1\\">RBAC &amp; Audit Trail</p></div>\\n  </div>\\n\\n  <div class=\\"rounded-xl border border-border bg-card p-6 space-y-4\\">\\n    <h2 class=\\"text-xl font-bold text-foreground\\">1. Ringkasan Eksekutif &amp; Sasaran Strategis</h2>\\n    <p class=\\"text-sm text-muted-foreground leading-relaxed\\">[Uraikan problem statement mendalam, value proposition, dan sasaran strategis bisnis]</p>\\n  </div>\\n  <div class=\\"rounded-xl border border-border bg-card p-6 space-y-4\\">\\n    <h2 class=\\"text-xl font-bold text-foreground\\">2. Arsitektur Solusi &amp; Topologi Infrastruktur</h2>\\n    <div class=\\"grid grid-cols-1 md:grid-cols-2 gap-4 pt-2\\">\\n      <div class=\\"p-4 rounded-lg border border-border/60 bg-muted/10\\"><h3 class=\\"font-semibold text-foreground text-sm\\">Runtime &amp; Hosting</h3><p class=\\"text-xs text-muted-foreground mt-1\\">${resolvedDeployment}</p></div>\\n      <div class=\\"p-4 rounded-lg border border-border/60 bg-muted/10\\"><h3 class=\\"font-semibold text-foreground text-sm\\">Database Layer</h3><p class=\\"text-xs text-muted-foreground mt-1\\">PostgreSQL dengan Connection Pooling</p></div>\\n    </div>\\n  </div>\\n  <div class=\\"rounded-xl border border-border bg-card p-6 space-y-4\\">\\n    <h2 class=\\"text-xl font-bold text-foreground\\">3. Dekomposisi Modul Domain Bisnis (DDD)</h2>\\n    <p class=\\"text-xs text-muted-foreground\\">[Uraikan minimal 8 modul fungsional dalam card grid responsif]</p>\\n  </div>\\n  <div class=\\"rounded-xl border border-border bg-card p-6 space-y-4\\">\\n    <h2 class=\\"text-xl font-bold text-foreground\\">4. Matriks Akses &amp; Keamanan (RBAC)</h2>\\n    <p class=\\"text-xs text-muted-foreground\\">[Tabel peran vs izin bergaya modern dengan badge status]</p>\\n  </div>\\n  <div class=\\"rounded-xl border border-border bg-card p-6 space-y-4\\">\\n    <h2 class=\\"text-xl font-bold text-foreground\\">5. Kontrak Data &amp; Spesifikasi API CRUD</h2>\\n    <p class=\\"text-xs text-muted-foreground\\">[Envelope response, headers, idempotency, dan spesifikasi endpoint CRUD lengkap (GET, POST, PUT, DELETE) beserta alur simulasi sistem]</p>\\n  </div>\\n  <div class=\\"rounded-xl border border-border bg-card p-6 space-y-4\\">\\n    <h2 class=\\"text-xl font-bold text-foreground\\">6. Persyaratan Non-Fungsional &amp; SLA</h2>\\n    <p class=\\"text-xs text-muted-foreground\\">[Latency, availability, RPO/RTO]</p>\\n  </div>\\n</div>"\n  }`);
+    jsonBlocks.push(`  "prd": {\n    "title": "Dokumen Spesifikasi Produk & Arsitektur (PRD)",\n    "content_markdown": "# SPESIFIKASI PERSYARATAN PRODUK & ARSITEKTUR (PRD)\\n\\n> **Proyek**: ${proj}\\n> **Domain Bisnis**: ${config.domain}\\n> **Target Deployment**: ${resolvedDeployment}\\n> **Gaya Arsitektur**: ${resolvedArch}\\n> **Target Ketersediaan (SLA)**: 99.99% Uptime\\n> **Latensi Respon (P95)**: < 150ms\\n> **Keamanan & Kepatuhan**: ${complianceList}\\n> **Status**: Produksi | **Versi**: 1.0.0\\n\\n---\\n\\n## 1. Ringkasan Eksekutif & Sasaran Bisnis\\n\\n[Uraikan problem statement mendalam, arsitektur solusi, value proposition, dan sasaran strategis bisnis]\\n\\n### Metrik Kinerja Utama\\n- **Target Ketersediaan (SLA)**: 99.99% Uptime\\n- **Latensi Respon (P95)**: < 150ms\\n- **Keamanan**: ${complianceList}\\n- **Pola Arsitektur**: ${resolvedArch}\\n\\n---\\n\\n## 2. Topologi Solusi & Infrastruktur\\n\\n- **Runtime & Hosting**: ${resolvedDeployment}\\n- **Database Layer**: PostgreSQL dengan Connection Pooling & High Availability\\n- **Cache & Message Broker**: Redis Caching & Event Bus\\n\\n---\\n\\n## 3. Dekomposisi Modul Domain Bisnis (DDD)\\n\\n[Uraikan minimal 8 modul domain fungsional lengkap dengan entitas kunci, invariant aturan bisnis, dan relasi]\\n\\n---\\n\\n## 4. Matriks Akses & Keamanan (RBAC)\\n\\n| Peran (Role) | Baca (Read) | Tulis (Write) | Setujui (Approve) | Ekspor Data |\\n| :--- | :---: | :---: | :---: | :---: |\\n| **Super Admin** | ✓ | ✓ | ✓ | ✓ |\\n| **Manager** | ✓ | ✓ | ✓ | ✕ |\\n| **Operator** | ✓ | ✓ | ✕ | ✕ |\\n| **Auditor** | ✓ | ✕ | ✕ | ✓ |\\n\\n---\\n\\n## 5. Kontrak Data & Spesifikasi API\\n\\n[Spesifikasi envelope response, standard headers (X-Tenant-ID, Idempotency-Key), dan alur CRUD]\\n\\n---\\n\\n## 6. Persyaratan Non-Fungsional & Tata Kelola\\n\\n- **Audit Trail**: Pencatatan kekal seluruh mutasi data ke audit_logs.\\n- **Soft Deletes**: Seluruh entitas utama menggunakan deleted_at.\\n- **Data Isolation**: Isolasi ketat berbasis tenant_id."\n  }`);
   }
 
   if (hasErd) {
@@ -144,10 +144,18 @@ You are a Senior Principal Software & Database Architect.
 Your task is to design a COMPLETE, PRODUCTION-GRADE, ENTERPRISE-LEVEL SYSTEM SPECIFICATION for the project above.
 
 CRITICAL RULES — DO NOT VIOLATE:
-${hasErd ? `1. NO TOY OR SIMPLIFIED SCHEMAS: You MUST produce an exhaustive, real-world enterprise database schema with AT LEAST ${minTables} TABLES in valid DBML. Do not group multiple tables into one generic table. Break down the system into realistic, normalized relational modules.\n` : ''}${hasPrd ? `2. PRD AS COMPREHENSIVE RICH HTML VIEWS: The PRD in "content_markdown" MUST NOT be a plain markdown README or generic text. It MUST be an exhaustive, enterprise-grade specification rendered as RICH, COLORFUL, THEME-AWARE HTML VIEWS using component-style <div> containers with Tailwind CSS classes.
-   - DO NOT START WITH <!DOCTYPE html>, <html>, <head>, or <body>! Start directly with root <div> elements (e.g. <div class="space-y-8">...</div>).
-   - Use theme-responsive Tailwind utility classes (bg-card, border-border, text-foreground, text-muted-foreground, bg-indigo-500/10, text-indigo-400, bg-emerald-500/10, text-emerald-400, bg-amber-500/10, text-amber-400, bg-rose-500/10, text-rose-400, border, rounded-xl, shadow-sm, p-4/p-6).
-   - Include rich visual components: metric/KPI cards in grid (grid grid-cols-1 md:grid-cols-3 gap-4), infrastructure topology cards, domain module cards with colored status pills and invariants, styled RBAC matrix table with colored badges, REST API CRUD contracts (GET, POST, PUT, DELETE), and SLA cards.
+${hasErd ? `1. NO TOY OR SIMPLIFIED SCHEMAS: You MUST produce an exhaustive, real-world enterprise database schema with AT LEAST ${minTables} TABLES in valid DBML. Do not group multiple tables into one generic table. Break down the system into realistic, normalized relational modules.\n` : ''}${hasPrd ? `2. PRD AS PURE MARKDOWN SPECIFICATION (STRICT NO RAW HTML): The PRD in "content_markdown" MUST be an exhaustive, enterprise-grade specification written in 100% PURE GITHUB FLAVORED MARKDOWN (headings, bullet points, blockquotes, code blocks, tables).
+   - STRICT PROHIBITION: DO NOT output any raw HTML tags (NO <div>, <span>, <p>, <style>, <script>, or class attributes). The system renders markdown natively with high-craft styling.
+   - You MUST include the metadata blockquote at the very top:
+     > **Proyek**: ${proj}
+     > **Domain Bisnis**: ${config.domain}
+     > **Target Deployment**: ${resolvedDeployment}
+     > **Gaya Arsitektur**: ${resolvedArch}
+     > **Target Ketersediaan (SLA)**: 99.99% Uptime
+     > **Latensi Respon (P95)**: < 150ms
+     > **Keamanan & Kepatuhan**: ${complianceList}
+     > **Status**: Produksi | **Versi**: 1.0.0
+   - Include deep sections: Executive Summary & KPIs, Solution Topology, Domain Decomposition (DDD with at least 8 modules), RBAC Matrix Table, API Contracts, and SLA/Governance.
    - Target depth: 2,500–4,000 words in formal Indonesian (Bahasa Indonesia baku kelas enterprise).\n` : ''}3. HOSTING & DEPLOYMENT: The application architecture must be optimized for ${resolvedDeployment}.
 ${hasFlowchart ? `4. FLOWCHART MUST BE DECISION-RICH: The flowchart must contain decision logic diamonds for validations, auth checks, status transitions, and error paths. Include at least 15–25 connected nodes.\n` : ''}${hasApi ? `5. REST API CRUD & WORKFLOW CONTRACT (MANDATORY 'api' OBJECT IN JSON): You MUST provide an explicit 'api' root object in the JSON containing full REST API endpoint specifications for every core domain entity (at least 20–35 endpoints). Every endpoint must define 'method' (GET/POST/PUT/DELETE), 'path', 'summary', 'tags', 'request' (query_params and/or body schema), and 'response' (HTTP status, description, and envelope).\n` : ''}6. STRICT JSON OUTPUT CONTRACT: You must respond ONLY with a single valid JSON object enclosed within \`\`\`json ... \`\`\` code fence. No conversational filler before or after the JSON.
 7. DOWNLOADABLE FILE REQUIREMENT (MANDATORY):
@@ -193,80 +201,68 @@ Bertindaklah sebagai Senior Principal Solutions & Enterprise Software Architect.
 Susun DOKUMEN PERSYARATAN PRODUK (PRD) & ARSITEKTUR SISTEM LENGKAP untuk proyek di atas.
 
 ATURAN PENULISAN:
-1. JANGAN GUNAKAN FORMAT README MARKDOWN BIASA! Format dokumen WAJIB menggunakan RICH HTML VIEWS menggunakan elemen <div> berdesain modern, responsif, dan penuh warna dengan utilitas Tailwind CSS.
-2. DILARANG KERAS menggunakan awalan <!DOCTYPE html>, <html>, <head>, atau <body>! Awali langsung dengan kontainer <div> (contoh: <div class="space-y-8">...</div>).
-3. Gunakan kelas tema responsif (bg-card, border-border, text-foreground, text-muted-foreground, aksen warna emerald, indigo, amber, violet, rose, dan grid responsif).
-4. Tuliskan dalam Bahasa Indonesia formal kelas enterprise, terstruktur, mendalam, dan komprehensif (target: 2.500–4.000 kata) mencakup minimal 8–10 modul domain bisnis, matriks RBAC, kontrak API, dan SLA.
+1. FORMAT WAJIB: 100% PURE GITHUB FLAVORED MARKDOWN! Gunakan headings (#, ##, ###), blockquotes (>), daftar berpoin, blok kode, dan tabel markdown.
+2. DILARANG KERAS MENGGUNAKAN RAW HTML TAGS (TIDAK BOLEH ADA <div>, <span>, <p>, atau atribut class/style)!
+3. Tuliskan dalam Bahasa Indonesia formal kelas enterprise, terstruktur, mendalam, dan komprehensif (target: 2.500–4.000 kata) mencakup minimal 8–10 modul domain bisnis, matriks RBAC, kontrak API, dan SLA.
 
-STRUKTUR DOKUMEN HTML VIEWS YANG WAJIB DIIKUTI:
+STRUKTUR DOKUMEN MARKDOWN YANG WAJIB DIIKUTI:
+# SPESIFIKASI PERSYARATAN PRODUK & ARSITEKTUR (PRD)
+
 > **Proyek**: ${proj}
 > **Domain Bisnis**: ${config.domain}
 > **Target Deployment**: ${resolvedDeployment}
-> **Status**: Produksi
-> **Versi**: 1.0.0
+> **Gaya Arsitektur**: ${resolvedArch}
+> **Target Ketersediaan (SLA)**: 99.99% Uptime
+> **Latensi Respon (P95)**: < 150ms
+> **Keamanan & Kepatuhan**: ${complianceList}
+> **Status**: Produksi | **Versi**: 1.0.0
 
-<div class="space-y-8">
-  <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-    <div class="p-5 rounded-xl border border-indigo-500/30 bg-indigo-500/5">
-      <span class="text-xs font-bold text-indigo-400 uppercase">Target SLA</span>
-      <p class="text-2xl font-extrabold text-foreground mt-1">99.99%</p>
-      <p class="text-xs text-muted-foreground mt-1">High Availability</p>
-    </div>
-    <div class="p-5 rounded-xl border border-emerald-500/30 bg-emerald-500/5">
-      <span class="text-xs font-bold text-emerald-400 uppercase">Latensi P95</span>
-      <p class="text-2xl font-extrabold text-foreground mt-1">&lt; 150ms</p>
-      <p class="text-xs text-muted-foreground mt-1">Edge Serverless</p>
-    </div>
-    <div class="p-5 rounded-xl border border-amber-500/30 bg-amber-500/5">
-      <span class="text-xs font-bold text-amber-400 uppercase">Keamanan</span>
-      <p class="text-2xl font-extrabold text-foreground mt-1">Enterprise</p>
-      <p class="text-xs text-muted-foreground mt-1">RBAC, RLS &amp; Audit</p>
-    </div>
-  </div>
+---
 
-  <div class="rounded-xl border border-border bg-card p-6 space-y-4">
-    <h2 class="text-xl font-bold text-foreground">1. Ringkasan Eksekutif &amp; Sasaran Strategis</h2>
-    <p class="text-sm text-muted-foreground leading-relaxed">
-      Uraikan problem statement mendalam, arsitektur solusi, value proposition, dan sasaran strategis bisnis.
-    </p>
-  </div>
+## 1. Ringkasan Eksekutif & Sasaran Bisnis
+[Uraikan problem statement mendalam, arsitektur solusi, value proposition, dan sasaran strategis bisnis]
 
-  <div class="rounded-xl border border-border bg-card p-6 space-y-4">
-    <h2 class="text-xl font-bold text-foreground">2. Topologi Solusi &amp; Infrastruktur</h2>
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
-      <div class="p-4 rounded-lg border border-border/60 bg-muted/10">
-        <h3 class="font-semibold text-foreground text-sm">Runtime &amp; Hosting</h3>
-        <p class="text-xs text-muted-foreground mt-1">${resolvedDeployment}</p>
-      </div>
-      <div class="p-4 rounded-lg border border-border/60 bg-muted/10">
-        <h3 class="font-semibold text-foreground text-sm">Basis Data</h3>
-        <p class="text-xs text-muted-foreground mt-1">PostgreSQL dengan Connection Pooling</p>
-      </div>
-    </div>
-  </div>
+### Metrik Kinerja Utama
+- **Target Ketersediaan (SLA)**: 99.99% Uptime
+- **Latensi Respon (P95)**: < 150ms
+- **Keamanan**: ${complianceList}
+- **Pola Arsitektur**: ${resolvedArch}
 
-  <div class="rounded-xl border border-border bg-card p-6 space-y-6">
-    <h2 class="text-xl font-bold text-foreground">3. Dekomposisi Modul Domain Bisnis (DDD)</h2>
-    <p class="text-xs text-muted-foreground">Uraikan minimal 8-10 modul fungsional dalam card grid responsif.</p>
-  </div>
+---
 
-  <div class="rounded-xl border border-border bg-card p-6 space-y-4">
-    <h2 class="text-xl font-bold text-foreground">4. Matriks Akses &amp; Keamanan (RBAC)</h2>
-    <p class="text-xs text-muted-foreground">Tabel peran vs izin bergaya modern dengan badge status warna.</p>
-  </div>
+## 2. Topologi Solusi & Infrastruktur
+- **Runtime & Hosting**: ${resolvedDeployment}
+- **Basis Data**: PostgreSQL dengan Connection Pooling & High Availability
+- **Cache & Rate Limiting**: Redis Caching
 
-  <div class="rounded-xl border border-border bg-card p-6 space-y-4">
-    <h2 class="text-xl font-bold text-foreground">5. Kontrak Data &amp; Spesifikasi API CRUD</h2>
-    <p class="text-xs text-muted-foreground">Standar envelope response, konvensi header, idempotency, dan spesifikasi endpoint CRUD lengkap (GET, POST, PUT, DELETE) beserta alur simulasi sistem.</p>
-  </div>
+---
 
-  <div class="rounded-xl border border-border bg-card p-6 space-y-4">
-    <h2 class="text-xl font-bold text-foreground">6. Persyaratan Non-Fungsional &amp; SLA</h2>
-    <p class="text-xs text-muted-foreground">Target latensi, ketersediaan, pemulihan bencana RPO/RTO.</p>
-  </div>
-</div>
+## 3. Dekomposisi Modul Domain Bisnis (DDD)
+[Uraikan minimal 8-10 modul fungsional lengkap dengan entitas kunci, invariant aturan bisnis, dan relasi]
+---
 
-Mulai susun dokumen PRD HTML views lengkap sekarang.`;
+## 4. Matriks Akses & Keamanan (RBAC)
+| Peran (Role) | Baca (Read) | Tulis (Write) | Setujui (Approve) | Ekspor Data |
+| :--- | :---: | :---: | :---: | :---: |
+| **Super Admin** | ✓ | ✓ | ✓ | ✓ |
+| **Manager** | ✓ | ✓ | ✓ | ✕ |
+| **Operator** | ✓ | ✓ | ✕ | ✕ |
+| **Auditor** | ✓ | ✕ | ✕ | ✓ |
+
+---
+
+## 5. Kontrak Data & Spesifikasi API CRUD
+[Standar envelope response, konvensi header (X-Tenant-ID, Idempotency-Key), dan spesifikasi endpoint CRUD lengkap beserta alur simulasi sistem]
+
+---
+
+## 6. Persyaratan Non-Fungsional & Tata Kelola
+- **Target Ketersediaan**: 99.99% Uptime
+- **Latensi Respon**: P95 < 150ms
+- **Audit Trail**: Seluruh transaksi dicatat di tabel audit_logs
+- **Data Isolation**: Isolasi ketat berbasis tenant_id
+
+Mulai susun dokumen PRD Markdown lengkap sekarang.`;
 }
 
 export function generateNotesToErdPrompt(config: PromptConfig, notesText?: string): string {

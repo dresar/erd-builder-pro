@@ -1,4 +1,3 @@
-import React from 'react';
 import { 
   Eye, 
   Edit3, 
@@ -7,12 +6,11 @@ import {
   Printer, 
   Database, 
   Network, 
-  Check, 
-  Sparkles 
+  ExternalLink,
+  PanelLeftClose,
+  PanelLeft,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { InfoTip } from '@/components/ai/InfoTip';
 
 export type PrdViewMode = 'html' | 'editor' | 'split';
 export type PrdStatus = 'draft' | 'in_review' | 'approved' | 'production';
@@ -29,6 +27,9 @@ interface PRDToolbarProps {
   onExportHtml: () => void;
   onExportMarkdown: () => void;
   onPrint: () => void;
+  onOpenNewTab?: () => void;
+  showMenu?: boolean;
+  onToggleMenu?: () => void;
   isSaving?: boolean;
 }
 
@@ -51,6 +52,9 @@ export function PRDToolbar({
   onExportHtml,
   onExportMarkdown,
   onPrint,
+  onOpenNewTab,
+  showMenu = true,
+  onToggleMenu,
   isSaving,
 }: PRDToolbarProps) {
   return (
@@ -176,6 +180,32 @@ export function PRDToolbar({
             <Printer className="size-3 text-muted-foreground" />
             <span className="hidden lg:inline">Cetak</span>
           </Button>
+
+          {onOpenNewTab && (
+            <Button
+              onClick={onOpenNewTab}
+              variant="outline"
+              size="sm"
+              className="h-7 px-2 text-xs gap-1 cursor-pointer border-indigo-500/40 text-indigo-400 hover:bg-indigo-500/10"
+              title="Buka PRD di tab baru"
+            >
+              <ExternalLink className="size-3" />
+              <span className="hidden sm:inline">Tab Baru</span>
+            </Button>
+          )}
+
+          {onToggleMenu && (
+            <Button
+              onClick={onToggleMenu}
+              variant="ghost"
+              size="sm"
+              className="h-7 px-2 text-xs gap-1 cursor-pointer text-muted-foreground hover:text-foreground"
+              title={showMenu ? "Tutup Daftar Isi" : "Buka Daftar Isi"}
+            >
+              {showMenu ? <PanelLeftClose className="size-3.5" /> : <PanelLeft className="size-3.5 text-indigo-400" />}
+              <span className="hidden xl:inline">{showMenu ? "Tutup" : "Menu"}</span>
+            </Button>
+          )}
         </div>
       </div>
     </div>

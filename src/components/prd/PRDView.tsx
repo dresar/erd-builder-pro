@@ -31,6 +31,7 @@ export function PRDView({
   const [content, setContent] = useState(activePrd?.content || getDefaultPrdTemplate('Sistem Enterprise'));
   const [viewMode, setViewMode] = useState<PrdViewMode>('html');
   const [status, setStatus] = useState<PrdStatus>('draft');
+  const [showMenu, setShowMenu] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
 
   useEffect(() => {
@@ -120,6 +121,18 @@ export function PRDView({
     window.print();
   };
 
+  const handleOpenInNewTab = () => {
+    try {
+      const rendered = marked.parse(content, { gfm: true, breaks: true }) as string;
+      const htmlString = generateStandaloneHtml(title, rendered, metadata);
+      const blob = new Blob([htmlString], { type: 'text/html;charset=utf-8' });
+      const url = URL.createObjectURL(blob);
+      window.open(url, '_blank');
+    } catch {
+      toast.error('Gagal membuka di tab baru.');
+    }
+  };
+
   const handleSynthesizeErd = async () => {
     try {
       localStorage.setItem('pending_prd_synthesis_context', content);
@@ -162,12 +175,15 @@ export function PRDView({
         onExportHtml={handleExportHtml}
         onExportMarkdown={handleExportMarkdown}
         onPrint={handlePrint}
+        onOpenNewTab={handleOpenInNewTab}
+        showMenu={showMenu}
+        onToggleMenu={() => setShowMenu((prev) => !prev)}
         isSaving={isSaving}
       />
 
       <div className="flex-1 flex overflow-hidden">
         {viewMode === 'html' && (
-          <PRDHtmlView content={content} metadata={metadata} showToc={true} />
+          <PRDHtmlView content={content} metadata={metadata} showToc={showMenu} />
         )}
 
         {viewMode === 'editor' && (
