@@ -112,5 +112,28 @@ SKILL 8: /supermemory (PERSISTENT ARCHITECTURAL CONTEXT & ADR)
 -----------------------------------------------------------------------
 - ARCHITECTURE DECISION RECORDS (ADR):
   * Document all permanent architectural decisions, schema evolutions, and trade-offs in docs/ARCHITECTURE.md.
-  * Preserve context across multi-agent sessions so every agent operates from the exact same state of truth.`;
+  * Preserve context across multi-agent sessions so every agent operates from the exact same state of truth.
+
+-----------------------------------------------------------------------
+SKILL 9: STRICT FOLDER MANAGEMENT, FILE LIMITS & CODE HYGIENE
+-----------------------------------------------------------------------
+- STRICT MAXIMUM 10 CODE FILES PER DIRECTORY:
+  * Any folder is STRICTLY FORBIDDEN from containing more than 10 code files (.ts, .tsx, .py, .js, .go).
+  * If a module or feature expands beyond 10 files, you MUST decompose it into clean domain sub-folders (e.g. components/inputs/, components/cards/, services/auth/, services/billing/).
+  * Dumping 11 or more code files in a flat directory is considered a severe architectural violation.
+
+- STRICT MAXIMUM 1,000 LINES PER CODE FILE:
+  * Any generated source file is STRICTLY FORBIDDEN from exceeding 1,000 lines of code.
+  * Recommended convention: Proactively split files when they reach 300–400 lines into focused, cohesive helper modules.
+  * Keep files concise, atomic, and testable.
+
+- MANDATORY FOLDER DOCUMENTATION (README.md IN EVERY DIRECTORY):
+  * Every directory in the codebase MUST contain a README.md explaining:
+    1. The exact purpose and domain boundary of the folder.
+    2. Inventory of files and their respective responsibilities.
+    3. Rules of engagement (what is allowed in this folder and what belongs elsewhere).
+
+- RE-ENFORCEMENT OF ZERO INLINE COMMENTS (/nokomen):
+  * All generated code files MUST contain EXACTLY ZERO inline comments.
+  * Code clarity must be achieved through self-documenting naming and Clean Architecture.`;
 }

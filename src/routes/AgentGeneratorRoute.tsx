@@ -300,7 +300,7 @@ export function AgentGeneratorRoute() {
   const currentPreviewContent = useMemo(() => {
     if (activeTab === 'prompt') return masterPrompt;
     if (activeTab === 'prd') {
-      return bundleFiles.find((f) => f.path === 'docs/PRD.md')?.content || '';
+      return bundleFiles.find((f) => f.path === 'docs/01_PRD.md' || f.path === 'docs/PRD.md')?.content || '';
     }
     if (activeTab === 'schema') {
       return bundleFiles.find((f) => f.path === 'database/schema.dbml')?.content || '';
@@ -323,8 +323,12 @@ export function AgentGeneratorRoute() {
    - DILARANG rounded-full untuk tombol utama.
    - Tinggi compact 32px-38px, font 11-13px.
 
-3. /nokomen:
+3. /nokomen & Manajemen Berkas:
    - Strict Zero-Comment Code pada seluruh file implementasi.
+   - Maksimal 1.000 baris kode per berkas.
+   - Maksimal 10 berkas kode (.ts, .tsx, .py) per folder.
+   - Setiap folder wajib memiliki README.md penjelas fungsi.
+   - Wajib 20+ berkas Markdown (.md) arsitektur lengkap.
 
 4. /master & /env-secrets-management:
    - 8-Fase Engineering Lifecycle.

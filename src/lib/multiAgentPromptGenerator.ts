@@ -1,5 +1,8 @@
 import JSZip from 'jszip';
 import { generateClaudeMasterPrompt } from './megaPrompt/claudeMasterPrompt';
+import { generateDefaultBundleFiles, type GeneratedBundleFile } from './megaPrompt/defaultBundleFiles';
+
+export type { GeneratedBundleFile };
 
 export interface MultiAgentProjectConfig {
   projectName: string;
@@ -11,14 +14,6 @@ export interface MultiAgentProjectConfig {
   flowcharts?: any[];
   notes?: any[];
   customInstructions?: string;
-}
-
-export interface GeneratedBundleFile {
-  path: string;
-  title: string;
-  role?: string;
-  language: string;
-  content: string;
 }
 
 export const AGENT_TEAM = [
@@ -160,159 +155,13 @@ export function buildClaudeMasterPrompt(config: MultiAgentProjectConfig): string
 }
 
 export function buildDefaultBundleFiles(config: MultiAgentProjectConfig): GeneratedBundleFile[] {
-  const proj = config.projectName.trim() || 'Sistem Enterprise';
-  const domain = config.domain.trim() || 'SaaS Multi-Tenant';
-  const techStack = config.techStack.trim() || 'Next.js 15 + Neon PostgreSQL + Express + Tailwind CSS';
   const fullDbml = extractFullDbml(config.diagrams);
-
-  return [
-    {
-      path: '.agents/01_TECH_LEAD.md',
-      title: 'Tech Lead & Architect',
-      role: 'Tech Lead',
-      language: 'markdown',
-      content: `# Agent 1: Tech Lead & System Architect
-
-## Mission
-Lead the engineering team, enforce Clean Architecture domain boundaries, and decompose business requirements into atomic tasks.
-
-## Responsibilities
-1. Architecture Governance: Ensure all components adhere to modular domain boundaries.
-2. Code Review & Standards: Strictly prevent bloated code, enforce type safety, and verify error boundaries.
-3. Task Orchestration: Assign backend tasks to Agent 2 and UI tasks to Agent 3.
-4. Conflict Resolution: Mediate schema and contract decisions between frontend and backend.
-
-## Execution Protocol
-- Inspect database/schema.dbml before approving API modifications.
-- Require verification passing (npm test & npx tsc --noEmit) before signing off on any phase.`,
-    },
-    {
-      path: '.agents/02_DATABASE_BACKEND.md',
-      title: 'Database & Backend Engineer',
-      role: 'Backend',
-      language: 'markdown',
-      content: `# Agent 2: Database & Backend Engineer
-
-## Mission
-Implement robust relational data models, atomic database transactions, and standardized API services for domain: ${domain}.
-
-## Responsibilities
-1. Schema & Migrations: Maintain relational integrity in Neon PostgreSQL based on database/schema.dbml.
-2. Service Layer: Write isolated service classes containing pure domain business logic.
-3. API Contracts: Deliver uniform REST responses: { success: boolean, data?: T, error?: string }.
-4. Performance: Index foreign keys, implement query optimization, and prevent N+1 query patterns.`,
-    },
-    {
-      path: '.agents/03_FRONTEND_UI.md',
-      title: 'Frontend & UI/UX Engineer',
-      role: 'Frontend',
-      language: 'markdown',
-      content: `# Agent 3: Frontend & UI/UX Specialist
-
-## Mission
-Build responsive, accessible, high-craft user interfaces using modern Tailwind CSS and modular component architecture.
-
-## Responsibilities
-1. Precision UI: Follow 6px–8px radius (rounded-lg), strictly non-pill, compact 32px–38px buttons.
-2. Bottom-Sheet Card: Animate record creation as a slide-up card from the bottom, never a generic center modal.
-3. Custom Confirmation: Animate delete confirmation with custom cards, never browser window.confirm.
-4. Layout Lock: Header and Sidebar remain pinned/fixed during scrolling.
-5. Mobile 2-Grid: All grid views on mobile viewports MUST strictly render in 2 columns (grid-cols-2).
-6. Dual View: Provide toggle between Grid View and List View.`,
-    },
-    {
-      path: '.agents/04_SECURITY_AUTH.md',
-      title: 'Security & RBAC Specialist',
-      role: 'Security',
-      language: 'markdown',
-      content: `# Agent 4: Security & Compliance Specialist
-
-## Mission
-Protect system assets, enforce tenant isolation, and validate identity and permissions across all operations.
-
-## Responsibilities
-1. Authentication: Secure JWT / session cookies with HTTP-only, secure, and SameSite flags.
-2. Authorization: Enforce Role-Based Access Control (RBAC) at both API route and data query layers.
-3. Multi-Tenancy: Guarantee that all queries filter strictly by tenant_id to avoid data leakage.
-4. Audit Trails: Log sensitive actions (mutations, role changes, exports) to an immutable audit table.`,
-    },
-    {
-      path: '.agents/05_QA_TESTER.md',
-      title: 'QA & Test Engineer',
-      role: 'QA & Test',
-      language: 'markdown',
-      content: `# Agent 5: QA & Verification Engineer
-
-## Mission
-Verify correctness, guard against regressions, and execute comprehensive test suites before release.
-
-## Responsibilities
-1. Automated Testing: Write unit tests for core domain calculation and business rules.
-2. Edge Case Auditing: Test boundary conditions (empty inputs, oversized payloads, invalid IDs).
-3. Integration Testing: Verify end-to-end API workflows and error status codes (400, 401, 403, 404, 422).
-4. Release Gate: Execute build verification (npm run build) and report test status.`,
-    },
-    {
-      path: 'docs/PRD.md',
-      title: 'Dokumen Spesifikasi Produk (PRD)',
-      language: 'markdown',
-      content: `# DOKUMEN SPESIFIKASI PERSYARATAN PRODUK & ARSITEKTUR (PRD)
-
-> **Proyek**: ${proj}  
-> **Domain Bisnis**: ${domain}  
-> **Tech Stack**: ${techStack}  
-> **Status**: Disetujui untuk Implementasi Tim Multi-Agent
-
----
-
-## 1. Ringkasan Eksekutif
-Sistem dirancang untuk menyediakan platform terpadu dengan performa tinggi, pemisahan data multi-tenant yang aman, serta kemampuan otomatisasi operasional penuh.
-
-## 2. Metrik Kunci & Sasaran Layanan (SLA)
-- Ketersediaan Sistem: 99.99% Uptime.
-- Latensi Transaksi (P95): < 150ms.
-- Integritas Transaksi: Pemulihan RPO < 5 menit.
-
-## 3. Dekomposisi Modul Domain Bisnis (DDD)
-- **Modul Identitas & Akses (IAM)**: Autentikasi, manajemen tenant, dan RBAC terpusat.
-- **Modul Operasional Inti**: Layanan bisnis khusus domain ${domain}.
-- **Modul Notifikasi & Antrean**: Pengiriman event asinkron dan webhook eksternal.
-- **Modul Audit & Kepatuhan**: Pencatatan aktivitas mutasi data dan audit trail.
-
-## 4. Matriks Akses (RBAC)
-| Peran (Role) | Baca | Tulis | Hapus | Ekspor |
-| :--- | :---: | :---: | :---: | :---: |
-| Super Admin | ✓ | ✓ | ✓ | ✓ |
-| Admin Tenant | ✓ | ✓ | ✓ | ✕ |
-| Operator | ✓ | ✓ | ✕ | ✕ |
-| Auditor | ✓ | ✕ | ✕ | ✓ |`,
-    },
-    {
-      path: 'database/schema.dbml',
-      title: 'Skema Basis Data (DBML)',
-      language: 'dbml',
-      content: fullDbml,
-    },
-    {
-      path: 'AGENTS.md',
-      title: 'Protokol Tim Kerja Agen',
-      language: 'markdown',
-      content: `# Multi-Agent Teamwork Coordination Protocol
-
-## Team Composition
-1. Agent 1: Tech Lead & Architect (.agents/01_TECH_LEAD.md)
-2. Agent 2: Database & Backend Engineer (.agents/02_DATABASE_BACKEND.md)
-3. Agent 3: Frontend & UI/UX Specialist (.agents/03_FRONTEND_UI.md)
-4. Agent 4: Security & Compliance Specialist (.agents/04_SECURITY_AUTH.md)
-5. Agent 5: QA & Verification Engineer (.agents/05_QA_TESTER.md)
-
-## Synchronization Rules
-- All agents consult docs/PRD.md for product requirements.
-- Backend and Frontend agents adhere strictly to database/schema.dbml.
-- Any proposed schema change must be approved by Agent 1 (Tech Lead).
-- No feature branch is merged without sign-off from Agent 5 (QA Tester).`,
-    },
-  ];
+  return generateDefaultBundleFiles({
+    projectName: config.projectName,
+    domain: config.domain,
+    techStack: config.techStack,
+    fullDbml,
+  });
 }
 
 export function downloadMegaPromptFile(promptText: string, projectName: string): void {

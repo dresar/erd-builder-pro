@@ -32,7 +32,10 @@ describe('multiAgentPromptGenerator', () => {
     expect(prompt).toContain('MANDATORY MOBILE 2-GRID RULE (STRICTLY PROHIBIT 1-GRID ON MOBILE)');
     expect(prompt).toContain('Single Root package.json');
     expect(prompt).toContain('Neon Serverless PostgreSQL');
-    expect(prompt).toContain('/mnt/data/');
+    expect(prompt).toContain('MANDATORY 20+ MARKDOWN ARCHITECTURE FILES');
+    expect(prompt).toContain('MAXIMUM 10 CODE FILES PER DIRECTORY');
+    expect(prompt).toContain('MAXIMUM 1,000 LINES PER CODE FILE');
+    expect(prompt).toContain('MANDATORY FOLDER DOCUMENTATION (README.md IN EVERY DIRECTORY)');
     expect(prompt).toContain('01_TECH_LEAD.md');
     expect(prompt).toContain('02_DATABASE_BACKEND.md');
     expect(prompt).toContain('03_FRONTEND_UI.md');
@@ -40,26 +43,30 @@ describe('multiAgentPromptGenerator', () => {
     expect(prompt).toContain('05_QA_TESTER.md');
   });
 
-  it('builds bundle files including the 5 agents and PRD', () => {
+  it('builds bundle files including 20+ markdown files and folder guides', () => {
     const files = buildDefaultBundleFiles({
       projectName: 'Fintech Hub',
       domain: 'Fintech',
       techStack: 'Express + PostgreSQL',
     });
 
-    expect(files.length).toBeGreaterThanOrEqual(8);
+    expect(files.length).toBeGreaterThanOrEqual(20);
     expect(files.some((f) => f.path === '.agents/01_TECH_LEAD.md')).toBe(true);
     expect(files.some((f) => f.path === '.agents/02_DATABASE_BACKEND.md')).toBe(true);
     expect(files.some((f) => f.path === '.agents/03_FRONTEND_UI.md')).toBe(true);
     expect(files.some((f) => f.path === '.agents/04_SECURITY_AUTH.md')).toBe(true);
     expect(files.some((f) => f.path === '.agents/05_QA_TESTER.md')).toBe(true);
-    expect(files.some((f) => f.path === 'docs/PRD.md')).toBe(true);
+    expect(files.some((f) => f.path === '.agents/README.md')).toBe(true);
+    expect(files.some((f) => f.path === 'docs/01_PRD.md')).toBe(true);
+    expect(files.some((f) => f.path === 'docs/README.md')).toBe(true);
+    expect(files.some((f) => f.path === 'database/README.md')).toBe(true);
+    expect(files.some((f) => f.path === 'src/README.md')).toBe(true);
     expect(files.some((f) => f.path === 'database/schema.dbml')).toBe(true);
     expect(files.some((f) => f.path === 'AGENTS.md')).toBe(true);
 
-    const prd = files.find((f) => f.path === 'docs/PRD.md');
-    expect(prd?.content).toContain('DOKUMEN SPESIFIKASI PERSYARATAN PRODUK');
-    expect(prd?.content).toContain('Matriks Akses (RBAC)');
+    const prd = files.find((f) => f.path === 'docs/01_PRD.md');
+    expect(prd?.content).toContain('Dokumen Spesifikasi Kebutuhan Produk (PRD)');
+    expect(prd?.content).toContain('Matriks Hak Akses (RBAC)');
   });
 
   it('verifies 5 agent team list', () => {
