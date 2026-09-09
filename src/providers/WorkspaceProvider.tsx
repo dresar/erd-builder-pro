@@ -305,7 +305,7 @@ export function WorkspaceProvider({
   } = useNotes(isGuest);
 
   const {
-    projects, activeProjectId, setActiveProjectId, fetchProjects,
+    projects, setProjects, activeProjectId, setActiveProjectId, fetchProjects,
     createProject, updateProject, deleteProject,
     restoreProject, deleteProjectPermanent,
     isLoading: isProjectsLoading,

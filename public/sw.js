@@ -1,4 +1,4 @@
-const CACHE_NAME = 'prd-pro-cache-v2.1';
+const CACHE_NAME = 'prd-pro-cache-v2.2';
 const API_CACHE_NAME = 'prd-pro-api-v1.0';
 
 const SHELL_ASSETS = [
@@ -73,7 +73,10 @@ self.addEventListener('fetch', (event) => {
         try {
           const networkResponse = await fetch(event.request.clone());
           if (networkResponse.ok) {
-            cache.put(event.request, networkResponse.clone());
+            try {
+              const clone = networkResponse.clone();
+              cache.put(event.request, clone).catch(() => {});
+            } catch {}
           }
           return networkResponse;
         } catch {
@@ -95,9 +98,11 @@ self.addEventListener('fetch', (event) => {
         if (cached) return cached;
         return fetch(event.request)
           .then((res) => {
-            if (res && res.status === 200 && res.type === 'basic') {
-              const clone = res.clone();
-              caches.open(CACHE_NAME).then((c) => c.put(event.request, clone));
+            if (res && res.status === 200 && (res.type === 'basic' || res.type === 'cors')) {
+              try {
+                const clone = res.clone();
+                caches.open(CACHE_NAME).then((c) => c.put(event.request, clone)).catch(() => {});
+              } catch {}
             }
             return res;
           })
@@ -111,8 +116,11 @@ self.addEventListener('fetch', (event) => {
     caches.match(event.request).then((cached) => {
       const fetchPromise = fetch(event.request)
         .then((res) => {
-          if (res && res.status === 200 && res.type === 'basic') {
-            caches.open(CACHE_NAME).then((c) => c.put(event.request, res.clone()));
+          if (res && res.status === 200 && (res.type === 'basic' || res.type === 'cors')) {
+            try {
+              const clone = res.clone();
+              caches.open(CACHE_NAME).then((c) => c.put(event.request, clone)).catch(() => {});
+            } catch {}
           }
           return res;
         })
