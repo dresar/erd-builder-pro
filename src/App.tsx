@@ -47,11 +47,7 @@ function AppContent() {
   const location = useLocation();
   const [aboutOpen, setAboutOpen] = useState(false);
 
-  useEffect(() => {
-    if (typeof (window as any).__removeSplash === 'function') {
-      (window as any).__removeSplash();
-    }
-  }, []);
+  // Splash removal handled after auth state resolves below
   // Listen for native macOS menu events (emitted from Rust via Tauri)
   useEffect(() => {
     let unlistenAbout: () => void;
@@ -97,6 +93,14 @@ function AppContent() {
 
   const { isPublicView, setIsPublicView, publicData, isPublicLoading, forbiddenDoc, fetchPublicDocument } = usePublicDocument(() => {});
   const shareInfo = getSharePathInfo();
+
+  useEffect(() => {
+    if (isAuthenticated !== null && !isPublicLoading) {
+      if (typeof (window as any).__removeSplash === 'function') {
+        (window as any).__removeSplash();
+      }
+    }
+  }, [isAuthenticated, isPublicLoading]);
 
   // Auth loading
   if (isAuthenticated === null && !shareInfo) {

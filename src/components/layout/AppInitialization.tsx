@@ -1,6 +1,5 @@
 import React, { useEffect } from 'react';
 import { motion } from "framer-motion";
-import { Database, Share2 } from 'lucide-react';
 
 interface AppInitializationProps {
   type: 'init' | 'public';
@@ -46,38 +45,45 @@ export function AppInitialization({ type, view = 'Document' }: AppInitialization
     mediaQuery.addEventListener('change', handler);
     return () => mediaQuery.removeEventListener('change', handler);
   }, []);
-  if (type === 'init') {
-    return (
-      <div className="h-screen w-screen bg-background flex flex-col items-center justify-center gap-6 overflow-hidden">
-        <motion.div initial={{ scale: 0.8, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="relative">
-          <div className="w-20 h-20 rounded-2xl bg-primary flex items-center justify-center shadow-2xl shadow-primary/40">
-            <Database className="w-10 h-10 text-primary-foreground animate-bounce" />
-          </div>
-          <div className="absolute -inset-4 border-2 border-primary/20 rounded-3xl animate-[spin_3s_linear_infinite]" />
-        </motion.div>
-        <div className="text-center z-10">
-          <h2 className="text-xl font-bold text-foreground mb-2">Preparing your workspace...</h2>
-          <div className="flex items-center justify-center gap-1.5">
-            {[0, 1, 2].map((i) => (
-              <motion.div key={i} animate={{ opacity: [0.3, 1, 0.3] }} transition={{ duration: 1.5, repeat: Infinity, delay: i * 0.2 }} className="w-1.5 h-1.5 rounded-full bg-primary" />
-            ))}
-          </div>
-        </div>
-      </div>
-    );
-  }
 
   return (
-    <div className="h-screen w-screen bg-background flex flex-col items-center justify-center gap-6 overflow-hidden">
-      <motion.div initial={{ scale: 0.8, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="relative">
-        <div className="w-20 h-20 rounded-2xl bg-yellow-500/10 flex items-center justify-center shadow-2xl shadow-yellow-500/10">
-          <Share2 className="w-10 h-10 text-yellow-500 animate-pulse" />
-        </div>
-        <div className="absolute -inset-4 border-2 border-yellow-500/20 rounded-3xl animate-[spin_3s_linear_infinite]" />
+    <div className="h-screen w-screen bg-background flex flex-col items-center justify-center gap-5 overflow-hidden select-none">
+      <motion.div
+        initial={{ scale: 0.88, opacity: 0 }}
+        animate={{ scale: [1, 1.05, 1], opacity: 1 }}
+        transition={{
+          scale: { duration: 1.6, repeat: Infinity, ease: "easeInOut" },
+          opacity: { duration: 0.3 }
+        }}
+        className="relative flex items-center justify-center"
+      >
+        <div className="absolute -inset-4 bg-primary/10 rounded-full blur-xl pointer-events-none" />
+        <img
+          src="/logo.png"
+          alt="PRD PRO"
+          className="relative w-16 h-16 sm:w-20 sm:h-20 object-contain drop-shadow-[0_0_20px_rgba(56,189,248,0.35)]"
+        />
       </motion.div>
-      <div className="text-center z-10">
-        <h2 className="text-xl font-bold text-foreground mb-1">Loading shared {view}...</h2>
-        <p className="text-xs text-muted-foreground">Preparing read-only view</p>
+
+      <div className="flex flex-col items-center gap-3 z-10">
+        <span className="font-bold text-lg tracking-wider bg-gradient-to-r from-blue-500 via-cyan-400 to-emerald-400 bg-clip-text text-transparent">
+          PRD PRO
+        </span>
+
+        {type === 'public' && (
+          <p className="text-xs text-muted-foreground -mt-1">
+            Loading shared {view}…
+          </p>
+        )}
+
+        <div className="w-28 h-1 bg-muted/60 rounded-full overflow-hidden">
+          <motion.div
+            className="h-full bg-gradient-to-r from-blue-500 via-cyan-400 to-emerald-400 rounded-full"
+            initial={{ width: "0%" }}
+            animate={{ width: ["0%", "70%", "100%"] }}
+            transition={{ duration: 1.4, repeat: Infinity, ease: "easeInOut" }}
+          />
+        </div>
       </div>
     </div>
   );
