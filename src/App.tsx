@@ -47,6 +47,11 @@ function AppContent() {
   const location = useLocation();
   const [aboutOpen, setAboutOpen] = useState(false);
 
+  useEffect(() => {
+    if (typeof (window as any).__removeSplash === 'function') {
+      (window as any).__removeSplash();
+    }
+  }, []);
   // Listen for native macOS menu events (emitted from Rust via Tauri)
   useEffect(() => {
     let unlistenAbout: () => void;

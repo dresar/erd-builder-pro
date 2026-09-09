@@ -281,15 +281,13 @@ export const AppSidebar = React.memo(({
     <>
     <Sidebar collapsible="icon" {...props}>
       <SidebarHeader>
-        <TeamSwitcher 
-          teams={[
-            {
-              name: "PRD PRO",
-              logo: Database,
-              plan: "Workspace",
-            }
-          ]} 
-        />
+        <div className="flex items-center gap-2.5 px-3 py-2.5">
+          <img src="/logo.png" alt="PRD PRO" className="w-8 h-8 rounded-xl object-contain shrink-0" />
+          <div className="flex flex-col min-w-0 group-data-[collapsible=icon]:hidden">
+            <span className="text-sm font-bold tracking-tight bg-gradient-to-r from-blue-400 to-cyan-400 bg-clip-text text-transparent leading-none">PRD PRO</span>
+            <span className="text-[10px] text-muted-foreground leading-none mt-0.5">Workspace</span>
+          </div>
+        </div>
         <SidebarGroup className="group-data-[collapsible=icon]:p-0">
           <SidebarGroupLabel className="flex items-center justify-between">
             Fitur

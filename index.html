@@ -5,9 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>PRD PRO</title>
     <link rel="manifest" href="/manifest.webmanifest" />
-    <meta name="theme-color" content="#020617" />
-    <link rel="icon" type="image/png" sizes="128x128" href="/favicon.png" />
-    <link rel="apple-touch-icon" sizes="180x180" href="/icons/icon-180x180-any.png" />
+    <meta name="theme-color" content="#0d1526" />
+    <link rel="icon" type="image/png" sizes="128x128" href="/logo.png" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/logo.png" />
     <meta name="mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <script>
@@ -23,9 +23,81 @@
         }
       })();
     </script>
+    <style>
+      #prd-splash {
+        position: fixed;
+        inset: 0;
+        z-index: 99999;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 20px;
+        background: #0d1526;
+        transition: opacity 0.4s ease;
+      }
+      #prd-splash img {
+        width: 80px;
+        height: 80px;
+        animation: prd-pulse 1.4s ease-in-out infinite;
+        filter: drop-shadow(0 0 18px rgba(56,189,248,0.5));
+      }
+      #prd-splash-name {
+        font-family: system-ui, -apple-system, sans-serif;
+        font-size: 18px;
+        font-weight: 700;
+        letter-spacing: 0.08em;
+        background: linear-gradient(135deg, #60a5fa 0%, #22d3ee 60%, #10b981 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+      }
+      #prd-splash-bar {
+        width: 120px;
+        height: 2px;
+        background: rgba(255,255,255,0.08);
+        border-radius: 999px;
+        overflow: hidden;
+      }
+      #prd-splash-bar-inner {
+        height: 100%;
+        width: 0%;
+        border-radius: 999px;
+        background: linear-gradient(90deg, #3b82f6, #22d3ee);
+        animation: prd-bar 1.2s cubic-bezier(0.4,0,0.2,1) forwards;
+      }
+      @keyframes prd-pulse {
+        0%, 100% { transform: scale(1); }
+        50% { transform: scale(1.06); }
+      }
+      @keyframes prd-bar {
+        0% { width: 0%; }
+        60% { width: 80%; }
+        100% { width: 100%; }
+      }
+      #prd-splash.hidden {
+        opacity: 0;
+        pointer-events: none;
+      }
+    </style>
   </head>
   <body>
+    <div id="prd-splash">
+      <img src="/logo.png" alt="PRD PRO" />
+      <div id="prd-splash-name">PRD PRO</div>
+      <div id="prd-splash-bar"><div id="prd-splash-bar-inner"></div></div>
+    </div>
     <div id="root"></div>
+    <script>
+      window.__removeSplash = function() {
+        var el = document.getElementById('prd-splash');
+        if (el) {
+          el.classList.add('hidden');
+          setTimeout(function() { el.remove(); }, 420);
+        }
+      };
+      setTimeout(function() { window.__removeSplash && window.__removeSplash(); }, 3500);
+    </script>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>

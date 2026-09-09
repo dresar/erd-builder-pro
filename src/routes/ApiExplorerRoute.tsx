@@ -9,7 +9,6 @@ import {
   Layers,
   ChevronRight,
   Code2,
-  Users,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
@@ -17,7 +16,7 @@ import { Badge } from '@/components/ui/badge';
 import { useWorkspace } from '@/providers/WorkspaceProvider';
 import { apiFetch } from '@/lib/api';
 import { parseDbmlToTables, buildEndpointsFromTables, buildWorkflowStepsFromFlowchart } from '@/lib/api-engine/schemaParser';
-import { generateOpenApiSpec, generatePostmanCollection, downloadJsonFile } from '@/lib/api-engine/exportUtils';
+import { generateOpenApiSpec, downloadJsonFile } from '@/lib/api-engine/exportUtils';
 import { ApiSidebar } from '@/components/api-explorer/ApiSidebar';
 import { EndpointTester } from '@/components/api-explorer/EndpointTester';
 import { WorkflowSimulator } from '@/components/api-explorer/WorkflowSimulator';
@@ -178,16 +177,9 @@ export function ApiExplorerRoute() {
     }
   };
 
-  const handleExportPostman = () => {
-    try {
-      const collection = generatePostmanCollection(projectName, endpoints);
-      const slug = projectName.toLowerCase().replace(/[^a-z0-9]+/g, '_') || 'api';
-      downloadJsonFile(collection, `${slug}_postman_collection.json`);
-      toast.success('Postman Collection diunduh');
-    } catch {
-      toast.error('Gagal mengunduh Postman');
-    }
-  };
+  const shortName = projectName.length > 22
+    ? projectName.slice(0, 20) + '…'
+    : projectName;
 
   if (!projectSlug) {
     const rawList = !searchProjectQuery.trim()
@@ -299,11 +291,11 @@ export function ApiExplorerRoute() {
             <span>Semua</span>
           </Button>
 
-          <div className="min-w-0">
-            <h1 className="text-sm font-bold text-foreground truncate flex items-center gap-2">
-              <span>{projectName}</span>
-              <Badge variant="outline" className="text-[10px] px-1.5 py-0 h-4 border-indigo-500/30 text-indigo-400">
-                {endpoints.length} Endpoints
+          <div className="min-w-0 max-w-[140px] sm:max-w-xs">
+            <h1 className="text-xs sm:text-sm font-bold text-foreground truncate flex items-center gap-1.5">
+              <span className="truncate">{shortName}</span>
+              <Badge variant="outline" className="text-[10px] px-1.5 py-0 h-4 border-primary/30 text-primary shrink-0">
+                {endpoints.length}
               </Badge>
             </h1>
           </div>
@@ -314,29 +306,19 @@ export function ApiExplorerRoute() {
             onClick={handleExportOpenApi}
             size="sm"
             variant="outline"
-            className="h-8 gap-1.5 px-3 text-xs cursor-pointer border-border/70"
+            className="h-7.5 gap-1.5 px-2.5 text-xs cursor-pointer border-border/70"
           >
             <Download className="size-3.5" />
             <span>OpenAPI</span>
           </Button>
 
           <Button
-            onClick={handleExportPostman}
+            onClick={() => setActiveMode('workflow')}
             size="sm"
-            variant="outline"
-            className="h-8 gap-1.5 px-3 text-xs cursor-pointer border-border/70"
+            className="h-7.5 gap-1.5 px-3 text-xs bg-gradient-to-r from-blue-600 to-cyan-500 hover:opacity-90 text-white cursor-pointer font-medium shadow-sm"
           >
-            <Download className="size-3.5" />
-            <span>Postman</span>
-          </Button>
-
-          <Button
-            onClick={() => navigate(`/agent-generator/${pSlug}`)}
-            size="sm"
-            className="h-8 gap-1.5 px-3 text-xs bg-indigo-600 hover:bg-indigo-700 text-white cursor-pointer"
-          >
-            <Users className="size-3.5" />
-            <span>Agen</span>
+            <Layers className="size-3.5" />
+            <span>Alur Kerja</span>
           </Button>
         </div>
       </div>
