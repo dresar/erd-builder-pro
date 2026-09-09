@@ -165,6 +165,7 @@ function AppContent() {
           {/* AI Pages */}
           <Route path="ai-generator" element={lazyRoute(<ExternalAIRoute />)} />
           <Route path="agent-generator" element={lazyRoute(<AgentGeneratorRoute />)} />
+          <Route path="agent-generator/:projectSlug" element={lazyRoute(<AgentGeneratorRoute />)} />
           <Route path="ai-chat" element={lazyRoute(<AIChatRoute />)} />
 
           {/* Default: Dashboard */}

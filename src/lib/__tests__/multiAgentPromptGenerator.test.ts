@@ -14,9 +14,9 @@ describe('multiAgentPromptGenerator', () => {
     });
 
     // Check English prompt instructions for Claude
-    expect(prompt).toContain('=== CLAUDE ENTERPRISE MULTI-AGENT PROJECT GENERATOR PROMPT ===');
-    expect(prompt).toContain('You are a Principal Software Architect and Multi-Agent Systems Engineer');
-    expect(prompt).toContain('All AI Agent directives, orchestration protocols, and engineering guidelines must be written in clear, rigorous, professional ENGLISH.');
+    expect(prompt).toContain('# MEGA ORCHESTRATOR PROMPT: COMPLETE MULTI-AGENT PROJECT GENERATOR');
+    expect(prompt).toContain('You are a Principal Software Architect, Lead Multi-Agent Systems Engineer');
+    expect(prompt).toContain('ALL AI Agent system instructions, teamwork protocols, and engineering governance must be written in authoritative, precise ENGLISH.');
     expect(prompt).toContain('Bahasa Indonesia baku kelas enterprise');
     expect(prompt).toContain('01_TECH_LEAD.md');
     expect(prompt).toContain('02_DATABASE_BACKEND.md');
