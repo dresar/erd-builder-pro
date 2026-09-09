@@ -23,9 +23,11 @@ import {
   AlertTriangle,
   Check,
   X,
+  Globe,
 } from 'lucide-react';
 import { AIAction, ViewType } from '@/components/ai/AIActions';
 import { Button } from '@/components/ui/button';
+import type { AttachedWebDoc } from './WebUrlReaderDialog';
 
 interface MentionFile {
   name: string;
@@ -123,6 +125,9 @@ export interface ChatInputProps {
   onAbort: () => void;
   hasProject?: boolean;
   mentionFiles?: MentionFile[];
+  attachedDocs?: AttachedWebDoc[];
+  onOpenUrlReader?: () => void;
+  onRemoveDoc?: (id: string) => void;
 }
 
 export const ChatInput = memo(function ChatInput({
@@ -140,6 +145,9 @@ export const ChatInput = memo(function ChatInput({
   onAbort,
   hasProject = false,
   mentionFiles = [],
+  attachedDocs = [],
+  onOpenUrlReader,
+  onRemoveDoc,
 }: ChatInputProps) {
   // ── Hooks must be before any early return (Rules of Hooks) ──
   const [mentionOpen, setMentionOpen] = useState(false);
@@ -311,6 +319,35 @@ export const ChatInput = memo(function ChatInput({
   return (
     <div className="shrink-0 border-t bg-background p-3">
       <div className="relative rounded-2xl border border-input bg-card p-2 shadow-sm transition-shadow focus-within:border-ring focus-within:ring-1 focus-within:ring-ring">
+        {attachedDocs.length > 0 && (
+          <div className="flex flex-wrap items-center gap-1.5 px-2 pt-1 pb-2 border-b border-border/40 mb-1">
+            {attachedDocs.map((doc) => (
+              <span
+                key={doc.id}
+                className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md text-[11px] bg-indigo-500/10 text-indigo-400 border border-indigo-500/30"
+              >
+                <Globe className="size-3 shrink-0" />
+                <span className="max-w-[160px] truncate font-medium" title={doc.title}>
+                  {doc.title}
+                </span>
+                <span className="text-[10px] text-muted-foreground">
+                  ({Math.round(doc.wordCount / 100) / 10}k kata)
+                </span>
+                {onRemoveDoc && (
+                  <button
+                    type="button"
+                    onClick={() => onRemoveDoc(doc.id)}
+                    className="hover:text-destructive cursor-pointer p-0.5"
+                    title="Hapus lampiran"
+                  >
+                    <X className="size-3" />
+                  </button>
+                )}
+              </span>
+            ))}
+          </div>
+        )}
+
         <textarea
           ref={inputRef}
           defaultValue=""
@@ -366,6 +403,19 @@ export const ChatInput = memo(function ChatInput({
               title="Sebut file (@)"
             >
               <AtSign className="size-3.5" />
+            </Button>
+          )}
+
+          {onOpenUrlReader && (
+            <Button
+              type="button"
+              variant="outline"
+              size="icon-xs"
+              className="h-7.5 w-7.5 rounded-md border-border/70 text-muted-foreground hover:text-foreground"
+              onClick={onOpenUrlReader}
+              title="Baca Dokumen Web (URL ke Markdown)"
+            >
+              <Globe className="size-3.5 text-indigo-400" />
             </Button>
           )}
 

@@ -11,6 +11,7 @@ import { SelectionBar } from './SelectionBar';
 import { ChatInput } from './ChatInput';
 import { ChatMessages } from './ChatMessages';
 import { PlanInterviewCard } from './PlanInterviewCard';
+import { WebUrlReaderDialog, type AttachedWebDoc } from './WebUrlReaderDialog';
 import { apiFetch } from '@/lib/api';
 import { extractPlanQuestion } from './plan-question-utils';
 import { cn } from '@/lib/utils';
@@ -124,6 +125,8 @@ export const AIChatPanel = ({
   const [sessionToDelete, setSessionToDelete] = useState<AIChatSession | null>(null);
   const [confirmOverwritePrompt, setConfirmOverwritePrompt] = useState<string | null>(null);
   const [isPlanInterviewVisible, setIsPlanInterviewVisible] = useState(false);
+  const [isUrlReaderOpen, setIsUrlReaderOpen] = useState(false);
+  const [attachedWebDocs, setAttachedWebDocs] = useState<AttachedWebDoc[]>([]);
 
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const panelRef = useRef<HTMLDivElement>(null);
@@ -351,20 +354,32 @@ export const AIChatPanel = ({
 
     const { context: mentionContext } = await resolveMentions(text);
 
+    let combinedContext = mentionContext || '';
+    if (attachedWebDocs.length > 0) {
+      const webDocsContext = attachedWebDocs
+        .map(
+          (doc) =>
+            `[REFERENSI DOKUMEN WEB DARI: ${doc.url}]\n# ${doc.title}\n\n${doc.markdown}`
+        )
+        .join('\n\n---\n\n');
+      combinedContext = combinedContext ? `${combinedContext}\n\n${webDocsContext}` : webDocsContext;
+    }
+
     sendMessage(text, selectionText, {
-      contextPrefix: mentionContext || undefined,
+      contextPrefix: combinedContext || undefined,
       actionPrompt: activeAction?.id === grillMeAction.id
         ? grillMeAction.buildPrompt({ planPhase })
         : activeActionPrompt || undefined,
       planMode: activeAction?.id === grillMeAction.id || undefined,
     });
     if (inputRef.current) inputRef.current.value = '';
+    setAttachedWebDocs([]);
     setLastActionId(activeActionId);
     if (!activeAction?.persistent) {
       setActiveActionId(null);
       setActiveActionPrompt(null);
     }
-  }, [isStreaming, sendMessage, selectionText, activeActionPrompt, activeActionId, activeAction, planPhase, resolveMentions]);
+  }, [isStreaming, sendMessage, selectionText, activeActionPrompt, activeActionId, activeAction, planPhase, resolveMentions, attachedWebDocs]);
 
   const handlePlanAnswer = useCallback(async (answer: string) => {
     if (isStreaming) return;
@@ -647,12 +662,20 @@ export const AIChatPanel = ({
                 onAbort={abortStream}
                 hasProject={!!projectId}
                 mentionFiles={mentionFiles}
+                attachedDocs={attachedWebDocs}
+                onOpenUrlReader={() => setIsUrlReaderOpen(true)}
+                onRemoveDoc={(id) => setAttachedWebDocs((prev) => prev.filter((d) => d.id !== id))}
               />
             </div>
           )}
         </div>
       </div>
 
+      <WebUrlReaderDialog
+        open={isUrlReaderOpen}
+        onOpenChange={setIsUrlReaderOpen}
+        onAttachDoc={(doc) => setAttachedWebDocs((prev) => [...prev, doc])}
+      />
 
       <ConfirmModal
         isOpen={!!confirmOverwritePrompt}

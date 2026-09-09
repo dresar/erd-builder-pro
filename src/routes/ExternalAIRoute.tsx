@@ -7,6 +7,7 @@ import { useWorkspace } from '@/providers/WorkspaceProvider';
 import { generateExternalAIPrompt, DOMAIN_PRESETS, PromptConfig, PromptStrategy } from '@/components/ai/externalPromptTemplates';
 import { ExternalAIPromptTab } from '@/components/ai/ExternalAIPromptTab';
 import { ExternalAIImportTab } from '@/components/ai/ExternalAIImportTab';
+import { CodeEditorPromptTab } from '@/components/ai/CodeEditorPromptTab';
 import { applyExternalBundle } from '@/components/ai/applyExternalBundle';
 import type { ParsedExternalBundle } from '@/components/ai/externalBundleTypes';
 
@@ -16,6 +17,7 @@ export function ExternalAIRoute() {
     projects, 
     notes,
     diagrams,
+    flowcharts,
     handleSidebarProjectCreate, 
     handleSidebarDiagramCreate, 
     handleSidebarNoteCreate, 
@@ -26,7 +28,7 @@ export function ExternalAIRoute() {
     selectedWorkspaceUid
   } = useWorkspace();
 
-  const [activeTab, setActiveTab] = useState<'prompt' | 'import'>('prompt');
+  const [activeTab, setActiveTab] = useState<'prompt' | 'editor' | 'import'>('editor');
   const [copied, setCopied] = useState(false);
   const [isApplying, setIsApplying] = useState(false);
 
@@ -230,6 +232,17 @@ export function ExternalAIRoute() {
             <div className="flex gap-1 bg-muted border border-border/40 rounded-lg p-0.5">
               <button
                 type="button"
+                onClick={() => setActiveTab('editor')}
+                className={`px-3 py-1 rounded-md text-xs font-semibold transition-all cursor-pointer ${
+                  activeTab === 'editor' 
+                    ? 'bg-background text-foreground shadow-sm' 
+                    : 'text-muted-foreground hover:text-foreground'
+                }`}
+              >
+                Editor AI (Claude/Cursor)
+              </button>
+              <button
+                type="button"
                 onClick={() => setActiveTab('prompt')}
                 className={`px-3 py-1 rounded-md text-xs font-semibold transition-all cursor-pointer ${
                   activeTab === 'prompt' 
@@ -237,7 +250,7 @@ export function ExternalAIRoute() {
                     : 'text-muted-foreground hover:text-foreground'
                 }`}
               >
-                Buat Prompt
+                Prompt Arsitektur
               </button>
               <button
                 type="button"
@@ -253,7 +266,7 @@ export function ExternalAIRoute() {
               </button>
             </div>
 
-            {activeTab === 'prompt' ? (
+            {activeTab === 'prompt' && (
               <Button
                 onClick={handleCopyPrompt}
                 size="sm"
@@ -262,7 +275,9 @@ export function ExternalAIRoute() {
                 {copied ? <Check className="size-3.5" /> : <Copy className="size-3.5" />}
                 <span>{copied ? 'Disalin' : 'Salin'}</span>
               </Button>
-            ) : (
+            )}
+
+            {activeTab === 'import' && (
               <Button
                 onClick={handleApplyBundle}
                 disabled={!parsedData || isApplying}
@@ -278,7 +293,15 @@ export function ExternalAIRoute() {
       </div>
 
       <div className="flex-1 overflow-y-auto custom-scrollbar rounded-xl border bg-background p-4 sm:p-5">
-        {activeTab === 'prompt' ? (
+        {activeTab === 'editor' ? (
+          <CodeEditorPromptTab
+            projects={projects}
+            diagrams={diagrams}
+            flowcharts={flowcharts}
+            notes={notes}
+            selectedWorkspaceUid={selectedWorkspaceUid}
+          />
+        ) : activeTab === 'prompt' ? (
           <ExternalAIPromptTab
             projectName={projectName}
             setProjectName={setProjectName}
