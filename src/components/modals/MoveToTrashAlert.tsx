@@ -85,7 +85,7 @@ export const MoveToTrashAlert: React.FC<MoveToTrashAlertProps> = ({
       if (!currentId) return;
 
       if (view === 'erd') await deleteDiagram?.(currentId);
-      else if (view === 'notes') await deleteNote?.(String(currentId));
+      else if (view === 'notes' || view === 'prd') await deleteNote?.(String(currentId));
       else if (view === 'drawings') await deleteDrawing?.(currentId);
       else if (view === 'flowchart') await deleteFlowchart?.(currentId);
       else if (view === 'project') await deleteProject?.(currentId);

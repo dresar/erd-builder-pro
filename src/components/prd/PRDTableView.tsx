@@ -168,9 +168,9 @@ export const PRDTableView = React.memo(function PRDTableView({
             </TableRow>
           </TableHeader>
           <TableBody>
-            {isLoading && filteredPrds.length === 0 ? (
+            {isLoading && filteredPrds.length === 0 && projects.length > 0 ? (
               <TableRow>
-                <TableCell colSpan={cols.length} className="h-32 text-center text-muted-foreground">
+                <TableCell colSpan={cols.length} className="h-40 text-center text-muted-foreground">
                   <span className="inline-flex items-center gap-2 text-xs">
                     <span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-primary/30 border-t-primary" />
                     Memuat...
@@ -179,8 +179,30 @@ export const PRDTableView = React.memo(function PRDTableView({
               </TableRow>
             ) : filteredPrds.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={cols.length} className="h-32 text-center text-muted-foreground text-xs">
-                  {totalPrds === 0 ? 'Belum ada dokumen PRD.' : 'Tidak ada dokumen PRD pada pencarian ini.'}
+                <TableCell colSpan={cols.length} className="h-48 text-center">
+                  <div className="flex flex-col items-center justify-center gap-2 text-muted-foreground py-4">
+                    <div className="size-10 rounded-xl bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center text-indigo-400">
+                      <FileText className="size-5" />
+                    </div>
+                    <p className="text-xs font-semibold text-foreground mt-1">
+                      {searchQuery.trim() ? 'Dokumen Tidak Ditemukan' : 'Belum Ada Dokumen PRD'}
+                    </p>
+                    <p className="text-[11px] text-muted-foreground max-w-sm leading-relaxed">
+                      {searchQuery.trim()
+                        ? 'Tidak ada dokumen PRD yang cocok dengan kata kunci pencarian.'
+                        : 'Mulai buat dokumen Product Requirement Document untuk mendefinisikan fitur dan alur sistem.'}
+                    </p>
+                    {!searchQuery.trim() && (
+                      <Button
+                        size="sm"
+                        onClick={onCreatePrd}
+                        className="mt-1.5 h-7.5 gap-1.5 px-3 text-xs bg-indigo-600 hover:bg-indigo-700 text-white cursor-pointer font-medium"
+                      >
+                        <Plus className="size-3.5" />
+                        <span>Buat PRD</span>
+                      </Button>
+                    )}
+                  </div>
                 </TableCell>
               </TableRow>
             ) : (

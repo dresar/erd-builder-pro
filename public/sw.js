@@ -1,4 +1,4 @@
-const CACHE_NAME = 'prd-pro-cache-v2.3';
+const CACHE_NAME = 'prd-pro-cache-v2.4';
 const API_CACHE_NAME = 'prd-pro-api-v1.0';
 
 const SHELL_ASSETS = [
@@ -43,30 +43,54 @@ self.addEventListener('activate', (event) => {
   self.clients.claim();
 });
 
-function isCacheableApiRequest(url) {
-  const u = new URL(url);
-  return CACHEABLE_API_PATHS.some((p) => u.pathname.startsWith(p));
+function isCacheableApiRequest(urlObj) {
+  return CACHEABLE_API_PATHS.some((p) => urlObj.pathname.startsWith(p));
 }
 
 self.addEventListener('fetch', (event) => {
   if (event.request.method !== 'GET') return;
 
   const url = event.request.url;
+  let urlObj;
+  try {
+    urlObj = new URL(url);
+  } catch {
+    return;
+  }
 
-  if (!url.startsWith(self.location.origin) && !url.includes('/api/')) return;
+  const isSameOrigin = urlObj.origin === self.location.origin;
+  const isApiCall = urlObj.pathname.startsWith('/api/');
+
+  if (!isSameOrigin && !isApiCall) return;
 
   if (event.request.mode === 'navigate') {
     event.respondWith(
-      fetch(event.request).catch(async () => {
-        const cached = (await caches.match('/index.html')) || (await caches.match('/'));
-        return cached || new Response('Offline', { status: 503, headers: { 'Content-Type': 'text/plain' } });
-      })
+      fetch(event.request)
+        .then((response) => {
+          if (response && response.status === 200) {
+            const clone = response.clone();
+            caches.open(CACHE_NAME).then((c) => c.put('/index.html', clone)).catch(() => {});
+          }
+          return response;
+        })
+        .catch(async () => {
+          const cache = await caches.open(CACHE_NAME);
+          const cached = (await cache.match('/index.html')) || (await cache.match('/')) || (await caches.match('/index.html'));
+          if (cached) return cached;
+          try {
+            return await fetch('/index.html');
+          } catch {}
+          return new Response(
+            '<!DOCTYPE html><html><head><meta charset="utf-8"><title>PRD PRO</title></head><body style="background:#0a0d14;color:#fff;font-family:sans-serif;display:flex;align-items:center;justify-content:center;height:100vh;margin:0;"><div style="text-align:center;"><h2>Anda Sedang Offline</h2><p style="color:#888;">Silakan periksa koneksi internet Anda.</p><button onclick="location.reload()" style="padding:8px 16px;background:#4f46e5;color:#fff;border:none;border-radius:6px;cursor:pointer;">Muat Ulang</button></div></body></html>',
+            { status: 200, headers: { 'Content-Type': 'text/html; charset=utf-8' } }
+          );
+        })
     );
     return;
   }
 
-  if (url.includes('/api/')) {
-    if (!isCacheableApiRequest(url)) return;
+  if (isApiCall) {
+    if (!isCacheableApiRequest(urlObj)) return;
 
     event.respondWith(
       caches.open(API_CACHE_NAME).then(async (cache) => {
@@ -83,7 +107,7 @@ self.addEventListener('fetch', (event) => {
           const cached = await cache.match(event.request);
           if (cached) return cached;
           return new Response(JSON.stringify({ error: 'offline', cached: false }), {
-            status: 503,
+            status: 200,
             headers: { 'Content-Type': 'application/json' },
           });
         }
@@ -92,7 +116,7 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  if (url.includes('/assets/')) {
+  if (urlObj.pathname.includes('/assets/')) {
     event.respondWith(
       caches.match(event.request).then((cached) => {
         if (cached) return cached;
@@ -106,7 +130,7 @@ self.addEventListener('fetch', (event) => {
             }
             return res;
           })
-          .catch(() => cached || new Response('Asset unavailable', { status: 503 }));
+          .catch(() => cached || new Response('Asset unavailable', { status: 404 }));
       })
     );
     return;
@@ -130,7 +154,7 @@ self.addEventListener('fetch', (event) => {
             const indexHtml = (await caches.match('/index.html')) || (await caches.match('/'));
             if (indexHtml) return indexHtml;
           }
-          return new Response('Unavailable', { status: 503 });
+          return new Response('Unavailable', { status: 404 });
         });
       return cached || fetchPromise;
     })

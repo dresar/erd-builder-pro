@@ -337,7 +337,7 @@ export function WorkspaceProvider({
       (window as any).currentSyncIsSilent = true;
       await selectDiagram(String(id), setActiveDiagramId);
       setTimeout(() => { isIncomingSyncRef.current = false; }, 1000);
-    } else if (view === 'notes' && dataType === DraftType.NOTES && String(id) === String(activeNoteUid)) {
+    } else if ((view === 'notes' || view === 'prd') && dataType === DraftType.NOTES && String(id) === String(activeNoteUid)) {
       await selectNote(String(id), { silent: true });
     } else if (view === 'drawings' && dataType === DraftType.DRAWINGS && String(id) === String(activeDrawingId)) {
       await selectDrawing(String(id), { silent: true });
@@ -489,7 +489,7 @@ export function WorkspaceProvider({
               : diagram,
           ));
         }
-      } else if (view === 'notes' && activeNoteUid) {
+      } else if ((view === 'notes' || view === 'prd') && activeNoteUid) {
         await selectNote(activeNoteUid, { silent: true, contentVersionAtStart: getContentVersion() });
       } else if (view === 'drawings' && activeDrawingId) {
         await selectDrawing(activeDrawingId, { silent: true });
@@ -622,7 +622,7 @@ export function WorkspaceProvider({
   useEffect(() => {
     if (!isOnline && !isPublicView) {
       if (view === 'erd' && activeDiagramId) saveDiagram(nodes, edges, viewportRef.current);
-      else if (view === 'notes' && activeNoteUid) {
+      else if ((view === 'notes' || view === 'prd') && activeNoteUid) {
         const n = notes.find(n => String(n.uid) === String(activeNoteUid));
         if (n) saveNote(n);
       } else if (view === 'drawings' && activeDrawingId) {
@@ -1012,7 +1012,7 @@ export function WorkspaceProvider({
     if (!activeDocument || !duplicateName.trim()) return;
     setIsRefreshing(true);
     try {
-      if (view === 'notes') {
+      if (view === 'notes' || view === 'prd') {
         const newNote = await duplicateNote(activeDocument.uid, duplicateName);
         if (newNote) {
           await handleNoteSelect(newNote.uid);

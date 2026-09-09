@@ -48,7 +48,7 @@ export function useDocumentActions(params: UseDocumentActionsParams): UseDocumen
   // Open RenameDocumentDialog for a document from table view (no activeDocument)
   const handleOpenEditDocument = useCallback((uid: string) => {
     let doc: any = null;
-    if (view === 'notes') {
+    if (view === 'notes' || view === 'prd') {
       doc = notes?.find((n: any) => n.uid === uid || String(n.id) === uid);
     } else if (view === 'erd') {
       doc = diagrams?.find((d: any) => d.uid === uid || String(d.id) === uid);

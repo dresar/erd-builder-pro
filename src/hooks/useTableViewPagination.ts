@@ -82,10 +82,10 @@ export function useTableViewPagination(params: UseTableViewPaginationParams) {
     }
   }
 
-  // 🗂 Server-side pagination: fetch notes
+  // 🗂 Server-side pagination: fetch notes & prd
   useEffect(() => {
     const h = handles.notes;
-    const isTableMode = view === 'notes' && !hasActiveItem && isTableView;
+    const isTableMode = (view === 'notes' || view === 'prd') && !hasActiveItem && isTableView;
     if (!isTableMode || !isAuthenticated || isPublicView) return;
 
     const projId = resolveProjectId(selectedWorkspaceUid);
