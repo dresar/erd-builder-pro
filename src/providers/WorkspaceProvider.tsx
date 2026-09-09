@@ -1008,38 +1008,34 @@ export function WorkspaceProvider({
   });
 
   const handleWorkspaceFilter = useCallback((uid: string | null) => {
+    if (!uid) {
+      navigate('/');
+      return;
+    }
+
     const isTableRoute = location.pathname.startsWith('/table/');
     if (!isTableRoute) {
-      const targetFeature = sidebarView || 'erd';
-      const targetUrl = uid
-        ? `/table/${targetFeature}?workspace=${encodeURIComponent(uid)}`
-        : `/table/${targetFeature}`;
-      navigate(targetUrl);
+      navigate(`/?workspace=${encodeURIComponent(uid)}`);
       return;
     }
 
     setTableSearchParams((prev: URLSearchParams) => {
       const next = new URLSearchParams(prev);
-      if (uid) {
-        next.set('workspace', uid);
-      } else {
-        next.delete('workspace');
-      }
+      next.set('workspace', uid);
       next.delete('page');
       return next;
     }, { replace: true });
-  }, [location.pathname, sidebarView, navigate, setTableSearchParams]);
+  }, [location.pathname, navigate, setTableSearchParams]);
 
   useEffect(() => {
-    if (location.pathname === '/' && tableSearchParams.get('view') === 'table') {
-      const targetFeature = tableSearchParams.get('feature') || sidebarView || 'erd';
-      const ws = tableSearchParams.get('workspace');
-      const targetUrl = ws
-        ? `/table/${targetFeature}?workspace=${encodeURIComponent(ws)}`
-        : `/table/${targetFeature}`;
-      navigate(targetUrl, { replace: true });
+    if (location.pathname === '/' && tableSearchParams.has('view')) {
+      setTableSearchParams((prev: URLSearchParams) => {
+        const next = new URLSearchParams(prev);
+        next.delete('view');
+        return next;
+      }, { replace: true });
     }
-  }, [location.pathname, tableSearchParams, sidebarView, navigate]);
+  }, [location.pathname, tableSearchParams, setTableSearchParams]);
 
   const tablePage = parseInt(tableSearchParams.get('page') || '1', 10);
 

@@ -69,7 +69,7 @@ const typeConfig = [
     icon: Network,
     color: 'text-emerald-500',
     bg: 'bg-emerald-500/10',
-    route: '/table/flowcharts',
+    route: '/table/flowchart',
     createFn: 'handleSidebarFlowchartCreate',
     totalKey: 'flowchartsTotal' as const,
   },

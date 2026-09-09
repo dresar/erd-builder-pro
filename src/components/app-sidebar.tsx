@@ -314,7 +314,7 @@ export const AppSidebar = React.memo(({
               <SidebarMenuItem>
                 <SidebarMenuButton
                   tooltip="Semua Ruang Kerja"
-                  isActive={selectedWorkspaceUid === null || selectedWorkspaceUid === ''}
+                  isActive={location.pathname === '/' && (selectedWorkspaceUid === null || selectedWorkspaceUid === '')}
                   onClick={() => handleWorkspaceClick(null)}
                 >
                   <Folder className="h-4 w-4 shrink-0" />

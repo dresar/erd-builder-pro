@@ -172,6 +172,7 @@ export function TableRoute() {
         />
       );
     case 'flowchart':
+    case 'flowcharts':
       return (
         <FlowchartTableView
           flowcharts={validFlowcharts}
