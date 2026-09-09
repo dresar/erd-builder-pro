@@ -43,13 +43,21 @@ export const resolveOwnedProjectId = async (
     throw new Error("Invalid project_id");
   }
 
-  const parsed = Number(projectId);
-  if (!Number.isFinite(parsed)) {
+  const strId = String(projectId).trim();
+  const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(strId);
+  const numId = Number(strId);
+
+  let whereClause: any;
+  if (isUuid) {
+    whereClause = { uid: strId, userId, isDeleted: false };
+  } else if (Number.isFinite(numId)) {
+    whereClause = { id: numId, userId, isDeleted: false };
+  } else {
     throw new Error("Invalid project_id");
   }
 
   const project = await prisma.project.findFirst({
-    where: { id: parsed, userId, isDeleted: false },
+    where: whereClause,
     select: { id: true },
   });
 

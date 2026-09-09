@@ -23,6 +23,71 @@ function columnIsNullable(value: any): boolean {
   return value !== undefined ? Boolean(value) : true;
 }
 
+export async function insertEntitiesBulk(rows: any[], diagramId: number) {
+  if (rows.length === 0 || !prisma) return;
+  await prisma.entity.createMany({
+    data: rows.map(e => ({
+      id: e.id,
+      diagramId,
+      name: e.name,
+      x: e.x,
+      y: e.y,
+      color: e.color || "#6366f1",
+      comment: e.comment || null,
+    })),
+    skipDuplicates: true,
+  });
+}
+
+export async function insertColumnsBulk(rows: any[]) {
+  if (rows.length === 0 || !prisma) return;
+  const CHUNK = 500;
+  for (let i = 0; i < rows.length; i += CHUNK) {
+    const batch = rows.slice(i, i + CHUNK);
+    await prisma.column.createMany({
+      data: batch.map(col => ({
+        id: col.id,
+        entityId: col._entity_id,
+        name: col.name,
+        type: col.type,
+        isPk: col.is_pk || false,
+        isNullable: columnIsNullable(col.is_nullable),
+        isUnique: Boolean(col.is_unique),
+        defaultValue: normalizePersistedColumnDefault(col.default_value, columnIsNullable(col.is_nullable)),
+        enumValues: col.enum_values || null,
+        comment: col.comment || null,
+        maxLength: col.max_length ?? null,
+        numericPrecision: col.numeric_precision ?? null,
+        numericScale: col.numeric_scale ?? null,
+        sortOrder: col.sort_order || 0,
+      })),
+      skipDuplicates: true,
+    });
+  }
+}
+
+export async function insertRelationshipsBulk(rows: any[], diagramId: number) {
+  if (rows.length === 0 || !prisma) return;
+  await prisma.relationship.createMany({
+    data: rows.map(r => ({
+      id: r.id,
+      diagramId,
+      sourceEntityId: r.source_entity_id,
+      targetEntityId: r.target_entity_id,
+      sourceColumnId: r.source_column_id || null,
+      targetColumnId: r.target_column_id || null,
+      sourceHandle: r.source_handle || null,
+      targetHandle: r.target_handle || null,
+      type: r.type || "one-to-many",
+      label: r.label || null,
+      onDelete: r.on_delete || null,
+      onUpdate: r.on_update || null,
+      constraintName: r.constraint_name || null,
+    })),
+    skipDuplicates: true,
+  });
+}
+
 export async function upsertEntities(rows: any[], diagramId: number) {
   if (rows.length === 0 || !prisma) return;
   const CHUNK = 50;

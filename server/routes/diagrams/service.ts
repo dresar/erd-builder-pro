@@ -75,6 +75,9 @@ const TAB_SELECT = {
 
 export {
   dedupe,
+  insertEntitiesBulk,
+  insertColumnsBulk,
+  insertRelationshipsBulk,
   upsertEntities,
   upsertColumns,
   upsertRelationships,
