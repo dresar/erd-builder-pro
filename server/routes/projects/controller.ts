@@ -18,9 +18,9 @@ export async function list(req: ExpressRequest, res: ExpressResponse): Promise<v
 
 export async function create(req: ExpressRequest, res: ExpressResponse): Promise<void> {
   try {
-    const { name } = req.body;
+    const { name, uid } = req.body;
     const userId = (req as any).user.id;
-    const project = await svc.createProject(name, userId);
+    const project = await svc.createProject(name, userId, uid);
     if (!project) { res.status(500).json({ error: "Failed to create project" }); return; }
     res.json(project);
   } catch (err: any) {

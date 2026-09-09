@@ -153,24 +153,30 @@ export function useFlowcharts(isGuest: boolean = false) {
 
     await localPersistence.saveResource(newFlowchart);
     setFlowcharts(prev => [newFlowchart, ...prev]);
-    toast.success('Flowchart created successfully');
 
     if (!isGuestCheck()) {
-      void apiFetch('/api/flowcharts', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ title, project_id: effectiveProjectId, data: data || '', uid: createUid }),
-      }).then(async res => {
+      try {
+        const res = await apiFetch('/api/flowcharts', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ title, project_id: effectiveProjectId, data: data || '', uid: createUid }),
+        });
         if (res.ok) {
           const serverFc = await res.json().catch(() => null);
           if (serverFc?.id) {
-            setFlowcharts(prev => prev.map(f => f.uid === createUid ? { ...f, id: serverFc.id } : f));
-            void localPersistence.saveResource({ ...serverFc, type: 'flowchart' });
+            const finalFc = { ...newFlowchart, ...serverFc, id: serverFc.id, uid: serverFc.uid || createUid, type: 'flowchart' };
+            setFlowcharts(prev => prev.map(f => f.uid === createUid ? finalFc : f));
+            await localPersistence.saveResource(finalFc);
+            toast.success('Flowchart created successfully');
+            return finalFc;
           }
         }
-      }).catch(() => {});
+      } catch (err) {
+        console.error('Error creating flowchart on server:', err);
+      }
     }
 
+    toast.success('Flowchart created successfully');
     return newFlowchart;
   };
 

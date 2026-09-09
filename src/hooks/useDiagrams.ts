@@ -215,24 +215,30 @@ export function useDiagrams(isAuthenticated: boolean | null, view: 'erd' | 'diag
 
     await localPersistence.saveResource(newDiagram);
     setDiagrams(prev => [newDiagram, ...prev]);
-    toast.success('Diagram created successfully');
 
     if (!isGuestCheck()) {
-      void apiFetch('/api/diagrams', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name, project_id: effectiveProjectId, uid: createUid }),
-      }).then(async res => {
+      try {
+        const res = await apiFetch('/api/diagrams', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ name, project_id: effectiveProjectId, uid: createUid }),
+        });
         if (res.ok) {
           const serverDiagram = normalizeDiagramRecord(await res.json().catch(() => null));
           if (serverDiagram?.id) {
-            setDiagrams(prev => prev.map(d => d.uid === createUid ? { ...d, id: serverDiagram.id } : d));
-            void localPersistence.saveResource({ ...serverDiagram, type: 'erd' });
+            const finalDiagram = { ...newDiagram, ...serverDiagram, id: serverDiagram.id, uid: serverDiagram.uid || createUid, type: 'erd' };
+            setDiagrams(prev => prev.map(d => d.uid === createUid ? finalDiagram : d));
+            await localPersistence.saveResource(finalDiagram);
+            toast.success('Diagram created successfully');
+            return finalDiagram;
           }
         }
-      }).catch(() => {});
+      } catch (err) {
+        console.error('Error creating diagram on server:', err);
+      }
     }
 
+    toast.success('Diagram created successfully');
     return newDiagram;
   };
 

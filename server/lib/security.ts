@@ -35,12 +35,12 @@ export const resolveOwnedProjectId = async (
   userId: string,
   projectId: unknown,
 ): Promise<number | null> => {
-  if (projectId === null || projectId === undefined || projectId === "" || projectId === "null") {
+  if (projectId === null || projectId === undefined || projectId === "" || projectId === "null" || projectId === "none" || projectId === "uncategorized") {
     return null;
   }
 
   if (typeof projectId !== "number" && typeof projectId !== "string" && typeof projectId !== "bigint") {
-    throw new Error("Invalid project_id");
+    return null;
   }
 
   const strId = String(projectId).trim();
@@ -53,7 +53,7 @@ export const resolveOwnedProjectId = async (
   } else if (Number.isFinite(numId)) {
     whereClause = { id: numId, userId, isDeleted: false };
   } else {
-    throw new Error("Invalid project_id");
+    return null;
   }
 
   const project = await prisma.project.findFirst({
@@ -62,7 +62,7 @@ export const resolveOwnedProjectId = async (
   });
 
   if (!project) {
-    throw new Error("Project not found");
+    return null;
   }
 
   return Number(project.id);

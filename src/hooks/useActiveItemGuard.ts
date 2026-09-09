@@ -58,9 +58,9 @@ export const useActiveItemGuard = ({
         return;
       }
 
-      if (activeItem && activeItem.project_id) {
+      if (activeItem && activeItem.project_id && projects.length > 0) {
         const parentProject = projects.find(p => String(p.id) === String(activeItem.project_id) || String(p.uid) === String(activeItem.project_id));
-        if (!parentProject || parentProject.is_deleted) {
+        if (parentProject && parentProject.is_deleted) {
           setActiveProjectId(null);
           setActiveDiagramId(null);
           setActiveNoteUid(null);

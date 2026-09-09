@@ -113,9 +113,9 @@ export async function listProjects(
   };
 }
 
-export async function createProject(name: string, userId: string) {
+export async function createProject(name: string, userId: string, uid?: string) {
   const project = await prisma?.project.create({
-    data: { name, userId, uid: randomUUID() },
+    data: { name, userId, uid: uid || randomUUID() },
   });
   return project || null;
 }

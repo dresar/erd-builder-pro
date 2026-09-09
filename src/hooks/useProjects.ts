@@ -112,9 +112,10 @@ export function useProjects(isGuest: boolean = false) {
   }, []);
 
   const createProject = async (name: string) => {
-    const newProject: Project = {
+    const newUid = crypto.randomUUID();
+    let newProject: Project = {
       id: Math.random().toString(36).substring(2, 11),
-      uid: crypto.randomUUID(),
+      uid: newUid,
       name,
       is_deleted: false,
       created_at: new Date().toISOString(),
@@ -123,23 +124,34 @@ export function useProjects(isGuest: boolean = false) {
 
     await localPersistence.saveResource(newProject);
     setProjects(prev => [newProject, ...prev]);
-    toast.success('Project created successfully');
 
     if (!isGuestCheck()) {
-      void apiFetch('/api/projects', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name, uid: newProject.uid }),
-      }).then(async res => {
+      try {
+        const res = await apiFetch('/api/projects', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ name, uid: newUid }),
+        });
         if (res.ok) {
           const serverProject = await res.json().catch(() => null);
           if (serverProject?.id) {
-            setProjects(prev => prev.map(p => p.uid === newProject.uid ? { ...p, id: serverProject.id } : p));
-            void localPersistence.saveResource({ ...serverProject, type: 'project' });
+            newProject = {
+              ...newProject,
+              ...serverProject,
+              id: serverProject.id,
+              uid: serverProject.uid || newUid,
+              type: 'project',
+            };
+            setProjects(prev => prev.map(p => p.uid === newUid ? newProject : p));
+            await localPersistence.saveResource(newProject);
           }
         }
-      }).catch(() => {});
+      } catch (err) {
+        console.error('Error creating project on server:', err);
+      }
     }
+
+    toast.success('Project created successfully');
     return newProject;
   };
 

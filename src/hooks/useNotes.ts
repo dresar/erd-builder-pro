@@ -149,24 +149,30 @@ export function useNotes(isGuest: boolean = false) {
 
     await localPersistence.saveResource(newNote);
     setNotes(prev => [newNote, ...prev]);
-    toast.success('Note created successfully');
 
     if (!isGuestCheck()) {
-      void apiFetch('/api/notes', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ title, project_id: effectiveProjectId, content: content || "", uid: noteUid }),
-      }).then(async res => {
+      try {
+        const res = await apiFetch('/api/notes', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ title, project_id: effectiveProjectId, content: content || "", uid: noteUid }),
+        });
         if (res.ok) {
           const serverNote = await res.json().catch(() => null);
           if (serverNote?.id) {
-            setNotes(prev => prev.map(n => n.uid === noteUid ? { ...n, id: serverNote.id } : n));
-            void localPersistence.saveResource({ ...serverNote, type: 'notes' });
+            const finalNote = { ...newNote, ...serverNote, id: serverNote.id, uid: serverNote.uid || noteUid, type: 'notes' };
+            setNotes(prev => prev.map(n => n.uid === noteUid ? finalNote : n));
+            await localPersistence.saveResource(finalNote);
+            toast.success('Note created successfully');
+            return finalNote;
           }
         }
-      }).catch(() => {});
+      } catch (err) {
+        console.error('Error creating note on server:', err);
+      }
     }
 
+    toast.success('Note created successfully');
     return newNote;
   };
 
