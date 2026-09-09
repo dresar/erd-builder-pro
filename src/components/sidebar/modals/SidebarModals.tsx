@@ -208,15 +208,17 @@ export function SidebarModals({
                 Project
               </FieldLabel>
               <Select value={selectedProjectId} onValueChange={(val) => setSelectedProjectId(val ?? "")}>
-                <SelectTrigger className="w-full h-9">
-                  <SelectValue>
+                <SelectTrigger className="w-full h-9 min-w-0 overflow-hidden">
+                  <SelectValue className="truncate text-left block w-full">
                     {selectedProjectId === "none" ? "No Project (Root)" : allProjects.find(p => p.id.toString() === selectedProjectId)?.name || "Select a project"}
                   </SelectValue>
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent className="max-w-[calc(100vw-3rem)] sm:max-w-xs">
                   <SelectItem value="none">No Project (Root)</SelectItem>
                   {allProjects.map(p => (
-                    <SelectItem key={p.id} value={p.id.toString()}>{p.name}</SelectItem>
+                    <SelectItem key={p.id} value={p.id.toString()} className="truncate">
+                      <span className="truncate block max-w-65">{p.name}</span>
+                    </SelectItem>
                   ))}
                 </SelectContent>
               </Select>

@@ -140,19 +140,17 @@ export const RenameDocumentDialog: React.FC<RenameDocumentDialogProps> = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-sm">
+      <DialogContent className="sm:max-w-sm overflow-hidden">
         <DialogHeader>
-          <DialogTitle>{isCreate ? `Buat ${viewLabel(view)}` : 'Edit Dokumen'}</DialogTitle>
-          <DialogDescription>
-            {isCreate
-              ? `Masukkan nama dan pilih ruang kerja untuk ${viewLabel(view)} baru.`
-              : `Ubah nama dan ruang kerja untuk ${viewLabel(view)} ini.`}
+          <DialogTitle className="text-base font-semibold">{isCreate ? `Buat ${viewLabel(view)}` : 'Edit Dokumen'}</DialogTitle>
+          <DialogDescription className="sr-only">
+            {isCreate ? `Buat ${viewLabel(view)} baru` : 'Edit dokumen'}
           </DialogDescription>
         </DialogHeader>
         <DialogBody>
-          <div className="space-y-4">
+          <div className="space-y-3.5">
             <Field>
-              <FieldLabel htmlFor="rename-input" className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/70 px-1">
+              <FieldLabel htmlFor="rename-input" className="text-xs font-medium text-foreground">
                 {isCreate ? 'Nama' : 'Nama Baru'}
               </FieldLabel>
               <Input
@@ -167,29 +165,30 @@ export const RenameDocumentDialog: React.FC<RenameDocumentDialogProps> = ({
                   }
                 }}
                 autoFocus
+                className="h-9"
               />
             </Field>
 
             <Field>
-              <FieldLabel className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/70 px-1">
+              <FieldLabel className="text-xs font-medium text-foreground">
                 Ruang Kerja
               </FieldLabel>
               {projects.length === 0 ? (
                 <p className="text-xs text-amber-500/90 py-1">
-                  Belum ada ruang kerja. Harap buat ruang kerja terlebih dahulu sebelum membuat dokumen.
+                  Harap buat ruang kerja terlebih dahulu.
                 </p>
               ) : (
                 <Select value={selectedProjectId} onValueChange={(value) => value !== null && setSelectedProjectId(value)}>
-                  <SelectTrigger className="h-9">
-                    <SelectValue>
+                  <SelectTrigger className="h-9 w-full min-w-0 overflow-hidden">
+                    <SelectValue className="truncate text-left block w-full">
                       {selectedProjectId === "none" ? "Tanpa Kategori" : projects.find(p => p.id.toString() === selectedProjectId)?.name || "Pilih Ruang Kerja"}
                     </SelectValue>
                   </SelectTrigger>
-                  <SelectContent>
+                  <SelectContent className="max-w-[calc(100vw-3rem)] sm:max-w-xs">
                     {!isCreate && <SelectItem value="none">Tanpa Kategori</SelectItem>}
                     {projects.map((project) => (
-                      <SelectItem key={project.id} value={project.id.toString()}>
-                        {project.name}
+                      <SelectItem key={project.id} value={project.id.toString()} className="truncate">
+                        <span className="truncate block max-w-65">{project.name}</span>
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -198,14 +197,15 @@ export const RenameDocumentDialog: React.FC<RenameDocumentDialogProps> = ({
             </Field>
           </div>
         </DialogBody>
-        <DialogFooter>
-          <DialogClose render={<Button variant="outline" className="h-9" />}>
+        <DialogFooter className="gap-2 sm:gap-2">
+          <DialogClose render={<Button variant="outline" size="sm" className="h-8.5 px-4" />}>
             Batal
           </DialogClose>
           <Button
+            size="sm"
             disabled={!newName.trim() || (isCreate && (!selectedProjectId || selectedProjectId === 'none' || projects.length === 0))}
             onClick={handleSave}
-            className="h-9 px-6"
+            className="h-8.5 px-5 font-medium"
           >
             {isCreate ? 'Buat' : 'Simpan'}
           </Button>
