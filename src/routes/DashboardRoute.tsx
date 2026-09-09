@@ -162,30 +162,6 @@ export function DashboardRoute() {
 
   const user = ctx.user;
   const userName = user?.user_metadata?.full_name || user?.user_metadata?.name || user?.email?.split('@')[0] || '';
-  const [serverRecentDocs, setServerRecentDocs] = useState<any[] | null>(null);
-
-  useEffect(() => {
-    if (ctx.isGuest || !user) {
-      setServerRecentDocs(null);
-      return;
-    }
-
-    let cancelled = false;
-    const fetchRecentFiles = async () => {
-      try {
-        const response = await apiFetch('/api/search/recent');
-        if (!response.ok) return;
-        const body = await response.json();
-        if (!cancelled) setServerRecentDocs(Array.isArray(body.data) ? body.data : []);
-      } catch {
-        // Keep local dashboard data as a fallback if the API is unavailable.
-      }
-    };
-
-    void fetchRecentFiles();
-    return () => { cancelled = true; };
-  }, [ctx.isGuest, user]);
-
   const selectedWorkspace = ctx.selectedWorkspaceUid;
   const activeWorkspace = useMemo(() => {
     if (!selectedWorkspace) return null;
@@ -195,26 +171,7 @@ export function DashboardRoute() {
   }, [ctx.projects, selectedWorkspace]);
 
   const recentDocs = useMemo(() => {
-    if (serverRecentDocs) {
-      let docs = serverRecentDocs.map((doc: any) => ({
-        ...doc,
-        _type: doc.type,
-        _group: doc.group,
-        _workspace: doc.workspace?.name || doc.project?.name || '—',
-        updated_at: doc.updated_at ?? doc.updatedAt,
-      }));
-      if (activeWorkspace) {
-        docs = docs.filter((doc: any) => {
-          const pid = doc.project_id ?? doc.projectId ?? doc.workspace?.id ?? doc.workspace?.uid ?? doc.project?.id ?? doc.project?.uid;
-          return String(pid) === String(activeWorkspace.id) || String(pid) === String(activeWorkspace.uid);
-        });
-      }
-      return docs;
-    }
-
-    const projectMap = new Map(
-      (ctx.projects || []).map((p: any) => [String(p.id), p.name])
-    );
+    const projectMap = new Map((ctx.projects || []).map((p: any) => [String(p.id), p.name]));
     const getWorkspace = (doc: any) => {
       const pid = doc.project_id ?? doc.projectId;
       return doc.projects?.name || doc.project?.name || (pid ? projectMap.get(String(pid)) : null) || '—';
@@ -223,17 +180,31 @@ export function DashboardRoute() {
       ...(ctx.diagrams || []).filter((d: any) => !isDbClientDiagram(d)).map((d: any) => ({
         ...d,
         _type: 'diagrams' as const,
-        _group: isDbClientDiagram(d) ? 'db-client' : 'diagrams',
+        _group: 'diagrams',
         _workspace: getWorkspace(d),
+        updated_at: d.updated_at ?? d.updatedAt,
       })),
       ...(ctx.notes || []).map((n: any) => ({
         ...n,
         _type: n.title?.startsWith('[PRD] ') ? ('prd' as const) : ('notes' as const),
         _group: n.title?.startsWith('[PRD] ') ? 'prd' : 'notes',
         _workspace: getWorkspace(n),
+        updated_at: n.updated_at ?? n.updatedAt,
       })),
-      ...(ctx.drawings || []).map((d: any) => ({ ...d, _type: 'drawings' as const, _group: 'drawings', _workspace: getWorkspace(d) })),
-      ...(ctx.flowcharts || []).map((f: any) => ({ ...f, _type: 'flowcharts' as const, _group: 'flowcharts', _workspace: getWorkspace(f) })),
+      ...(ctx.drawings || []).map((d: any) => ({
+        ...d,
+        _type: 'drawings' as const,
+        _group: 'drawings',
+        _workspace: getWorkspace(d),
+        updated_at: d.updated_at ?? d.updatedAt,
+      })),
+      ...(ctx.flowcharts || []).map((f: any) => ({
+        ...f,
+        _type: 'flowcharts' as const,
+        _group: 'flowcharts',
+        _workspace: getWorkspace(f),
+        updated_at: f.updated_at ?? f.updatedAt,
+      })),
     ];
     let list = all.filter((d) => !d.is_deleted);
     if (activeWorkspace) {
@@ -243,9 +214,9 @@ export function DashboardRoute() {
       });
     }
     return list
-      .sort((a, b) => new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime())
+      .sort((a, b) => new Date(b.updated_at || 0).getTime() - new Date(a.updated_at || 0).getTime())
       .slice(0, 10);
-  }, [ctx.diagrams, ctx.notes, ctx.drawings, ctx.flowcharts, ctx.projects, serverRecentDocs, activeWorkspace]);
+  }, [ctx.diagrams, ctx.notes, ctx.drawings, ctx.flowcharts, ctx.projects, activeWorkspace]);
 
   const [recentQuery, setRecentQuery] = useState('');
   const [recentFilter, setRecentFilter] = useState('all');
@@ -258,7 +229,6 @@ export function DashboardRoute() {
     });
   }, [recentDocs, recentFilter, recentQuery]);
 
-  // All non-deleted docs count
   const totalDocs = useMemo(() => {
     return (ctx.diagrams || []).filter((d: any) => !d.is_deleted && !isDbClientDiagram(d)).length +
       (ctx.notes || []).filter((n: any) => !n.is_deleted).length +
@@ -266,51 +236,32 @@ export function DashboardRoute() {
       (ctx.flowcharts || []).filter((f: any) => !f.is_deleted).length;
   }, [ctx.diagrams, ctx.notes, ctx.drawings, ctx.flowcharts]);
 
-  // Workspace document counts — fetched from backend (accurate, not paginated)
-  const [projectSummaries, setProjectSummaries] = useState<Record<string, any>>({});
-
   const projectsWithCounts = useMemo(() => {
+    const matchPid = (item: any, p: any) => {
+      const pid = String(item.project_id ?? item.projectId ?? item.workspace?.id ?? '');
+      return pid === String(p.id) || (p.uid && pid === String(p.uid));
+    };
     return (ctx.projects || [])
       .filter((p: any) => !p.is_deleted)
       .map((p: any) => {
-        const summary = projectSummaries[String(p.id)] || {};
+        const notesCount = (ctx.notes || []).filter(n => !n.is_deleted && matchPid(n, p)).length;
+        const diagramsCount = (ctx.diagrams || []).filter(d => !d.is_deleted && !isDbClientDiagram(d) && matchPid(d, p)).length;
+        const drawingsCount = (ctx.drawings || []).filter(d => !d.is_deleted && matchPid(d, p)).length;
+        const flowchartsCount = (ctx.flowcharts || []).filter(f => !f.is_deleted && matchPid(f, p)).length;
+        const total = notesCount + diagramsCount + drawingsCount + flowchartsCount;
         return {
           ...p,
-          notesCount: summary.notes ?? 0,
-          diagramsCount: summary.diagrams ?? 0,
-          drawingsCount: summary.drawings ?? 0,
-          flowchartsCount: summary.flowcharts ?? 0,
-          dbClientsCount: summary.db_clients ?? 0,
-          totalDocs: (summary.notes ?? 0) + (summary.diagrams ?? 0) + (summary.drawings ?? 0) + (summary.flowcharts ?? 0) + (summary.db_clients ?? 0),
+          notesCount,
+          diagramsCount,
+          drawingsCount,
+          flowchartsCount,
+          dbClientsCount: 0,
+          totalDocs: total,
         };
       })
       .sort((a: any, b: any) => b.totalDocs - a.totalDocs)
       .slice(0, 4);
-  }, [ctx.projects, projectSummaries]);
-
-  // Fetch summaries for visible projects
-  useEffect(() => {
-    const activeProjects = (ctx.projects || []).filter((p: any) => !p.is_deleted).slice(0, 4);
-    if (activeProjects.length === 0) return;
-
-    let cancelled = false;
-    const fetchAll = async () => {
-      const results: Record<string, any> = {};
-      for (const p of activeProjects) {
-        try {
-          const res = await apiFetch(`/api/projects/${p.id}/summary?include_db_client=${showDbClient}`);
-          if (res.ok && !cancelled) {
-            results[String(p.id)] = await res.json();
-          }
-        } catch {
-          // Silently fail — counts will default to 0
-        }
-      }
-      if (!cancelled) setProjectSummaries(results);
-    };
-    fetchAll();
-    return () => { cancelled = true; };
-  }, [ctx.projects, showDbClient]);
+  }, [ctx.projects, ctx.notes, ctx.diagrams, ctx.drawings, ctx.flowcharts]);
 
   const [initialLoadDone, setInitialLoadDone] = useState(false);
   const isLoading = ctx.isLoading || ctx.isProjectsLoading;

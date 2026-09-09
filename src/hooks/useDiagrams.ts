@@ -110,24 +110,17 @@ export function useDiagrams(isAuthenticated: boolean | null, view: 'erd' | 'diag
   activeDiagramIdRef.current = activeDiagramId;
 
   const fetchDiagrams = useCallback(async (isLoadMore = false, projectId: number | null | string = 'all', searchQuery = '', isPublic: boolean | null = null, limit = 10, page?: number, options?: { silent?: boolean; sourceType?: 'blank' | 'production_db' }) => {
-    if (isGuestCheck()) {
+    try {
       const [localResources, localProjects] = await Promise.all([
         localPersistence.getAllResources('erd'),
         localPersistence.getAllResources('project'),
       ]);
       const activeProjects = localProjects.filter((p: any) => !p.is_deleted);
-      if (activeProjects.length === 0) {
-        setDiagrams([]);
-        setDiagramsTotal(0);
-        setHasMoreDiagrams(false);
-        setIsLoading(false);
-        return;
-      }
       const activeProjectIds = new Set(activeProjects.flatMap((p: any) => [String(p.id), String(p.uid)].filter(Boolean)));
       const projectMap = new Map(
         activeProjects.map((p: any) => [String(p.id), { uid: p.uid || String(p.id), name: p.name }])
       );
-      let filtered = localResources.filter((f: any) => !f.is_deleted && f.project_id && activeProjectIds.has(String(f.project_id)));
+      let filtered = localResources.filter((f: any) => !f.is_deleted && (!activeProjects.length || !f.project_id || activeProjectIds.has(String(f.project_id))));
       if (options?.sourceType) {
         filtered = filtered.filter((f: any) => (f.source_type ?? f.sourceType ?? 'blank') === options.sourceType);
       }
@@ -142,27 +135,31 @@ export function useDiagrams(isAuthenticated: boolean | null, view: 'erd' | 'diag
         projects: f.projects || projectMap.get(String(f.project_id)) || null,
       }));
 
-      // Sort: newest first by created_at
       enriched.sort((a: any, b: any) => {
         const da = a.created_at ? new Date(a.created_at).getTime() : 0;
         const db = b.created_at ? new Date(b.created_at).getTime() : 0;
         return db - da;
       });
 
-      // Paginate
       const pageSize = limit;
       const pageNum = page !== undefined ? page : 1;
       const startIdx = (pageNum - 1) * pageSize;
       const paged = enriched.slice(startIdx, startIdx + pageSize);
 
-      setDiagrams(paged);
-      setDiagramsTotal(enriched.length);
-      setHasMoreDiagrams(false);
+      if (paged.length > 0 || isGuestCheck()) {
+        setDiagrams(paged);
+        setDiagramsTotal(enriched.length);
+        setHasMoreDiagrams(false);
+        setIsLoading(false);
+        if (isGuestCheck()) return;
+      }
+    } catch {}
+
+    if (isGuestCheck()) {
       setIsLoading(false);
       return;
     }
 
-    if (!options?.silent) setIsLoading(true);
     try {
       const offset = page !== undefined ? (page - 1) * limit : (isLoadMore ? diagramsRef.current.length : 0);
       const projIdParam = (projectId === null || projectId === 'null' || projectId === 'none') ? 'null' : projectId;
@@ -171,16 +168,11 @@ export function useDiagrams(isAuthenticated: boolean | null, view: 'erd' | 'diag
       const sourceParam = options?.sourceType ? `&source_type=${options.sourceType}` : '';
       const res = await apiFetch(`/api/diagrams?limit=${limit}&offset=${offset}&project_id=${projIdParam}${qParam}${publicParam}${sourceParam}`);
       if (res.ok) {
-        let json;
-        try {
-          json = await res.json();
-        } catch (e) {
-          console.error('Failed to parse JSON response in fetchDiagrams', e);
-          return;
-        }
+        const json = await res.json().catch(() => null);
+        if (!json) return;
         const data = json.data !== undefined ? json.data : (Array.isArray(json) ? json : []);
         const total = json.total !== undefined ? json.total : (Array.isArray(data) ? data.length : 0);
-        
+
         const diagramsList = (Array.isArray(data) ? data : []).map(normalizeDiagramRecord);
         if (isLoadMore) {
           setDiagrams(prev => [...prev, ...diagramsList]);
@@ -196,63 +188,52 @@ export function useDiagrams(isAuthenticated: boolean | null, view: 'erd' | 'diag
         }
         setDiagramsTotal(total);
         setHasMoreDiagrams((diagramsList.length + offset) < total);
-      } else {
-        const errText = await res.text();
-        console.error(`Failed to fetch diagrams: ${res.status} ${res.statusText}`, errText);
+        void localPersistence.saveResourcesBatch(diagramsList.map(d => ({ ...d, type: 'erd' })));
       }
-    } catch (err) {
-      console.error('Error in fetchDiagrams:', err);
-    } finally {
+    } catch {} finally {
       setIsLoading(false);
     }
-  }, []); 
+  }, []);
 
   const createDiagram = async (name: string, projectId?: number | string | null) => {
     const effectiveProjectId = (projectId === 'none' || projectId === 'uncategorized') ? null : projectId;
+    const createUid = crypto.randomUUID();
 
-    if (isGuestCheck()) {
-      const newDiagram = {
-        id: Math.random().toString(36).substring(2, 11),
-        uid: crypto.randomUUID(),
-        name,
-        project_id: effectiveProjectId || null,
-        dbml_source: '',
-        is_deleted: false,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-        entities: [],
-        relationships: [],
-        type: 'erd',
-      } as Diagram & { type: string };
-      await localPersistence.saveResource(newDiagram);
-      setDiagrams(prev => [newDiagram, ...prev]);
-      toast.success('Diagram created locally');
-      return newDiagram;
-    }
+    const newDiagram = {
+      id: Math.random().toString(36).substring(2, 11),
+      uid: createUid,
+      name,
+      project_id: effectiveProjectId || null,
+      dbml_source: '',
+      is_deleted: false,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+      entities: [],
+      relationships: [],
+      type: 'erd',
+    } as Diagram & { type: string };
 
-    try {
-      const createUid = crypto.randomUUID();
-      const res = await apiFetch('/api/diagrams', {
+    await localPersistence.saveResource(newDiagram);
+    setDiagrams(prev => [newDiagram, ...prev]);
+    toast.success('Diagram created successfully');
+
+    if (!isGuestCheck()) {
+      void apiFetch('/api/diagrams', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ name, project_id: effectiveProjectId, uid: createUid }),
-      });
-      if (res.ok) {
-        const newDiagram = normalizeDiagramRecord(await res.json());
-        if (!newDiagram.uid) {
-          newDiagram.uid = createUid;
+      }).then(async res => {
+        if (res.ok) {
+          const serverDiagram = normalizeDiagramRecord(await res.json().catch(() => null));
+          if (serverDiagram?.id) {
+            setDiagrams(prev => prev.map(d => d.uid === createUid ? { ...d, id: serverDiagram.id } : d));
+            void localPersistence.saveResource({ ...serverDiagram, type: 'erd' });
+          }
         }
-        setDiagrams(prev => [newDiagram, ...prev]);
-        toast.success('Diagram created successfully');
-        return newDiagram;
-      } else {
-        toast.error('Failed to create diagram');
-      }
-    } catch (err) {
-      console.error('Error creating diagram:', err);
-      toast.error('Error creating diagram');
+      }).catch(() => {});
     }
-    return null;
+
+    return newDiagram;
   };
 
   const updateDiagram = async (id: number | string, name: string, options?: { silent?: boolean }) => {

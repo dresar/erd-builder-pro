@@ -219,10 +219,27 @@ class LocalPersistence {
     return new Promise((resolve, reject) => {
       const transaction = db.transaction('resources', 'readwrite');
       const store = transaction.objectStore('resources');
-      const request = store.put(resource);
+      const item = { ...resource, id: resource.id ?? resource.uid ?? crypto.randomUUID() };
+      const request = store.put(item);
 
       request.onsuccess = () => resolve();
       request.onerror = () => reject(request.error);
+    });
+  }
+
+  async saveResourcesBatch(resources: any[]): Promise<void> {
+    if (!resources || !resources.length) return;
+    const db = await this.init();
+    return new Promise((resolve, reject) => {
+      const transaction = db.transaction('resources', 'readwrite');
+      const store = transaction.objectStore('resources');
+      for (const res of resources) {
+        if (!res) continue;
+        const item = { ...res, id: res.id ?? res.uid ?? crypto.randomUUID() };
+        store.put(item);
+      }
+      transaction.oncomplete = () => resolve();
+      transaction.onerror = () => reject(transaction.error);
     });
   }
 

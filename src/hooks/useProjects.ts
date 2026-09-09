@@ -28,7 +28,7 @@ export function useProjects(isGuest: boolean = false) {
   }>({ diagrams: [], notes: [], drawings: [], flowcharts: [] });
 
   const fetchProjects = useCallback(async (isLoadMore = false, searchQuery = '') => {
-    if (isGuestCheck()) {
+    try {
       const [localProjects, uDiagrams, uNotes, uDrawings, uFlowcharts] = await Promise.all([
         localPersistence.getAllResources('project'),
         localPersistence.getAllResources('erd'),
@@ -42,9 +42,7 @@ export function useProjects(isGuest: boolean = false) {
         uid: p.uid || String(p.id),
       }));
       if (searchQuery) filteredProjects = filteredProjects.filter(p => p.name.toLowerCase().includes(searchQuery.toLowerCase()));
-      
-      // For guest, we also need to nested the files manually or just filter them in the UI
-      // To match the backend structure:
+
       const projectsWithFiles = filteredProjects.map(p => ({
         ...p,
         diagrams: uDiagrams.filter(f => !f.is_deleted && (String(f.project_id) === String(p.id) || String(f.project_id) === String(p.uid))),
@@ -53,29 +51,34 @@ export function useProjects(isGuest: boolean = false) {
         flowcharts: uFlowcharts.filter(f => !f.is_deleted && (String(f.project_id) === String(p.id) || String(f.project_id) === String(p.uid))),
       }));
 
-      setProjects(projectsWithFiles);
-      setUncategorized({
-        diagrams: uDiagrams.filter(f => !f.is_deleted && !f.project_id),
-        notes: uNotes.filter(f => !f.is_deleted && !f.project_id),
-        drawings: uDrawings.filter(f => !f.is_deleted && !f.project_id),
-        flowcharts: uFlowcharts.filter(f => !f.is_deleted && !f.project_id),
-      });
-      setProjectsTotal(filteredProjects.length);
-      setHasMoreProjects(false);
+      if (projectsWithFiles.length > 0 || isGuestCheck()) {
+        setProjects(projectsWithFiles);
+        setUncategorized({
+          diagrams: uDiagrams.filter(f => !f.is_deleted && !f.project_id),
+          notes: uNotes.filter(f => !f.is_deleted && !f.project_id),
+          drawings: uDrawings.filter(f => !f.is_deleted && !f.project_id),
+          flowcharts: uFlowcharts.filter(f => !f.is_deleted && !f.project_id),
+        });
+        setProjectsTotal(filteredProjects.length);
+        setIsLoading(false);
+        if (isGuestCheck()) return;
+      }
+    } catch {}
+
+    if (isGuestCheck()) {
       setIsLoading(false);
       return;
     }
 
-    setIsLoading(true);
     try {
       const offset = isLoadMore ? projectsRef.current.length : 0;
       const qParam = searchQuery ? `&q=${encodeURIComponent(searchQuery)}` : '';
-      const res = await apiFetch(`/api/projects?limit=100&offset=${offset}${qParam}`); // Increased limit for better tree view
+      const res = await apiFetch(`/api/projects?limit=100&offset=${offset}${qParam}`);
       if (res.ok) {
         const json = await res.json();
         const projectsList = Array.isArray(json.data) ? json.data : [];
         const total = json.total !== undefined ? json.total : projectsList.length;
-        
+
         if (isLoadMore) {
           setProjects(prev => [...prev, ...projectsList]);
         } else {
@@ -88,74 +91,70 @@ export function useProjects(isGuest: boolean = false) {
 
         setProjectsTotal(total);
         setHasMoreProjects((projectsList.length + offset) < total);
+        void localPersistence.saveResourcesBatch(projectsList.map((p: any) => ({ ...p, type: 'project' })));
         return json;
-      } else {
-        const errText = await res.text();
-        console.error(`Failed to fetch projects: ${res.status} ${res.statusText}`, errText);
       }
-    } catch (err) {
-      console.error('Error in fetchProjects:', err);
-    } finally {
+    } catch {} finally {
       setIsLoading(false);
     }
     return null;
   }, []);
 
   const createProject = async (name: string) => {
-    if (isGuestCheck()) {
-      const newProject: Project = {
-        id: Math.random().toString(36).substring(2, 11),
-        uid: crypto.randomUUID(),
-        name,
-        is_deleted: false,
-        created_at: new Date().toISOString(),
-        type: 'project',
-      } as Project & { type: string };
-      await localPersistence.saveResource(newProject);
-      setProjects(prev => [newProject, ...prev]);
-      toast.success('Project created locally');
-      return newProject;
-    }
+    const newProject: Project = {
+      id: Math.random().toString(36).substring(2, 11),
+      uid: crypto.randomUUID(),
+      name,
+      is_deleted: false,
+      created_at: new Date().toISOString(),
+      type: 'project',
+    } as Project & { type: string };
 
-    try {
-      const res = await apiFetch('/api/projects', {
+    await localPersistence.saveResource(newProject);
+    setProjects(prev => [newProject, ...prev]);
+    toast.success('Project created successfully');
+
+    if (!isGuestCheck()) {
+      void apiFetch('/api/projects', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name }),
-      });
-      if (res.ok) {
-        const newProject = await res.json();
-        setProjects(prev => [newProject, ...prev]);
-        toast.success('Project created successfully');
-        return newProject;
-      }
-    } catch (err) {}
-    return null;
+        body: JSON.stringify({ name, uid: newProject.uid }),
+      }).then(async res => {
+        if (res.ok) {
+          const serverProject = await res.json().catch(() => null);
+          if (serverProject?.id) {
+            setProjects(prev => prev.map(p => p.uid === newProject.uid ? { ...p, id: serverProject.id } : p));
+            void localPersistence.saveResource({ ...serverProject, type: 'project' });
+          }
+        }
+      }).catch(() => {});
+    }
+    return newProject;
   };
 
   const updateProject = async (id: number | string, name: string) => {
-    if (isGuestCheck()) {
-      const project = await localPersistence.getResource(id);
-      if (project) {
-        project.name = name;
-        await localPersistence.saveResource(project);
-        setProjects(prev => prev.map(p => p.id === id ? { ...p, name } : p));
-        toast.success('Project renamed locally');
-      }
-      return;
+    const idStr = String(id);
+    const existing = await localPersistence.getResource(id);
+    if (existing) {
+      existing.name = name;
+      await localPersistence.saveResource(existing);
     }
+    setProjects(prev => prev.map(p => (String(p.id) === idStr || String(p.uid) === idStr) ? { ...p, name } : p));
+    toast.success('Project updated successfully');
 
-    try {
-      const res = await apiFetch(`/api/projects/${id}`, {
+    if (!isGuestCheck()) {
+      void apiFetch(`/api/projects/${id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ name }),
-      });
-      if (res.ok) {
-        setProjects(prev => prev.map(p => p.id === id ? { ...p, name } : p));
-        toast.success('Project renamed successfully');
-      }
-    } catch (err) {}
+      }).then(async res => {
+        if (res.ok) {
+          const updated = await res.json().catch(() => null);
+          if (updated) void localPersistence.saveResource({ ...updated, type: 'project' });
+        }
+      }).catch(() => {});
+    }
+    return true;
   };
 
   const deletingProjectsRef = useRef<Set<string>>(new Set());
@@ -166,63 +165,27 @@ export function useProjects(isGuest: boolean = false) {
     deletingProjectsRef.current.add(idStr);
 
     try {
-      if (isGuestCheck()) {
-        const allProjects = await localPersistence.getAllResources('project');
-        const project = allProjects.find((p: any) => String(p.id) === idStr || String(p.uid) === idStr);
-        if (project) {
-          const deleted_at = new Date().toISOString();
-          project.is_deleted = true;
-          project.deleted_at = deleted_at;
-          await localPersistence.saveResource(project);
-          
-          const targetIds = new Set([idStr, String(project.id), String(project.uid)].filter(Boolean));
-          const remainingProjects = allProjects.filter((p: any) => !p.is_deleted && String(p.id) !== idStr && String(p.uid) !== idStr);
-          const remainingProjectIds = new Set(remainingProjects.flatMap((p: any) => [String(p.id), String(p.uid)].filter(Boolean)));
-
-          const types = ['erd', 'notes', 'drawings', 'flowchart'];
-          for (const type of types) {
-            const items = await localPersistence.getAllResources(type);
-            for (const item of items) {
-              if (targetIds.has(String(item.project_id)) || !item.project_id || !remainingProjectIds.has(String(item.project_id))) {
-                item.is_deleted = true;
-                item.deleted_at = deleted_at;
-                await localPersistence.saveResource(item);
-              }
-            }
-          }
-
-          setProjects(prev => prev.filter(p => String(p.id) !== idStr && String(p.uid) !== idStr));
-          if (String(activeProjectId) === idStr || targetIds.has(String(activeProjectId))) {
-            setActiveProjectId(null);
-          }
-          window.dispatchEvent(new CustomEvent('workspace:project-deleted', { detail: { targetIds: Array.from(targetIds) } }));
-          toast.success('Project and its items moved to local trash', { id: `proj-${idStr}` });
-        }
-        return true;
+      const allProjects = await localPersistence.getAllResources('project');
+      const project = allProjects.find((p: any) => String(p.id) === idStr || String(p.uid) === idStr);
+      if (project) {
+        project.is_deleted = true;
+        project.deleted_at = new Date().toISOString();
+        await localPersistence.saveResource(project);
       }
 
-      const res = await apiFetch(`/api/projects/${id}`, { method: 'DELETE' });
-      if (res.ok) {
-        const data = await res.json().catch(() => ({}));
-        if (data && data.success === false) {
-          toast.error(data.error || 'Failed to delete workspace');
-          return false;
-        }
-        const currentProject = projects.find(p => String(p.id) === idStr || String(p.uid) === idStr);
-        const targetIds = new Set([idStr, String(currentProject?.id), String(currentProject?.uid)].filter(Boolean));
-        setProjects(prev => prev.filter(p => String(p.id) !== idStr && String(p.uid) !== idStr));
-        if (String(activeProjectId) === idStr || targetIds.has(String(activeProjectId))) {
-          setActiveProjectId(null);
-        }
-        window.dispatchEvent(new CustomEvent('workspace:project-deleted', { detail: { targetIds: Array.from(targetIds) } }));
-        toast.success('Project moved to trash', { id: `proj-${idStr}` });
-        return true;
+      setProjects(prev => prev.filter(p => String(p.id) !== idStr && String(p.uid) !== idStr));
+      if (String(activeProjectId) === idStr) {
+        setActiveProjectId(null);
       }
-    } catch (err) {
+      toast.success('Project moved to trash');
+
+      if (!isGuestCheck()) {
+        void apiFetch(`/api/projects/${id}`, { method: 'DELETE' }).catch(() => {});
+      }
+      return true;
     } finally {
       deletingProjectsRef.current.delete(idStr);
     }
-    return false;
   };
 
   const restoreProject = async (id: number | string) => {

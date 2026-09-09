@@ -56,21 +56,14 @@ export function useFlowcharts(isGuest: boolean = false) {
     limit = 10,
     options?: { silent?: boolean; page?: number },
   ) => {
-    if (isGuestCheck()) {
+    try {
       const [localFlowcharts, localProjects] = await Promise.all([
         localPersistence.getAllResources('flowchart'),
         localPersistence.getAllResources('project'),
       ]);
       const activeProjects = localProjects.filter((p: any) => !p.is_deleted);
-      if (activeProjects.length === 0) {
-        setFlowcharts([]);
-        setFlowchartsTotal(0);
-        setHasMoreFlowcharts(false);
-        setIsLoading(false);
-        return;
-      }
       const activeProjectIds = new Set(activeProjects.flatMap((p: any) => [String(p.id), String(p.uid)].filter(Boolean)));
-      let filtered = localFlowcharts.filter(f => !f.is_deleted && f.project_id && activeProjectIds.has(String(f.project_id)));
+      let filtered = localFlowcharts.filter(f => !f.is_deleted && (!activeProjects.length || !f.project_id || activeProjectIds.has(String(f.project_id))));
       if (projectId !== 'all') {
         filtered = filtered.filter(f => String(f.project_id) === String(projectId));
       }
@@ -87,14 +80,20 @@ export function useFlowcharts(isGuest: boolean = false) {
       const startIdx = (pageNum - 1) * limit;
       const paged = filtered.slice(startIdx, startIdx + limit);
 
-      setFlowcharts(paged);
-      setFlowchartsTotal(filtered.length);
-      setHasMoreFlowcharts(false);
+      if (paged.length > 0 || isGuestCheck()) {
+        setFlowcharts(paged);
+        setFlowchartsTotal(filtered.length);
+        setHasMoreFlowcharts(false);
+        setIsLoading(false);
+        if (isGuestCheck()) return;
+      }
+    } catch {}
+
+    if (isGuestCheck()) {
       setIsLoading(false);
       return;
     }
 
-    if (!options?.silent) setIsLoading(true);
     try {
       const offset = options?.page !== undefined ? (options.page - 1) * limit : (isLoadMore ? flowchartsRef.current.length : 0);
       const projIdParam = (projectId === null || projectId === 'null' || projectId === 'none') ? 'null' : projectId;
@@ -102,7 +101,8 @@ export function useFlowcharts(isGuest: boolean = false) {
       const publicParam = isPublic !== null ? `&is_public=${isPublic}` : '';
       const res = await apiFetch(`/api/flowcharts?limit=${limit}&offset=${offset}&project_id=${projIdParam}${qParam}${publicParam}`);
       if (res.ok) {
-        const json = await res.json();
+        const json = await res.json().catch(() => null);
+        if (!json) return;
         const data = json.data !== undefined ? json.data : json;
         const total = json.total !== undefined ? json.total : (Array.isArray(data) ? data.length : 0);
 
@@ -128,53 +128,50 @@ export function useFlowcharts(isGuest: boolean = false) {
         });
         setFlowchartsTotal(total);
         setHasMoreFlowcharts((flowchartsListData.length + offset) < total);
+        void localPersistence.saveResourcesBatch(flowchartsListData.map((f: any) => ({ ...f, type: 'flowchart' })));
       }
-    } catch (err) {
-      console.error('Error fetching flowcharts:', err);
-    } finally {
+    } catch {} finally {
       setIsLoading(false);
     }
   }, [isGuest]);
 
   const createFlowchart = async (title: string, projectId?: number | string | null, data?: string) => {
     const effectiveProjectId = (projectId === 'none' || projectId === 'uncategorized') ? null : projectId;
+    const createUid = crypto.randomUUID();
 
-    if (isGuest) {
-      const newFlowchart = {
-        id: Math.random().toString(36).substring(2, 9),
-        uid: crypto.randomUUID(),
-        title,
-        data: data || '',
-        project_id: effectiveProjectId || null,
-        is_deleted: false,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-        type: 'flowchart',
-      } as Flowchart & { type: string };
-      await localPersistence.saveResource(newFlowchart);
-      setFlowcharts(prev => [newFlowchart, ...prev]);
-      toast.success('Flowchart created locally');
-      return newFlowchart;
-    }
+    const newFlowchart = {
+      id: Math.random().toString(36).substring(2, 9),
+      uid: createUid,
+      title,
+      data: data || '',
+      project_id: effectiveProjectId || null,
+      is_deleted: false,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+      type: 'flowchart',
+    } as Flowchart & { type: string };
 
-    try {
-      const flowchartUid = crypto.randomUUID();
-      const res = await apiFetch('/api/flowcharts', {
+    await localPersistence.saveResource(newFlowchart);
+    setFlowcharts(prev => [newFlowchart, ...prev]);
+    toast.success('Flowchart created successfully');
+
+    if (!isGuestCheck()) {
+      void apiFetch('/api/flowcharts', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ title, project_id: effectiveProjectId, data: data || "", uid: flowchartUid }),
-      });
-      if (res.ok) {
-        const newFlowchart = await res.json();
-        if (!newFlowchart.uid) {
-          newFlowchart.uid = flowchartUid;
+        body: JSON.stringify({ title, project_id: effectiveProjectId, data: data || '', uid: createUid }),
+      }).then(async res => {
+        if (res.ok) {
+          const serverFc = await res.json().catch(() => null);
+          if (serverFc?.id) {
+            setFlowcharts(prev => prev.map(f => f.uid === createUid ? { ...f, id: serverFc.id } : f));
+            void localPersistence.saveResource({ ...serverFc, type: 'flowchart' });
+          }
         }
-        setFlowcharts(prev => [newFlowchart, ...prev]);
-        toast.success('Flowchart created successfully');
-        return newFlowchart;
-      }
-    } catch (err) {}
-    return null;
+      }).catch(() => {});
+    }
+
+    return newFlowchart;
   };
 
   // All mutation/CRUD functions use uid (UUID) for API calls.

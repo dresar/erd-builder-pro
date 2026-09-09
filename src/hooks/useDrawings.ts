@@ -48,30 +48,15 @@ export function useDrawings(isGuest: boolean = false) {
     }
   };
 
-  const fetchDrawings = useCallback(async (
-    isLoadMore = false,
-    projectId: number | null | string = 'all',
-    searchQuery = '',
-    isPublic: boolean | null = null,
-    limit = 10,
-    page?: number,
-    options?: { silent?: boolean }
-  ) => {
-    if (isGuestCheck()) {
+  const fetchDrawings = useCallback(async (isLoadMore = false, projectId: number | null | string = 'all', searchQuery = '', isPublic: boolean | null = null, limit = 10, page?: number, options?: { silent?: boolean }) => {
+    try {
       const [localDrawings, localProjects] = await Promise.all([
         localPersistence.getAllResources('drawings'),
         localPersistence.getAllResources('project'),
       ]);
       const activeProjects = localProjects.filter((p: any) => !p.is_deleted);
-      if (activeProjects.length === 0) {
-        setDrawings([]);
-        setDrawingsTotal(0);
-        setHasMoreFiles(false);
-        setIsLoading(false);
-        return;
-      }
       const activeProjectIds = new Set(activeProjects.flatMap((p: any) => [String(p.id), String(p.uid)].filter(Boolean)));
-      let filtered = localDrawings.filter(d => !d.is_deleted && d.project_id && activeProjectIds.has(String(d.project_id)));
+      let filtered = localDrawings.filter(d => !d.is_deleted && (!activeProjects.length || !d.project_id || activeProjectIds.has(String(d.project_id))));
       if (projectId !== 'all') {
         filtered = filtered.filter(d => String(d.project_id) === String(projectId));
       }
@@ -83,14 +68,20 @@ export function useDrawings(isGuest: boolean = false) {
       const startIdx = (pageNum - 1) * pageSize;
       const paged = filtered.slice(startIdx, startIdx + pageSize);
 
-      setDrawings(paged);
-      setDrawingsTotal(filtered.length);
-      setHasMoreFiles(false);
+      if (paged.length > 0 || isGuestCheck()) {
+        setDrawings(paged);
+        setDrawingsTotal(filtered.length);
+        setHasMoreFiles(false);
+        setIsLoading(false);
+        if (isGuestCheck()) return;
+      }
+    } catch {}
+
+    if (isGuestCheck()) {
       setIsLoading(false);
       return;
     }
 
-    if (!options?.silent) setIsLoading(true);
     try {
       const offset = page !== undefined ? (page - 1) * limit : (isLoadMore ? drawingsRef.current.length : 0);
       const projIdParam = (projectId === null || projectId === 'null' || projectId === 'none') ? 'null' : projectId;
@@ -98,7 +89,8 @@ export function useDrawings(isGuest: boolean = false) {
       const publicParam = isPublic !== null ? `&is_public=${isPublic}` : '';
       const res = await apiFetch(`/api/drawings?limit=${limit}&offset=${offset}&project_id=${projIdParam}${qParam}${publicParam}`);
       if (res.ok) {
-        const json = await res.json();
+        const json = await res.json().catch(() => null);
+        if (!json) return;
         const data = json.data !== undefined ? json.data : json;
         const total = json.total !== undefined ? json.total : (Array.isArray(data) ? data.length : 0);
 
@@ -124,52 +116,50 @@ export function useDrawings(isGuest: boolean = false) {
         });
         setDrawingsTotal(total);
         setHasMoreFiles((drawingsListData.length + offset) < total);
+        void localPersistence.saveResourcesBatch(drawingsListData.map((d: any) => ({ ...d, type: 'drawings' })));
       }
-    } catch (err) {
-      console.error('Error fetching drawings:', err);
-    } finally {
+    } catch {} finally {
       setIsLoading(false);
     }
   }, []);
 
   const createDrawing = async (title: string, projectId?: number | string | null, data?: string) => {
     const effectiveProjectId = (projectId === 'none' || projectId === 'uncategorized') ? null : projectId;
+    const createUid = crypto.randomUUID();
 
-    if (isGuestCheck()) {
-      const newDrawing = {
-        id: Math.random().toString(36).substring(2, 9),
-        title,
-        data: data || '',
-        project_id: effectiveProjectId || null,
-        is_deleted: false,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-        type: 'drawings',
-      } as Drawing & { type: string };
-      await localPersistence.saveResource(newDrawing);
-      setDrawings(prev => [newDrawing, ...prev]);
-      toast.success('Drawing created locally');
-      return newDrawing;
-    }
+    const newDrawing = {
+      id: Math.random().toString(36).substring(2, 9),
+      uid: createUid,
+      title,
+      data: data || '',
+      project_id: effectiveProjectId || null,
+      is_deleted: false,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+      type: 'drawings',
+    } as Drawing & { type: string };
 
-    try {
-      const drawingUid = crypto.randomUUID();
-      const res = await apiFetch('/api/drawings', {
+    await localPersistence.saveResource(newDrawing);
+    setDrawings(prev => [newDrawing, ...prev]);
+    toast.success('Drawing created successfully');
+
+    if (!isGuestCheck()) {
+      void apiFetch('/api/drawings', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ title, project_id: effectiveProjectId, data: data || "", uid: drawingUid }),
-      });
-      if (res.ok) {
-        const newDrawing = await res.json();
-        if (!newDrawing.uid) {
-          newDrawing.uid = drawingUid;
+        body: JSON.stringify({ title, project_id: effectiveProjectId, data: data || "", uid: createUid }),
+      }).then(async res => {
+        if (res.ok) {
+          const serverDw = await res.json().catch(() => null);
+          if (serverDw?.id) {
+            setDrawings(prev => prev.map(d => d.uid === createUid ? { ...d, id: serverDw.id } : d));
+            void localPersistence.saveResource({ ...serverDw, type: 'drawings' });
+          }
         }
-        setDrawings(prev => [newDrawing, ...prev]);
-        toast.success('Drawing created successfully');
-        return newDrawing;
-      }
-    } catch (err) {}
-    return null;
+      }).catch(() => {});
+    }
+
+    return newDrawing;
   };
 
   const duplicateDrawing = async (uid: string, newTitle: string) => {

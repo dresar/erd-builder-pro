@@ -35,24 +35,17 @@ export function useNotes(isGuest: boolean = false) {
   activeNoteUidRef.current = activeNoteUid;
 
   const fetchNotes = useCallback(async (isLoadMore = false, projectId: number | null | string = 'all', searchQuery = '', isPublic: boolean | null = null, limit = 10, page?: number, options?: { silent?: boolean }) => {
-    if (isGuestCheck()) {
+    try {
       const [localNotes, localProjects] = await Promise.all([
         localPersistence.getAllResources('notes'),
         localPersistence.getAllResources('project'),
       ]);
       const activeProjects = localProjects.filter((p: any) => !p.is_deleted);
-      if (activeProjects.length === 0) {
-        setNotes([]);
-        setNotesTotal(0);
-        setHasMoreNotes(false);
-        setIsLoading(false);
-        return;
-      }
       const activeProjectIds = new Set(activeProjects.flatMap((p: any) => [String(p.id), String(p.uid)].filter(Boolean)));
       const projectMap = new Map(
         activeProjects.map((p: any) => [String(p.id), { uid: p.uid || String(p.id), name: p.name }])
       );
-      let filtered = localNotes.filter((n: any) => !n.is_deleted && n.project_id && activeProjectIds.has(String(n.project_id)));
+      let filtered = localNotes.filter((n: any) => !n.is_deleted && (!activeProjects.length || !n.project_id || activeProjectIds.has(String(n.project_id))));
       if (projectId !== 'all') {
         filtered = filtered.filter(n => String(n.project_id) === String(projectId));
       }
@@ -64,21 +57,17 @@ export function useNotes(isGuest: boolean = false) {
         projects: n.projects || projectMap.get(String(n.project_id)) || null,
       }));
 
-      // Sort: newest first by created_at
       enriched.sort((a: any, b: any) => {
         const da = a.created_at ? new Date(a.created_at).getTime() : 0;
         const db = b.created_at ? new Date(b.created_at).getTime() : 0;
         return db - da;
       });
 
-      // Paginate
       const pageSize = limit;
       const pageNum = page !== undefined ? page : 1;
       const startIdx = (pageNum - 1) * pageSize;
       const paged = enriched.slice(startIdx, startIdx + pageSize);
 
-      // Preserve content for notes that were already loaded in detail view
-      // (prevents fetchNotes list response from overwriting selectNote's content)
       const merged = paged.map((n: any) => {
         const existing = notesRef.current.find(e => String(e.uid ?? e.id) === String(n.uid ?? n.id));
         if (existing && existing.content != null) {
@@ -86,14 +75,21 @@ export function useNotes(isGuest: boolean = false) {
         }
         return n;
       });
-      setNotes(merged);
-      setNotesTotal(enriched.length);
-      setHasMoreNotes(false);
+
+      if (merged.length > 0 || isGuestCheck()) {
+        setNotes(merged);
+        setNotesTotal(enriched.length);
+        setHasMoreNotes(false);
+        setIsLoading(false);
+        if (isGuestCheck()) return;
+      }
+    } catch {}
+
+    if (isGuestCheck()) {
       setIsLoading(false);
       return;
     }
 
-    if (!options?.silent) setIsLoading(true);
     try {
       const offset = page !== undefined ? (page - 1) * limit : (isLoadMore ? notesRef.current.length : 0);
       const projIdParam = (projectId === null || projectId === 'null' || projectId === 'none') ? 'null' : projectId;
@@ -101,18 +97,17 @@ export function useNotes(isGuest: boolean = false) {
       const publicParam = isPublic !== null ? `&is_public=${isPublic}` : '';
       const res = await apiFetch(`/api/notes?limit=${limit}&offset=${offset}&project_id=${projIdParam}${qParam}${publicParam}`);
       if (res.ok) {
-        const json = await res.json();
+        const json = await res.json().catch(() => null);
+        if (!json) return;
         const data = json.data !== undefined ? json.data : (Array.isArray(json) ? json : []);
         const total = json.total !== undefined ? json.total : (Array.isArray(data) ? data.length : 0);
-        
+
         const notesListData = Array.isArray(data) ? data : [];
         if (isLoadMore) {
           setNotes(prev => [...prev, ...notesListData]);
         } else {
           setNotes(prev => {
             const activeUid = activeNoteUidRef.current;
-            // Preserve content for notes already loaded in detail view (selectNote)
-            // even when the note IS in the list response (which lacks the content field).
             const merged = notesListData.map((n: any) => {
               const existing = prev.find(e => String(e.uid ?? e.id) === String(n.uid ?? n.id));
               if (existing && existing.content != null) {
@@ -120,7 +115,6 @@ export function useNotes(isGuest: boolean = false) {
               }
               return n;
             });
-            // Also preserve the active note if it's missing from the list entirely
             if (activeUid && !merged.some(n => n.uid === activeUid)) {
               const existing = prev.find(n => n.uid === activeUid);
               if (existing) return [...merged, existing];
@@ -130,59 +124,50 @@ export function useNotes(isGuest: boolean = false) {
         }
         setNotesTotal(total);
         setHasMoreNotes((notesListData.length + offset) < total);
-      } else {
-        const errText = await res.text();
-        console.error(`Failed to fetch notes: ${res.status} ${res.statusText}`, errText);
+        void localPersistence.saveResourcesBatch(notesListData.map(n => ({ ...n, type: 'notes' })));
       }
-    } catch (err) {
-      console.error('Error in fetchNotes:', err);
-    } finally {
+    } catch {} finally {
       setIsLoading(false);
     }
-  }, []); 
+  }, []);
 
   const createNote = async (title: string, projectId?: number | string | null, content?: string) => {
     const effectiveProjectId = (projectId === 'none' || projectId === 'uncategorized') ? null : projectId;
+    const noteUid = crypto.randomUUID();
 
-    if (isGuestCheck()) {
-      const noteUid = crypto.randomUUID();
-      const newNote = {
-        id: noteUid,
-        uid: noteUid,
-        title,
-        content: content || '',
-        project_id: effectiveProjectId || null,
-        is_deleted: false,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-        type: 'notes',
-      } as Note & { type: string };
-      await localPersistence.saveResource(newNote);
-      setNotes(prev => [newNote, ...prev]);
-      toast.success('Note created locally');
-      return newNote;
-    }
+    const newNote = {
+      id: noteUid,
+      uid: noteUid,
+      title,
+      content: content || '',
+      project_id: effectiveProjectId || null,
+      is_deleted: false,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+      type: 'notes',
+    } as Note & { type: string };
 
-    try {
-      const noteUid = crypto.randomUUID();
-      const res = await apiFetch('/api/notes', {
+    await localPersistence.saveResource(newNote);
+    setNotes(prev => [newNote, ...prev]);
+    toast.success('Note created successfully');
+
+    if (!isGuestCheck()) {
+      void apiFetch('/api/notes', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ title, project_id: effectiveProjectId, content: content || "", uid: noteUid }),
-      });
-      if (res.ok) {
-        const newNote = await res.json();
-        if (!newNote.uid) {
-          newNote.uid = noteUid;
+      }).then(async res => {
+        if (res.ok) {
+          const serverNote = await res.json().catch(() => null);
+          if (serverNote?.id) {
+            setNotes(prev => prev.map(n => n.uid === noteUid ? { ...n, id: serverNote.id } : n));
+            void localPersistence.saveResource({ ...serverNote, type: 'notes' });
+          }
         }
-        setNotes(prev => [newNote, ...prev]);
-        toast.success('Note created successfully');
-        return newNote;
-      }
-    } catch (err) {
-      console.error('Error creating note:', err);
+      }).catch(() => {});
     }
-    return null;
+
+    return newNote;
   };
 
   const duplicateNote = async (uid: string, newTitle: string) => {
