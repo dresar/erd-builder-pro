@@ -36,7 +36,9 @@ export function getExecutionDirectiveSection(projectName: string, domain: string
 #    - If you have file-creation tools (Claude Code CLI, Cursor, Antigravity, Windsurf):
 #      Write the actual files to disk right now without asking.
 #    - If you are in a web chat (ChatGPT, Claude web):
-#      Immediately output the complete production code files starting with PHASE 1.
+#      Immediately output the complete production code files starting with PHASE 1,
+#      OR output a single self-contained Python generator script (e.g. generate_project_bundle.py)
+#      that writes all files and compiles the downloadable ZIP locally.
 
 # =======================================================================
 # [SECTION B: 5-PHASE DETERMINISTIC AUTONOMOUS ROADMAP]

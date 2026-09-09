@@ -65,9 +65,10 @@ CRITICAL CODE ARCHITECTURE & FOLDER MANAGEMENT CONSTRAINTS:
    - Self-documenting naming and Clean Architecture are mandatory.
 
 -----------------------------------------------------------------------
-CLAUDE DIRECT ZIP CREATION INSTRUCTION (SANDBOX EXECUTION):
+ZIP PACKAGING & FALLBACK LOCAL PYTHON GENERATOR SCRIPT:
 -----------------------------------------------------------------------
-When running inside Claude (Claude 3.7 Sonnet / Claude Artifacts):
+[OPTION A: DIRECT SANDBOX ZIP CREATION (Claude Artifacts / Python Sandbox)]
+When running inside an environment with an active Python execution sandbox (Claude Artifacts, ChatGPT Code Interpreter, etc.):
 You MUST bundle all 21+ generated Markdown documentation files, database schemas, and codebase files into a downloadable ZIP archive using Python in your execution sandbox.
 
 Execute this Python script to construct and deliver the archive:
@@ -95,8 +96,26 @@ with zipfile.ZipFile(zip_path, "w", zipfile.ZIP_DEFLATED) as zipf:
 
 print(f"Enterprise ZIP package created successfully: {zip_path}")
 \`\`\`
-
 Provide the user with the direct link to download \`${safeSlug}_bundle.zip\`.
+
+[OPTION B: FALLBACK SINGLE-FILE PYTHON GENERATOR (FOR NON-SANDBOX / STANDARD CHAT)]
+Not all AI chatbots or interfaces have a built-in sandbox capable of emitting direct downloadable ZIP links.
+IF you are running in an environment where direct sandbox ZIP generation is NOT supported (e.g. standard ChatGPT web chat, Claude chat without file-creation tool, Cursor chat, Windsurf, local terminal LLMs, or API clients):
+You are EXPLICITLY AUTHORIZED and INSTRUCTED to output a SINGLE, SELF-CONTAINED, EXHAUSTIVE PYTHON SCRIPT (e.g. \`generate_${safeSlug}_bundle.py\`).
+
+Requirements for this standalone generator script:
+1. Pure Python 3 Standard Library:
+   - Strictly use built-in modules only: \`os\`, \`sys\`, \`pathlib\`, \`zipfile\`.
+   - Strictly ZERO pip dependencies (\`requests\`, \`colorama\`, etc. are forbidden). The user must be able to run it on vanilla Python without installing anything.
+2. Complete Unabbreviated Inlined Content:
+   - Embed the FULL, complete text of all 21+ Markdown files (including the 2,500+ word Indonesian PRD in docs/01_PRD.md), schema.dbml, schema.sql, seed.sql, and .agents/ protocols directly inside multi-line raw string dictionaries or variables in the Python file.
+   - Strictly NO abbreviations, NO ellipses ("..."), NO "// TODO". Every single file must be 100% complete.
+3. Automated Local Extraction & ZIP Generation:
+   - When the user runs \`python generate_${safeSlug}_bundle.py\` in their local terminal:
+     a. It creates the entire directory structure (\`docs/\`, \`database/\`, \`.agents/\`, \`src/\`).
+     b. It writes all 21+ files to disk with UTF-8 encoding.
+     c. It automatically compiles the whole bundle directory into \`${safeSlug}_bundle.zip\` right in their local folder.
+     d. It prints a clean console report showing the generated tree and the ready-to-use ZIP file path.
 
 -----------------------------------------------------------------------
 STRICT ANTI-ABBREVIATION & ZERO-OMISSION DIRECTIVE:
