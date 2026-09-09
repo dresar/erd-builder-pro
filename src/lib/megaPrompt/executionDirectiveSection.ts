@@ -130,7 +130,7 @@ export function getExecutionDirectiveSection(projectName: string, domain: string
 # - Rule 37: Micro-Click Interaction: All interactive buttons must have active:scale-[0.98] transition-transform.
 # - Rule 38: Precision Cards (/precision-card-button-ui): Delicate 1px border-border/70, rounded-lg/xl, padding p-3 to p-4, shadow-xs.
 # - Rule 39: Microcopy Hierarchy (/ui-ux-text): Form placeholders strictly maximum 1 word. Button labels strictly maximum 1–2 words.
-# - Rule 40: Zero AI Slop (/anti-slop-writing): Banned words: "delve", "tapestry", "robust", "streamline", "seamless", "cutting-edge".
+# - Rule 40: Zero AI Slop & Authentic Craft (/anti-slop-writing): Banned words: "delve", "tapestry", "robust", "streamline", "seamless", "cutting-edge", "empower", "elevate", "leverage", "foster", "game-changer", "vibrant", "pivotal", "multifaceted", "Di era digital...", "Menyelami...". Enforce dynamic sentence length (burstiness), no Rule of Three, max 1 em-dash per 500 words, and direct practitioner language.
 
 # =======================================================================
 # [SECTION D: IMMEDIATE FIRST-TURN INSTRUCTION]

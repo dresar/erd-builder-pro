@@ -91,13 +91,43 @@ SKILL 5: /env-secrets-management (CREDENTIAL SECURITY & ZERO-LEAK)
   * Strictly prevent exposing backend secrets to the browser client bundle (e.g. never prefix server secrets with NEXT_PUBLIC_ or VITE_).
 
 -----------------------------------------------------------------------
-SKILL 6: /anti-slop-writing (AUTHENTIC HUMAN CADENCE & ZERO AI CLICHES)
+SKILL 6: /anti-slop-writing (MASTER ANTI-SLOP SYSTEM & AUTHENTIC HUMAN CRAFT)
 -----------------------------------------------------------------------
-- BANNED AI CLICHES:
-  * Strictly forbid overused AI buzzwords: "delve", "tapestry", "robust", "streamline", "seamless", "game-changer", "elevate", "cutting-edge", "unleash", "testament", "beacon".
-- HUMAN TECHNICAL VOICE:
-  * Use concrete, direct engineering terms (e.g. "transaction rollback", "indexed B-tree query", "debounced 300ms input", "atomic commit").
-  * Active voice, natural rhythm, varied sentence lengths, and zero robotic corporate fluff.
+A unified system for producing human-crafted text, interfaces, and code documentation that eliminates statistically detectable "AI Slop" patterns while preserving clarity and technical depth:
+
+1. WRITING & COPYWRITING DIRECTIVES (TEXT & CONTENT):
+- THE CORE WRITING CONSTRAINT:
+  * Never use banned AI words/phrases across English & Indonesian.
+  * Never invent facts, synthetic numbers, or fake quotes to sound convincing. Use real schema names and measurable data.
+  * Never sound like a corporate cheerleading bot. Write like a senior practitioner who understands production realities.
+- STRUCTURAL & RHYTHM RULES (BURSTINESS):
+  * No "Rule of Three": Break the default AI reflex of grouping 3 adjectives or 3 bullet points. Use 1, 2, 4, or 5 points.
+  * Dynamic Sentence Length: Never write consecutive sentences of similar length. Mix ultra-short 3-5 word sentences with nuanced 20-word compound thoughts.
+  * No Parataxis (Staccato AI Rhythm): Avoid repetitive sequences of blunt micro-sentences. Connect related ideas using subordinate clauses, semicolons, and natural conjunctions.
+  * No Hedging Seesaw: Stop balancing every statement ("While X has benefits, it's crucial to remember that Y also poses challenges..."). State technical trade-offs directly.
+  * Active Voice Over Passive Slop: Write direct sentences ("The migration engine drops orphaned indexes") rather than passive filler ("Orphaned indexes are successfully removed by the system").
+- PUNCTUATION & TYPOGRAPHY DISCIPLINE:
+  * Em Dashes (—): Maximum ONE per 500 words. (Overusing em dashes is the #1 signature of LLM writing).
+  * Exclamation Marks (!): Maximum ONE per 1,000 words. Let concrete substance convey importance.
+  * Semicolons (;): Use naturally to connect closely related independent clauses.
+  * Ellipses (...): Prohibited as stylistic transitions; only permitted if data is literally truncated.
+
+2. BANNED VOCABULARY & AI TROPES (ENGLISH & INDONESIAN):
+- Overused AI Verbs: delve, elevate, empower, streamline, unlock, leverage, foster, spearhead, harness. (Use: explore, use, build, help, speed up, run).
+- Fluff & Fillers: tapestry, landscape, testament to, vibrant, pivotal, multifaceted, nuanced. (Use: context, system, proof, lively, key, varied).
+- Buzzwords: cutting-edge, game-changer, seamless, revolutionary, transformative, robust, bespoke. (Use: fast, reliable, modern, well-built).
+- Chatbot Signoffs: "I hope this helps!", "Let me know if you need anything else!", "In conclusion...". (State the next action directly or stop cleanly).
+- Indonesian Slop: "Di era digital yang serba cepat ini...", "Menyelami lebih dalam...", "Sebuah bukti nyata...", "Tidak hanya X, tetapi juga Y...". (Langsung ke inti pembahasan tanpa basa-basi klise).
+
+3. UI & FRONTEND CRAFT DIRECTIVES (DESIGN & ACCESSIBILITY):
+- Purpose Test: Reject visual decoration that exists solely because "it looks like AI UI". Every gradient, border, and badge must serve hierarchy.
+- No Cookie-Cutter SaaS Slop: Avoid generic purple/indigo gradients + floating cards + 3-column pricing grids. Use grounded typography, deliberate contrast, and intentional white space.
+- Mobile & Accessibility Standards: Minimum tap target of 44x44px for interactive elements. Text contrast ratio must strictly pass WCAG AA (4.5:1). Custom focus-visible rings required.
+
+4. CODE & ARCHITECTURE DOCUMENTATION DIRECTIVES:
+- Zero Obvious Comments (/nokomen): Never explain what basic syntax does.
+- Document the "Why" and Invariants: Document non-obvious business logic, architectural trade-offs, and security invariants.
+- Concise PRDs & Architecture Notes: Structured, modular, and free of introductory padding.
 
 -----------------------------------------------------------------------
 SKILL 7: /graphify (KNOWLEDGE GRAPH & DEPENDENCY TOPOLOGY)

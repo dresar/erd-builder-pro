@@ -1,4 +1,19 @@
 export function getEnterprisePrdSection(projectName: string, domain: string, existingNotes: string): string {
+  const antiSlopPrdDirective = `
+### STANDAR DOKUMENTASI PRODUK & ANTI-SLOP PRD (/anti-slop-writing)
+Seluruh bab spesifikasi produk, user stories, dan dokumentasi teknis WAJIB mematuhi standar /anti-slop-writing:
+1. Larangan Kosakata & Klise AI (EN & ID):
+   - Dilarang keras menggunakan kata klise AI: "delve", "tapestry", "robust", "streamline", "seamless", "game-changer", "elevate", "cutting-edge", "unleash", "testament", "beacon", "Di era digital yang serba cepat ini...", "Menyelami lebih dalam...", "Sebuah bukti nyata...", "Tidak hanya X, tetapi juga Y...".
+2. Gaya Bahasa Praktisi Autentik (Human Practitioner Voice):
+   - Gunakan fakta teknis terukur, nama tabel/kolom nyata, dan bahasa lugas tanpa pembuka klise korporat.
+   - Variasi ritme kalimat (Burstiness): Kombinasikan kalimat pendek 3-5 kata dengan kalimat majemuk terstruktur 15-25 kata. Hindari pola panjang kalimat yang monoton.
+   - Hindari 'Rule of Three' mekanis (kebiasaan AI mengelompokkan 3 kata sifat berulang). Gunakan 1, 2, 4, atau 5 poin sesuai kebutuhan teknis riil.
+3. Disiplin Tanda Baca & Tipografi:
+   - Em dash (—) maksimal 1 per 500 kata.
+   - Tanda seru (!) maksimal 1 per 1.000 kata. Biarkan substansi kalimat yang menyampaikan urgensi.
+4. Spesifikasi Faktual & Zero Hallucination:
+   - Dilarang membuat angka metrik fiktif. Seluruh alur state machine, batasan domain, dan skema payload wajib definitif.`;
+
   if (existingNotes && existingNotes.trim().length > 100) {
     return `=======================================================================
 [SECTION 1: PRODUCT REQUIREMENTS DOCUMENT (PRD - BAHASA INDONESIA RESMI)]
@@ -8,6 +23,7 @@ export function getEnterprisePrdSection(projectName: string, domain: string, exi
 > Domain: ${domain}
 > Klasifikasi: Spesifikasi Produksi Enterprise Multi-Tenant
 > Target Ketersediaan: 99.9% Uptime SLA | Same-Day Settlement | Zero Data Leak
+${antiSlopPrdDirective}
 
 ${existingNotes.trim()}
 `;
@@ -23,6 +39,7 @@ ${existingNotes.trim()}
 > Status: Spesifikasi Produksi Enterprise
 > Versi: 1.0.0
 > Target Arsitektur: Modular Monolith / Cloud-Native Multi-Tenant
+${antiSlopPrdDirective}
 
 ## 1. Latar Belakang & Sasaran Strategis
 Sistem ini dirancang untuk menjawab tantangan operasional berskala enterprise pada domain ${domain}.

@@ -1,6 +1,6 @@
 export function getApiEndpointsSection(projectName: string, dbmlSource: string): string {
   const tableNames: string[] = [];
-  const tableRegex = /Table\s+["']?([a-zA-Z0-9_.]+)["']?/gi;
+  const tableRegex = /(?:^|\n)\s*Table\s+["']?([a-zA-Z0-9_.]+)["']?/gi;
   let match: RegExpExecArray | null;
   while ((match = tableRegex.exec(dbmlSource)) !== null) {
     const raw = match[1];
