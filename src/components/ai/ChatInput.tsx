@@ -241,8 +241,6 @@ export const ChatInput = memo(function ChatInput({
   const activeAction = actions.find(action => action.id === activeActionId);
   const activeToolAction = toolActions.find(action => action.id === activeActionId);
 
-  if (!hasActiveSession) return null;
-
   return (
     <div className="shrink-0 border-t bg-background p-3">
       <div className="relative rounded-2xl border border-input bg-card p-2 shadow-sm transition-shadow focus-within:border-ring focus-within:ring-1 focus-within:ring-ring">

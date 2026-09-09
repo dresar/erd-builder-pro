@@ -46,7 +46,7 @@ export function AIChatRoute() {
   const entityUidParam = searchParams.get('entityUid');
 
   return (
-    <div className="flex-1 flex flex-col h-full min-h-0 overflow-hidden rounded-xl border border-border/60 bg-background shadow-xs">
+    <div className="flex-1 flex flex-col h-full min-h-0 overflow-hidden bg-background">
       <AIChatPanel
         layout="page"
         projectId={activeProjectId}

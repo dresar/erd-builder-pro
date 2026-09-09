@@ -363,12 +363,20 @@ export function useAIChat(
   // ─── Messaging (Send) ────────────────────────────────
 
   const sendMessage = useCallback(async (content: string, selectionText?: string | null, requestContext?: AIRequestContext) => {
-    if (!currentSession || !content.trim()) return;
+    if (!content.trim()) return;
+
+    let activeSession = currentSession;
+    if (!activeSession) {
+      const newUid = await createSession();
+      if (!newUid) return;
+      activeSession = sessionsRef.current.find(s => s.uid === newUid) ?? null;
+      if (!activeSession) return;
+    }
 
     const trimmed = content.trim();
     const isGuest = isGuestCheck();
     const isPlanRequest = requestContext?.planMode === true;
-    const sessionUid = String(currentSession.uid ?? currentSession.id);
+    const sessionUid = String(activeSession.uid ?? activeSession.id);
     const clientMessageId = requestContext?.clientMessageId ?? crypto.randomUUID();
     const outbox = isPlanRequest
       ? (await listPlanOutbox(sessionUid).catch(() => [])).find(item => item.clientMessageId === clientMessageId)
@@ -405,7 +413,7 @@ export function useAIChat(
 
     const tempUserMsg: AIChatMessage = {
       id: `temp-${clientMessageId}`,
-      session_id: currentSession.uid ?? currentSession.id,
+      session_id: activeSession.uid ?? activeSession.id,
       role: 'user',
       content: trimmed,
       selection_text: selectionText || null,
@@ -416,7 +424,7 @@ export function useAIChat(
     };
     const streamingMsg: AIChatMessage = {
       id: 'streaming',
-      session_id: currentSession.uid ?? currentSession.id,
+      session_id: activeSession.uid ?? activeSession.id,
       role: 'assistant',
       content: '',
       plan_mode: isPlanRequest || undefined,
@@ -464,7 +472,7 @@ export function useAIChat(
       const isFirstMessage = updatedCache.filter(m => m.role === 'user').length === 1;
       if (isFirstMessage) {
         const title = trimmed.length > 60 ? trimmed.slice(0, 57) + '...' : trimmed;
-        autoTitleSession(currentSession.uid, title, true);
+        autoTitleSession(activeSession.uid, title, true);
       }
     }
 
@@ -475,7 +483,7 @@ export function useAIChat(
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            session_id: currentSession.uid ?? currentSession.id, role: 'user', content: trimmed, selection_text: selectionText || null,
+            session_id: activeSession.uid ?? activeSession.id, role: 'user', content: trimmed, selection_text: selectionText || null,
             client_message_id: clientMessageId,
           }),
         });
@@ -612,7 +620,7 @@ export function useAIChat(
       // Project ID sync + sibling context (Online only)
       if (!isGuest) {
         const liveProjectId = projectIdRef.current ?? null;
-        await syncSessionProjectId(currentSession, liveProjectId, setCurrentSession, setSessions);
+        await syncSessionProjectId(activeSession, liveProjectId, setCurrentSession, setSessions);
 
         if (liveProjectId && entityContext) {
           try {
@@ -660,7 +668,7 @@ export function useAIChat(
       const assistantMessageId = assistantClientMessageId(clientMessageId);
       const finalAiMsg: AIChatMessage = {
         id: `ai-${Date.now()}`,
-        session_id: currentSession.uid ?? currentSession.id,
+        session_id: activeSession.uid ?? activeSession.id,
         role: 'assistant',
         content: accumulatedResponse,
         client_message_id: assistantMessageId,
@@ -694,10 +702,10 @@ export function useAIChat(
 
       // Persist
       if (isGuest) {
-        const persisted = await persistGuestMessages(currentSession.uid, messagesCacheMapRef.current.get(sessionUid) ?? []);
+        const persisted = await persistGuestMessages(activeSession.uid, messagesCacheMapRef.current.get(sessionUid) ?? []);
         if (!persisted) throw new Error('Failed to save AI response locally');
         setSessions(prev => {
-          const updated = prev.map(s => s.uid === currentSession.uid ? { ...s, updated_at: new Date().toISOString() } : s);
+          const updated = prev.map(s => s.uid === activeSession.uid ? { ...s, updated_at: new Date().toISOString() } : s);
           updated.sort((a, b) => new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime());
           return updated;
         });
@@ -706,7 +714,7 @@ export function useAIChat(
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            session_id: currentSession.uid ?? currentSession.id, role: 'assistant', content: accumulatedResponse,
+            session_id: activeSession.uid ?? activeSession.id, role: 'assistant', content: accumulatedResponse,
             client_message_id: assistantMessageId,
           }),
         });
@@ -720,12 +728,12 @@ export function useAIChat(
 
         // Optimistic local state update
         setSessions(prev => {
-          const updated = prev.map(s => s.id === currentSession.id ? { ...s, updated_at: new Date().toISOString() } : s);
+          const updated = prev.map(s => s.id === activeSession.id ? { ...s, updated_at: new Date().toISOString() } : s);
           updated.sort((a, b) => new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime());
           return updated;
         });
         // Fire-and-forget: sync timestamp on server
-        apiFetch(`/api/ai/chat/sessions/${currentSession.uid}`, {
+        apiFetch(`/api/ai/chat/sessions/${activeSession.uid}`, {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ updated_at: new Date().toISOString() }),

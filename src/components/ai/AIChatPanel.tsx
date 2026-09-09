@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
-import { Sparkles, Plus, Loader2, Search, ChevronLeft, ChevronRight, ArrowLeft, Bot } from 'lucide-react';
+import { Sparkles, Plus, Loader2, Search, ChevronLeft, ChevronRight, ArrowLeft, Bot, History, PanelLeftClose } from 'lucide-react';
 import { useAIChat, EntityContext } from '@/hooks/useAIChat';
 import { AIAction, getActionsForView, grillMeAction, ViewType } from '@/components/ai/AIActions';
 import { useAIAction } from '@/contexts/AIActionContext';
@@ -119,6 +119,7 @@ export const AIChatPanel = ({
   const [activeActionId, setActiveActionId] = useState<string | null>(null);
   const [activeActionPrompt, setActiveActionPrompt] = useState<string | null>(null);
   const [page, setPage] = useState<'list' | 'chat'>('list');
+  const [isHistoryOpen, setIsHistoryOpen] = useState(false);
   const [minimized, setMinimized] = useState(false);
   const [sessionToDelete, setSessionToDelete] = useState<AIChatSession | null>(null);
   const [confirmOverwritePrompt, setConfirmOverwritePrompt] = useState<string | null>(null);
@@ -146,6 +147,13 @@ export const AIChatPanel = ({
 
   // Reset to page 1 on search change
   useEffect(() => { setSessionPage(1); }, [sessionSearch]);
+
+  // Auto-select latest session on load if none selected
+  useEffect(() => {
+    if (!currentSession && sessions.length > 0 && !isSessionsLoading) {
+      selectSession(sessions[0].uid);
+    }
+  }, [sessions, currentSession, isSessionsLoading, selectSession]);
 
   // Actions sesuai file fitur yang sedang dibuka (entityType), bukan dari sesi entity_type
   const actions = [grillMeAction, ...(currentViewType ? getActionsForView(currentViewType) : [])];
@@ -404,30 +412,32 @@ export const AIChatPanel = ({
           isPage ? "flex-col md:flex-row bg-background" : "flex-col bg-card"
         )}
       >
-        {/* ── Left Column: Session List ──────────────────── */}
+        {/* ── Left Column: Session List (Collapsible on Page mode) ── */}
         <div
           className={cn(
             "flex flex-col h-full overflow-hidden border-border/60",
-            isPage ? "w-full md:w-72 lg:w-80 md:border-r bg-card/20 shrink-0" : "flex-1",
-            isPage && page === 'chat' && "hidden md:flex",
+            isPage ? (isHistoryOpen ? "w-72 lg:w-80 md:border-r bg-card/40 shrink-0 flex flex-col animate-in slide-in-from-left duration-200" : "hidden") : "flex-1",
             !isPage && page !== 'list' && "hidden"
           )}
         >
           {/* ── List Header ────────────────────────── */}
-          <div className="shrink-0 flex items-center justify-between px-4 py-3 border-b border-border/60 bg-muted/20">
-            <div className="flex items-center gap-2.5">
-              <Sparkles className="size-4 text-primary" />
-              <h3 className="text-sm font-semibold tracking-tight">Asisten AI</h3>
+          <div className="shrink-0 flex items-center justify-between px-3.5 py-3 border-b border-border/60 bg-muted/20">
+            <div className="flex items-center gap-2 min-w-0">
+              <History className="size-4 text-primary shrink-0" />
+              <h3 className="text-xs font-semibold tracking-tight uppercase text-muted-foreground truncate">Riwayat Chat</h3>
+              <span className="text-[10px] px-1.5 py-0.2 rounded-full bg-muted font-mono text-muted-foreground shrink-0">
+                {filteredSessions.length}
+              </span>
             </div>
-            <div className="flex items-center gap-1">
-              {onOpenExternalAI && (
-                <Button variant="ghost" size="icon" className="size-8" onClick={onOpenExternalAI} title="AI Eksternal (Claude/ChatGPT)">
-                  <Bot className="size-4" />
-                </Button>
-              )}
-              <Button variant="ghost" size="icon" className="size-8 cursor-pointer" onClick={handleNewSession} title="Chat Baru">
+            <div className="flex items-center gap-1 shrink-0">
+              <Button variant="ghost" size="icon" className="size-7 cursor-pointer" onClick={handleNewSession} title="Chat Baru">
                 <Plus className="size-4" />
               </Button>
+              {isPage && (
+                <Button variant="ghost" size="icon" className="size-7 cursor-pointer" onClick={() => setIsHistoryOpen(false)} title="Tutup Riwayat">
+                  <PanelLeftClose className="size-4" />
+                </Button>
+              )}
             </div>
           </div>
 
@@ -467,6 +477,9 @@ export const AIChatPanel = ({
                     onClick={() => {
                       selectSession(session.uid);
                       setPage('chat');
+                      if (typeof window !== 'undefined' && window.innerWidth < 768) {
+                        setIsHistoryOpen(false);
+                      }
                     }}
                     onDelete={() => setSessionToDelete(session)}
                   />
@@ -498,24 +511,42 @@ export const AIChatPanel = ({
           </div>
         </div>
 
-        {/* ── Right Column: Chat Conversation ────────────── */}
+        {/* ── Right Column: Chat Conversation (Full Width) ── */}
         <div
           className={cn(
             "flex-1 flex flex-col h-full min-w-0 bg-background",
-            isPage && page === 'list' && !currentSession && "hidden md:flex",
             !isPage && page !== 'chat' && "hidden"
           )}
         >
           {/* ── Chat Header ─────────────────────────── */}
-          <div className="shrink-0 flex items-center justify-between px-4 py-3 border-b border-border/60 bg-muted/20">
-            <div className="flex items-center gap-2 min-w-0">
-              <button
-                onClick={() => setPage('list')}
-                className={cn("size-7 flex items-center justify-center rounded hover:bg-muted/30 shrink-0 transition-colors cursor-pointer", isPage && "md:hidden")}
-                title="Daftar Percakapan"
-              >
-                <ArrowLeft className="size-4" />
-              </button>
+          <div className="shrink-0 flex items-center justify-between px-4 py-2.5 border-b border-border/60 bg-muted/20">
+            <div className="flex items-center gap-2.5 min-w-0">
+              {isPage ? (
+                <Button
+                  variant={isHistoryOpen ? "secondary" : "outline"}
+                  size="sm"
+                  onClick={() => setIsHistoryOpen(prev => !prev)}
+                  className="h-8 px-2.5 gap-1.5 text-xs font-medium cursor-pointer shrink-0 transition-colors"
+                  title={isHistoryOpen ? "Tutup Riwayat" : "Buka Riwayat Percakapan"}
+                >
+                  <History className="size-3.5 text-muted-foreground" />
+                  <span>Riwayat</span>
+                  {sessions.length > 0 && (
+                    <span className="ml-0.5 text-[10px] px-1.5 py-0.2 rounded-full bg-muted text-muted-foreground font-mono">
+                      {sessions.length}
+                    </span>
+                  )}
+                </Button>
+              ) : (
+                <button
+                  onClick={() => setPage('list')}
+                  className="size-7 flex items-center justify-center rounded hover:bg-muted/30 shrink-0 transition-colors cursor-pointer"
+                  title="Daftar Percakapan"
+                >
+                  <ArrowLeft className="size-4" />
+                </button>
+              )}
+
               <div className="flex items-center gap-2 min-w-0">
                 <span className="text-sm font-semibold truncate">{currentSession?.title || 'Asisten AI'}</span>
                 {entityTitle && (
@@ -525,18 +556,17 @@ export const AIChatPanel = ({
                 )}
               </div>
             </div>
+
             <div className="flex items-center gap-1.5 shrink-0">
               {onOpenExternalAI && (
-                <Button variant="ghost" size="icon" className="size-7" onClick={onOpenExternalAI} title="AI Eksternal (Claude/ChatGPT)">
-                  <Bot className="size-3.5" />
+                <Button variant="ghost" size="icon" className="size-8 cursor-pointer" onClick={onOpenExternalAI} title="AI Eksternal (Claude/ChatGPT)">
+                  <Bot className="size-4 text-muted-foreground" />
                 </Button>
               )}
-              {isPage && (
-                <Button variant="outline" size="sm" className="h-7 text-xs gap-1 cursor-pointer" onClick={handleNewSession}>
-                  <Plus className="size-3.5" />
-                  <span>Chat Baru</span>
-                </Button>
-              )}
+              <Button variant="default" size="sm" className="h-8 text-xs gap-1.5 cursor-pointer font-medium" onClick={handleNewSession}>
+                <Plus className="size-3.5" />
+                <span>Chat Baru</span>
+              </Button>
             </div>
           </div>
 

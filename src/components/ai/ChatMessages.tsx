@@ -1,5 +1,5 @@
 import { memo, useRef, useState, useEffect, useCallback } from 'react';
-import { MessageSquare, Plus, Bot, User, Loader2, Copy, Check, ChevronDown } from 'lucide-react';
+import { MessageSquare, Plus, Bot, User, Loader2, Copy, Check, ChevronDown, Sparkles, Database, Wand2, Lightbulb } from 'lucide-react';
 import { AIChatMessage } from '@/types';
 import { useWorkspace } from '@/providers/WorkspaceProvider';
 import { Button } from '@/components/ui/button';
@@ -160,34 +160,45 @@ export const ChatMessages = memo(function ChatMessages({
     <div className="flex-1 relative min-h-0">
       <div ref={scrollContainerRef} className="absolute inset-0 overflow-y-auto overflow-x-hidden p-4 space-y-4 scrollbar-thin scrollbar-thumb-muted-foreground/10">
 
-        {!hasActiveSession ? (
-          <div className="h-full flex flex-col items-center justify-center text-center py-16">
-            {!hasSessions ? (
-              <>
-                <MessageSquare className="size-10 text-muted-foreground/20 mb-4" />
-                <h4 className="text-sm font-semibold">Asisten AI</h4>
-                <p className="text-xs text-muted-foreground mt-1 max-w-50">
-                  Pilih percakapan atau buat baru.
-                </p>
-                <Button variant="default" size="sm" className="mt-4" onClick={handleNewSession}>
-                  <Plus className="size-4 mr-2" />
-                  Chat Baru
-                </Button>
-              </>
-            ) : (
-              <p className="text-xs text-muted-foreground/50 font-medium">
-                Pilih percakapan untuk lanjut
-              </p>
-            )}
+        {!hasMessages && !isMessagesLoading ? (
+          <div className="h-full flex flex-col items-center justify-center text-center py-10 px-4 max-w-2xl mx-auto">
+            <div className="size-12 rounded-2xl bg-primary/10 border border-primary/20 flex items-center justify-center text-primary mb-3.5 shadow-xs">
+              <Sparkles className="size-6" />
+            </div>
+            <h3 className="text-base font-semibold tracking-tight text-foreground">
+              Asisten AI ERD Builder Pro
+            </h3>
+            <p className="text-xs text-muted-foreground mt-1 max-w-md leading-relaxed">
+              Tanyakan apa saja tentang skema database, relasi tabel, flowchart alur logika, atau optimasi query SQL.
+            </p>
+
+            {/* Quick Starter Suggestions */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-6 w-full text-left">
+              {[
+                { title: 'Skema E-Commerce', desc: 'Rancang tabel pesanan, produk, pengguna, dan pembayaran dengan relasi foreign key.' },
+                { title: 'Flowchart Autentikasi', desc: 'Buat alur logika flowchart registrasi pengguna, verifikasi OTP, dan login.' },
+                { title: 'Analisis Relasi', desc: 'Jelaskan perbedaan relasi Many-to-Many vs One-to-Many berserta tabel pivot.' },
+                { title: 'Optimasi Query', desc: 'Bagaimana cara menentukan index komposit terbaik pada PostgreSQL?' },
+              ].map((item, idx) => (
+                <button
+                  key={idx}
+                  type="button"
+                  onClick={() => sendMessage(item.desc)}
+                  className="p-3 rounded-xl border border-border/70 bg-card hover:bg-muted/40 hover:border-primary/40 transition-all text-left group cursor-pointer shadow-2xs"
+                >
+                  <p className="text-xs font-semibold text-foreground group-hover:text-primary transition-colors">
+                    {item.title}
+                  </p>
+                  <p className="text-[11px] text-muted-foreground/80 mt-0.5 line-clamp-2 leading-relaxed">
+                    {item.desc}
+                  </p>
+                </button>
+              ))}
+            </div>
           </div>
         ) : isMessagesLoading ? (
           <div className="flex items-center justify-center py-16">
             <Loader2 className="size-6 animate-spin text-muted-foreground/40" />
-          </div>
-        ) : !hasMessages ? (
-          <div className="flex flex-col items-center justify-center text-center py-16">
-            <Bot className="size-10 text-muted-foreground/20 mb-3" />
-            <p className="text-xs text-muted-foreground font-medium">Kirim pesan untuk memulai</p>
           </div>
         ) : (
           <>
